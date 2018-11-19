@@ -15,30 +15,29 @@ class CameraBotLauncher:
     """Bot launcher which parses configuration file, creates bot and camera instances and finally starts bot."""
 
     def __init__(self):
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.config_file = 'config.json'
-        self._config_options = self.load_config()
-        self.welcome_sent = False
+        self._log = logging.getLogger(self.__class__.__name__)
+        self._config_file = 'config.json'
+        self._config_options = self._load_config()
+        self._welcome_sent = False
 
-        options_telegram = self._config_options['telegram']
-        telegram_token = options_telegram['token']
-        telegram_allowed_uids = options_telegram['allowed_user_ids']
+        telegram_options = self._config_options['telegram']
+        telegram_token = telegram_options['token']
+        telegram_allowed_uids = telegram_options['allowed_user_ids']
 
         cam_list = self._config_options['camera_list']
-        cam_instances = self.create_cameras(cam_list)
+        cam_instances = self._create_cameras(cam_list)
 
         cambot = CameraBot(token=telegram_token,
                            user_id_list=telegram_allowed_uids,
                            cam_instances=cam_instances,
-                           stop=self.stop_polling,
-                           )
+                           stop_polling=self._stop_polling)
 
-        self.updater = Updater(bot=cambot)
+        self._updater = Updater(bot=cambot)
 
-        getpic_commands, getfullpic_commands = self.create_setup_commands(cam_instances)
-        self.setup_commands(getpic_commands, getfullpic_commands)
+        getpic_commands, getfullpic_commands = self._create_setup_commands(cam_instances)
+        self._setup_commands(getpic_commands, getfullpic_commands)
 
-    def create_cameras(self, camera_list):
+    def _create_cameras(self, camera_list):
         """Creates dict with camera ids, instances and commands."""
         cams = {}
 
@@ -49,14 +48,14 @@ class CameraBotLauncher:
             description = cam_data['desc']
 
             cams[cam_id] = {"instance": HomeCam(api, user, password, description),
-                            'commands': ['getpic_{0}'.format(cam_id), 'getfullpic_{0}'.format(cam_id)]}
+                            'commands': ['getpic_{0}'.format(cam_id),
+                                         'getfullpic_{0}'.format(cam_id)]}
 
-        self.log.debug('Creating cameras: {0}'.format(cams))
-
+        self._log.debug('Creating cameras: {0}'.format(cams))
         return cams
 
     @staticmethod
-    def create_setup_commands(cams):
+    def _create_setup_commands(cams):
         """Returns lists of commands which are passed to Dispatcher handler."""
         getpic_commands = []
         getfullpic_commands = []
@@ -69,57 +68,57 @@ class CameraBotLauncher:
 
     def run(self):
         """Starts and runs bot."""
-        self.log.info('Starting {0} bot'.format(self.updater.bot.first_name))
+        self._log.info('Starting {0} bot'.format(self._updater.bot.first_name))
 
-        if not self.welcome_sent:
-            self.updater.bot.send_startup_message()
-            self.welcome_sent = True
+        if not self._welcome_sent:
+            self._updater.bot.send_startup_message()
+            self._welcome_sent = True
 
-        self.updater.start_polling()
-        self.updater.idle()
+        self._updater.start_polling()
+        self._updater.idle()
 
-    def stop_polling(self):
+    def _stop_polling(self):
         """Stops bot and exits application."""
-        self.updater.stop()
-        self.updater.is_idle = False
+        self._updater.stop()
+        self._updater.is_idle = False
 
-    def load_config(self):
+    def _load_config(self):
         """Loads telegram and camera configuration from config file and returns json object."""
-        if not os.path.isfile(self.config_file):
-            error_message = 'Cannot find {0} file'.format(self.config_file)
-            self.log.error(error_message)
+        if not os.path.isfile(self._config_file):
+            error_message = 'Cannot find {0} file'.format(self._config_file)
+            self._log.error(error_message)
             raise ConfigError(error_message)
 
-        with open(self.config_file, 'r') as f:
-            self.log.debug('Reading config file {0}'.format(self.config_file))
+        with open(self._config_file, 'r') as f:
+            self._log.debug('Reading config file {0}'.format(self._config_file))
             config = f.read()
 
         try:
-            config_json = json.loads(config, object_pairs_hook=self.conf_raise_on_duplicates)
+            config_json = json.loads(config, object_pairs_hook=self._conf_raise_on_duplicates)
         except json.decoder.JSONDecodeError:
-            error_message = 'Malformed configuration file {0}'.format(self.config_file)
-            self.log.error(error_message)
+            error_message = 'Malformed configuration file {0}'.format(self._config_file)
+            self._log.error(error_message)
             raise ConfigError(error_message)
 
         return config_json
 
-    def conf_raise_on_duplicates(self, config_data):
+    def _conf_raise_on_duplicates(self, config_data):
         """Raise ConfigError on duplicate keys."""
         conf_dict = {}
 
         for key, value in config_data:
             if key in conf_dict:
-                error_message = "Malformed configuration file {0}, duplicate key: {1}".format(self.config_file, key)
-                self.log.error(error_message)
+                error_message = "Malformed configuration file {0}, duplicate key: {1}".format(self._config_file, key)
+                self._log.error(error_message)
                 raise ConfigError(error_message)
             else:
                 conf_dict[key] = value
 
         return conf_dict
 
-    def setup_commands(self, getpic_commands, getfullpic_commands):
+    def _setup_commands(self, getpic_commands, getfullpic_commands):
         """Setup for Dispatcher with bot commands and error handler."""
-        dispatcher = self.updater.dispatcher
+        dispatcher = self._updater.dispatcher
 
         dispatcher.add_handler(CommandHandler('help', CameraBot.cmd_help))
         dispatcher.add_handler(CommandHandler('start', CameraBot.cmd_help))
