@@ -1,10 +1,14 @@
+"""Home Camera Module"""
+
 import logging
+import requests
 from datetime import datetime
 from io import BytesIO
-
-import requests
 from PIL import Image
 from requests.auth import HTTPDigestAuth
+
+from camerabot.constants import BAD_RESPONSE_CODES
+from camerabot.errors import HomeCamError, CameraResponseError
 
 
 class HomeCam:
@@ -18,27 +22,27 @@ class HomeCam:
         self._user = user
         self._password = password
         self.description = description
-        self._req = requests
         self.snapshots_taken = 0
 
-    def take_snapshot(self, update, resize=False):
+    def take_snapshot(self, resize=False):
         """Takes and returns full or resized snapshot from the camera."""
-        self._log.debug('Snapshot from {0}'.format(self._api))
-
+        self._log.debug('Taking snapshot from {0}'.format(self._api))
         try:
             auth = HTTPDigestAuth(self._user, self._password)
-            response = self._req.get(self._api, auth=auth, stream=True)
-            response.raise_for_status()
-        except requests.exceptions.ConnectionError:
-            self._log.error('Connection to {0} failed'.format(self.description))
-            update.message.reply_text(
-                'Connection to {0} failed, try later or /list other cameras'.format(self.description))
-            return None, None
+            response = requests.get(self._api, auth=auth, stream=True)
+            self._verify_status_code(response)
+        except requests.exceptions.ConnectionError as err:
+            err_msg = 'Connection to {0} failed.'.format(self.description)
+            self._log.error(err_msg)
+            raise HomeCamError(err_msg)
+        except CameraResponseError as err:
+            self._log.error(str(err))
+            raise HomeCamError(str(err))
 
         snapshot_timestamp = int(datetime.now().timestamp())
         self.snapshots_taken += 1
-
         snapshot = self._resize_snapshot(response.raw) if resize else response.raw
+
         return snapshot, snapshot_timestamp
 
     def _resize_snapshot(self, raw_snapshot):
@@ -51,7 +55,17 @@ class HomeCam:
         snapshot.save(resized_snapshot, 'JPEG', quality=90)
         resized_snapshot.seek(0)
 
-        self._log.debug("Raw snapshot: {0}, {1}, {2}".format(snapshot.format, snapshot.mode, snapshot.size))
+        self._log.debug("Raw snapshot: {0}, {1}, {2}".format(snapshot.format,
+                                                             snapshot.mode,
+                                                             snapshot.size))
         self._log.debug("Resized snapshot: {0}".format(size))
 
         return resized_snapshot
+
+    def _verify_status_code(self, response):
+        if not response:
+            code = response.status_code
+            unhandled_code = 'Unhandled response code: {0}'
+            raise CameraResponseError(
+                BAD_RESPONSE_CODES.get(code, unhandled_code.format(code)).
+                format(response.url))

@@ -1,0 +1,29 @@
+{
+  "telegram": {
+    "token": "",
+    "allowed_user_ids": []
+  },
+  "watchdog": {
+    "sleep": 2,
+    "directory": ""
+  },
+  "log_level": "INFO",
+  "camera_list": {
+    "cam_1": {
+      "description": "Kitchen Camera",
+      "auth": {
+        "user": "",
+        "password": ""
+      },
+      "api_url": ""
+    },
+    "cam_2": {
+      "description": "Basement Camera",
+      "auth": {
+        "user": "",
+        "password": ""
+      },
+      "api_url": ""
+    }
+  }
+}
