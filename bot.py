@@ -15,7 +15,9 @@ from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR
 
 
 class CameraBotLauncher:
-    """Bot launcher which parses configuration file, creates bot and camera instances and finally starts bot."""
+    """Bot launcher which parses configuration file, creates bot and
+    camera instances and finally starts bot.
+    """
 
     def __init__(self, conf_path=CONFIG_FILE):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -25,8 +27,8 @@ class CameraBotLauncher:
         tg_token = conf['telegram']['token']
         tg_allowed_uids = conf['telegram']['allowed_user_ids']
         cam_list = conf['camera_list']
+        self._wd_is_enabled = conf['watchdog']['enabled']
         wd_directory = conf['watchdog']['directory']
-        wd_sleep_time = conf['watchdog']['sleep']
 
         log_level = self._get_int_log_level(conf['log_level'])
         logging.getLogger().setLevel(log_level)
@@ -43,8 +45,7 @@ class CameraBotLauncher:
         self._setup_commands(getpic_cmds, getfullpic_cmds)
 
         self._directory_watcher = DirectoryWatcher(bot=self._updater,
-                                                   directory=wd_directory,
-                                                   sleep_time=wd_sleep_time)
+                                                   directory=wd_directory)
         self._welcome_sent = False
 
     def run(self):
@@ -60,7 +61,8 @@ class CameraBotLauncher:
         # Blocks code execution until signal is received, therefore 'self._directory_watcher.run' won't execute.
         # self._updater.idle()
 
-        self._directory_watcher.watch()
+        if self._wd_is_enabled:
+            self._directory_watcher.watch()
 
     def _create_cameras(self, camera_list):
         """Creates dict with camera ids, instances and commands."""
@@ -73,8 +75,8 @@ class CameraBotLauncher:
             description = cam_data['description']
 
             cams[cam_id] = {"instance": HomeCam(api_url, user, password, description),
-                            'commands': ['getpic_{0}'.format(cam_id),
-                                         'getfullpic_{0}'.format(cam_id)]}
+                            'commands': ('getpic_{0}'.format(cam_id),
+                                         'getfullpic_{0}'.format(cam_id))}
 
         self._log.debug('Creating cameras: {0}'.format(cams))
         return cams
@@ -96,7 +98,9 @@ class CameraBotLauncher:
         self._updater.is_idle = False
 
     def _load_config(self, path):
-        """Loads telegram and camera configuration from config file and returns json object."""
+        """Loads telegram and camera configuration from config file
+        and returns json object.
+        """
         if not os.path.isfile(path):
             err_msg = 'Can\'t find {0} configuration file'.format(path)
             self._log.error(err_msg)
@@ -142,7 +146,8 @@ class CameraBotLauncher:
 
     def _get_int_log_level(self, log_level_str):
         if log_level_str not in LOG_LEVELS_STR:
-            warn_msg = 'Invalid log level "{0}", using "INFO". Choose from {1})'.format(log_level_str, LOG_LEVELS_STR)
+            warn_msg = 'Invalid log level "{0}", using "INFO". ' \
+                       'Choose from {1})'.format(log_level_str, LOG_LEVELS_STR)
             self._log.warning(warn_msg)
         return getattr(logging, log_level_str, logging.INFO)
 

@@ -26,6 +26,7 @@ def authorization_check(func):
             bot._log.error('User authorization error')
             bot._log.error(bot._get_user_info(update))
             bot._print_access_error(update)
+
     return wrapper
 
 
@@ -38,7 +39,6 @@ def camera_selection(func):
         cam_id = update.message.text.split('_', 1)[1]
         cam = cambot._cam_instances[cam_id]['instance']
         args = args + (cam, cam_id)
-
         return func(*args, **kwargs)
 
     return wrapper
@@ -48,12 +48,12 @@ class CameraBot(Bot):
     """CameraBot class where main bot things are done."""
 
     def __init__(self, token, user_ids, cam_instances, stop_polling):
-        super(CameraBot, self).__init__(token, request=(Request(con_pool_size=10)))
+        super(CameraBot, self).__init__(token,
+                                        request=(Request(con_pool_size=10)))
         self._log = logging.getLogger(self.__class__.__name__)
         self._cam_instances = cam_instances
         self._user_ids = user_ids
         self._stop_polling = stop_polling
-
         self._log.info('Initializing {0} bot'.format(self.first_name))
 
     def send_startup_message(self):
@@ -61,20 +61,26 @@ class CameraBot(Bot):
         self._log.info('Sending welcome message')
 
         for user_id in self._user_ids:
-            self.send_message(user_id, '{0} bot started, see /help for available commands'.format(self.first_name))
+            self.send_message(user_id,
+                              '{0} bot started, see /help for available commands'.format(
+                                  self.first_name))
 
-    def send_cam_photo(self, photo, update=None, caption=None, reply_text=None, full_snapshot_name=None, full_pic=False,
-                   from_watchdog=False):
+    def send_cam_photo(self, photo, update=None, caption=None, reply_text=None,
+                       full_snapshot_name=None, full_pic=False,
+                       from_watchdog=False):
         """Send received photo."""
         if from_watchdog:
             for uid in self._user_ids:
                 filename = os.path.basename(photo.name)
-                self.send_document(chat_id=uid, document=photo, caption=caption, filename=filename,
+                self.send_document(chat_id=uid, document=photo,
+                                   caption=caption, filename=filename,
                                    timeout=300)
         else:
             update.message.reply_text(reply_text)
             if full_pic:
-                update.message.reply_document(document=photo, filename=full_snapshot_name, caption=caption)
+                update.message.reply_document(document=photo,
+                                              filename=full_snapshot_name,
+                                              caption=caption)
             else:
                 update.message.reply_photo(photo=photo, caption=caption)
 
@@ -82,20 +88,23 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_getpic(self, update, cam, cam_id):
         """Gets and sends resized snapshot from the camera."""
-        self._log.info('Resized cam snapshot from {0} requested'.format(cam.description))
+        self._log.info(
+            'Resized cam snapshot from {0} requested'.format(cam.description))
         self._log.debug(self._get_user_info(update))
 
         try:
             photo, snapshot_timestamp = cam.take_snapshot(resize=True)
         except HomeCamError as err:
-            update.message.reply_text('{0}\nTry later or /list other cameras'.format(str(err)))
+            update.message.reply_text(
+                '{0}\nTry later or /list other cameras'.format(str(err)))
             return
 
         caption = 'Pic taken on {0:%a %b %-d %H:%M:%S %Y} (pic #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         reply_text = 'Sending pic from {0}...'.format(cam.description)
         self._log.info('Sending resized cam snapshot')
-        self.send_cam_photo(photo=photo, update=update, caption=caption, reply_text=reply_text)
+        self.send_cam_photo(photo=photo, update=update, caption=caption,
+                            reply_text=reply_text)
 
         self._log.info('Resized snapshot sent')
         self._print_helper(update, cam_id)
@@ -110,7 +119,8 @@ class CameraBot(Bot):
         try:
             photo, snapshot_timestamp = cam.take_snapshot(resize=False)
         except HomeCamError as err:
-            update.message.reply_text('{0}\nTry later or /list other cameras'.format(str(err)))
+            update.message.reply_text(
+                '{0}\nTry later or /list other cameras'.format(str(err)))
             return
 
         full_snapshot_name = 'Full_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
@@ -119,9 +129,10 @@ class CameraBot(Bot):
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         reply_text = 'Sending full pic from {0}...'.format(cam.description)
         self._log.info('Sending full snapshot')
-        self.send_cam_photo(photo=photo, update=update, caption=caption, reply_text=reply_text, \
-                                                                        full_snapshot_name=full_snapshot_name,
-                                                                        full_pic=True)
+        self.send_cam_photo(photo=photo, update=update, caption=caption,
+                            reply_text=reply_text, \
+                            full_snapshot_name=full_snapshot_name,
+                            full_pic=True)
         self._log.info('Full cam snapshot {0} sent'.format(full_snapshot_name))
         self._print_helper(update, cam_id)
 
@@ -129,12 +140,9 @@ class CameraBot(Bot):
     def cmd_stop(self, update):
         """Terminates bot."""
         msg = 'Stopping {0} bot'.format(self.first_name)
-
         self._log.info(msg)
         self._log.debug(self._get_user_info(update))
-
         update.message.reply_text(msg)
-
         thread = Thread(target=self._stop_polling)
         thread.start()
 
@@ -146,9 +154,11 @@ class CameraBot(Bot):
         msg = ['<b>You have {0} cameras:</b>'.format(len(self._cam_instances))]
 
         for cam_id, cam_data in self._cam_instances.items():
-            msg.append('<b>Camera:</b> {0}\n<b>Description:</b> {1}\n<b>Commands:</b> {2}'.format(
-                cam_id, cam_data['instance'].description,
-                ', '.join('/{0}'.format(cmds) for cmds in cam_data['commands'])))
+            msg.append(
+                '<b>Camera:</b> {0}\n<b>Description:</b> {1}\n<b>Commands:</b> {2}'.format(
+                    cam_id, cam_data['instance'].description,
+                    ', '.join(
+                        '/{0}'.format(cmds) for cmds in cam_data['commands'])))
 
         update.message.reply_html('\n\n'.join(msg))
 
@@ -159,10 +169,13 @@ class CameraBot(Bot):
         if requested:
             self._log.info('Help message has been requested')
             self._log.debug(self._get_user_info(update))
-            update.message.reply_text('Use /list command to list available cameras and commands')
+            update.message.reply_text(
+                'Use /list command to list available cameras and commands')
         elif append:
-            update.message.reply_text('{0} to get pic or /list available cameras'.format(
-                ', '.join('/{0}'.format(x) for x in self._cam_instances[cam_id]['commands'])))
+            update.message.reply_text(
+                '{0} to get pic or /list available cameras'.format(
+                    ', '.join('/{0}'.format(x) for x in
+                              self._cam_instances[cam_id]['commands'])))
 
         self._log.info('Help message has been sent')
 

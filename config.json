@@ -4,7 +4,7 @@
     "allowed_user_ids": []
   },
   "watchdog": {
-    "sleep": 2,
+    "enabled": false,
     "directory": ""
   },
   "log_level": "INFO",

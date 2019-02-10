@@ -7,7 +7,8 @@ from io import BytesIO
 from PIL import Image
 from requests.auth import HTTPDigestAuth
 
-from camerabot.constants import BAD_RESPONSE_CODES
+from camerabot.constants import (BAD_RESPONSE_CODES, IMG_SIZE, IMG_FORMAT,
+                                                               IMG_QUALITY)
 from camerabot.errors import HomeCamError, CameraResponseError
 
 
@@ -37,7 +38,7 @@ class HomeCam:
             raise HomeCamError(err_msg)
         except CameraResponseError as err:
             self._log.error(str(err))
-            raise HomeCamError(str(err))
+            raise HomeCamError from err
 
         snapshot_timestamp = int(datetime.now().timestamp())
         self.snapshots_taken += 1
@@ -47,19 +48,17 @@ class HomeCam:
 
     def _resize_snapshot(self, raw_snapshot):
         """Resizes and returns JPEG snapshot."""
-        size = 1280, 724
         snapshot = Image.open(raw_snapshot)
         resized_snapshot = BytesIO()
 
-        snapshot.resize(size, Image.ANTIALIAS)
-        snapshot.save(resized_snapshot, 'JPEG', quality=90)
+        snapshot.resize(IMG_SIZE, Image.ANTIALIAS)
+        snapshot.save(resized_snapshot, IMG_FORMAT, quality=IMG_QUALITY)
         resized_snapshot.seek(0)
 
         self._log.debug("Raw snapshot: {0}, {1}, {2}".format(snapshot.format,
                                                              snapshot.mode,
                                                              snapshot.size))
-        self._log.debug("Resized snapshot: {0}".format(size))
-
+        self._log.debug("Resized snapshot: {0}".format(IMG_SIZE))
         return resized_snapshot
 
     def _verify_status_code(self, response):

@@ -15,10 +15,9 @@ from camerabot.errors import DirectoryWatcherError
 class DirectoryWatcher:
     """Watchdog class."""
 
-    def __init__(self, bot, directory, sleep_time):
+    def __init__(self, bot, directory):
         self._log = logging.getLogger(self.__class__.__name__)
         self.directory = directory
-        self.sleep_time = sleep_time
         self._event_handler = DirectoryWatcherEventHandler(bot=bot)
         self._observer = Observer()
 
@@ -31,7 +30,7 @@ class DirectoryWatcher:
         self._observer.start()
         try:
             while True:
-                time.sleep(self.sleep_time)
+                time.sleep(1)
         except Exception as err:
             self._log.error('Watchdog encountered an error: {0}'.format(str(err)))
             self._observer.stop()
