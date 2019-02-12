@@ -5,6 +5,7 @@ import logging
 import os
 import time
 
+from pathlib import Path
 from subprocess import call
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -25,6 +26,13 @@ class DirectoryWatcher:
 
     def watch(self):
         """Watches directory for new files."""
+        path = Path(self.directory)
+        if not path.exists() and not path.is_dir():
+            err_msg = 'Watchdog directory "{0}" ' \
+                      'doesn\'t exist.'.format(self.directory)
+            self._log.error(err_msg)
+            raise DirectoryWatcherError(err_msg)
+
         self._log.info('Starting to watch {0}'.format(self.directory))
         self._observer.schedule(self._event_handler, self.directory)
         self._observer.start()

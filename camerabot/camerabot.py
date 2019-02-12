@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from datetime import datetime
 from functools import wraps
 from threading import Thread
@@ -36,7 +37,7 @@ def camera_selection(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         cambot, update = args
-        cam_id = update.message.text.split('_', 1)[1]
+        cam_id = re.split(r'^.*(?=cam_)', update.message.text)[-1]
         cam = cambot._cam_instances[cam_id]['instance']
         args = args + (cam, cam_id)
         return func(*args, **kwargs)
@@ -164,6 +165,40 @@ class CameraBot(Bot):
 
         self._log.info('Camera list has been sent')
 
+    @authorization_check
+    @camera_selection
+    def cmd_motion_detection_off(self, update, cam, cam_id):
+        """Disable camera's Motion Detection."""
+        self._log.info('Disabling camera\'s Motion Detection has been '
+                       'requested')
+        self._log.debug(self._get_user_info(update))
+        try:
+            cam.motion_detection_switch(enable=False)
+            msg = 'Motion Detection successfully disabled.'
+            update.message.reply_text(msg)
+            self._log.info(msg)
+            self._print_helper(update, cam_id)
+        except HomeCamError as err:
+            update.message.reply_text(str(err))
+            return
+
+    @authorization_check
+    @camera_selection
+    def cmd_motion_detection_on(self, update, cam, cam_id):
+        """Enable camera's Motion Detection."""
+        self._log.info('Enabling camera\'s Motion Detection has been '
+                       'requested')
+        self._log.debug(self._get_user_info(update))
+        try:
+            cam.motion_detection_switch(enable=True)
+            msg = 'Motion Detection successfully enabled.'
+            update.message.reply_text(msg)
+            self._log.info(msg)
+            self._print_helper(update, cam_id)
+        except HomeCamError as err:
+            update.message.reply_text(str(err))
+            return
+
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
         """Sends help message to telegram chat."""
         if requested:
@@ -173,8 +208,8 @@ class CameraBot(Bot):
                 'Use /list command to list available cameras and commands')
         elif append:
             update.message.reply_text(
-                '{0} to get pic or /list available cameras'.format(
-                    ', '.join('/{0}'.format(x) for x in
+                'Available commands\n{0} or /list available cameras'.format(
+                    '\n'.join('/{0}'.format(x) for x in
                               self._cam_instances[cam_id]['commands'])))
 
         self._log.info('Help message has been sent')

@@ -11,19 +11,31 @@
   "camera_list": {
     "cam_1": {
       "description": "Kitchen Camera",
-      "auth": {
-        "user": "",
-        "password": ""
-      },
-      "api_url": ""
+      "api": {
+        "host": "",
+        "auth": {
+          "user": "",
+          "password": ""
+        },
+        "endpoints": {
+          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "motion_detection": "/MotionDetection/1/"
+        }
+      }
     },
     "cam_2": {
       "description": "Basement Camera",
-      "auth": {
-        "user": "",
-        "password": ""
-      },
-      "api_url": ""
+      "api": {
+        "host": "",
+        "auth": {
+          "user": "",
+          "password": ""
+        },
+        "endpoints": {
+          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "motion_detection": "/MotionDetection/1/"
+        }
+      }
     }
   }
 }

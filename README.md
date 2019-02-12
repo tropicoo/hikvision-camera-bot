@@ -38,22 +38,35 @@ with default template:
   "camera_list": {
     "cam_1": {
       "description": "Kitchen Camera",
-      "auth": {
-        "user": "",
-        "password": ""
-      },
-      "api_url": ""
+      "api": {
+        "host": "",
+        "auth": {
+          "user": "",
+          "password": ""
+        },
+        "endpoints": {
+          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "motion_detection": "/MotionDetection/1/"
+        }
+      }
     },
     "cam_2": {
       "description": "Basement Camera",
-      "auth": {
-        "user": "",
-        "password": ""
-      },
-      "api_url": ""
+      "api": {
+        "host": "",
+        "auth": {
+          "user": "",
+          "password": ""
+        },
+        "endpoints": {
+          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "motion_detection": "/MotionDetection/1/"
+        }
+      }
     }
   }
 }
+
 ```
 
 To get things done follow next steps:
@@ -63,7 +76,7 @@ and put it to `allowed_user_ids` list as integer value. Multiple ids can
 be used, just separate them with a comma.
 3. If you wish to monitor directory and send files to yourself when created,
 enable `watchdog` by setting `enabled` to `true` and specify `directory`
-path to be monitored e.g. `/tmp/watchdir`.
+path to be monitored e.g. `/tmp/watchdir`. Make sure that directory exists.
 For example configure your camera to take and put snapshot on move detection
 through FTP to watched folder. Watchdog looks for `on_create` events, sends
 created file and deletes it.
@@ -72,8 +85,8 @@ comes with two cameras. Preferable names of cameras are `cam_1`,
 `cam_2`, `cam_3` etc. with any description.
 5. Write authentication credentials in appropriate keys: `user` and `password`
 for every camera you want to use.
-6. Same for `api_url`, which should include protocol and api path e.g.
-`http://192.168.10.10/Streaming/channels/102/picture?snapShotImageType=JPEG`
+6. Same for `host`, which should include protocol e.g.
+`http://192.168.10.10`
 
 **Example configuration**
 ```json
@@ -93,11 +106,17 @@ for every camera you want to use.
   "camera_list": {
     "cam_1": {
       "description": "Kitchen Camera",
-      "auth": {
-        "user": "admin",
-        "password": "kjjhthOogv"
-      },
-      "api_url": "http://192.168.10.10/Streaming/channels/102/picture?snapShotImageType=JPEG"
+      "api": {
+        "host": "http://192.168.10.10",
+        "auth": {
+          "user": "admin",
+          "password": "kjjhthOogv"
+        },
+        "endpoints": {
+          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "motion_detection": "/MotionDetection/1/"
+        }
+      }
     }
   }
 }

@@ -4,11 +4,12 @@ import argparse
 import json
 import logging
 import os
+import sys
 
 from telegram.ext import CommandHandler, Updater
 
 from camerabot.camerabot import CameraBot
-from camerabot.directorywatcher import DirectoryWatcher
+from camerabot.directorywatcher import DirectoryWatcher, DirectoryWatcherError
 from camerabot.errors import ConfigError
 from camerabot.homecam import HomeCam
 from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR
@@ -41,8 +42,7 @@ class CameraBotLauncher:
                            stop_polling=self._stop_polling)
 
         self._updater = Updater(bot=cambot)
-        getpic_cmds, getfullpic_cmds = self._create_setup_commands(cam_instances)
-        self._setup_commands(getpic_cmds, getfullpic_cmds)
+        self._setup_commands(cam_instances)
 
         self._directory_watcher = DirectoryWatcher(bot=self._updater,
                                                    directory=wd_directory)
@@ -61,36 +61,41 @@ class CameraBotLauncher:
         # Blocks code execution until signal is received, therefore 'self._directory_watcher.run' won't execute.
         # self._updater.idle()
 
-        if self._wd_is_enabled:
-            self._directory_watcher.watch()
+        try:
+            if self._wd_is_enabled:
+                self._directory_watcher.watch()
+        except DirectoryWatcherError as err:
+            self._stop_polling()
+            sys.exit(str(err))
 
     def _create_cameras(self, camera_list):
         """Creates dict with camera ids, instances and commands."""
         cams = {}
-
         for cam_id, cam_data in camera_list.items():
-            user = cam_data['auth']['user']
-            password = cam_data['auth']['password']
-            api_url = cam_data['api_url']
-            description = cam_data['description']
-
-            cams[cam_id] = {"instance": HomeCam(api_url, user, password, description),
+            cams[cam_id] = {"instance": HomeCam(cam_data),
                             'commands': ('getpic_{0}'.format(cam_id),
-                                         'getfullpic_{0}'.format(cam_id))}
+                                         'getfullpic_{0}'.format(cam_id),
+                                         'mdetection_on_{0}'.format(cam_id),
+                                         'mdetection_off_{0}'.format(cam_id),
+                                         )}
 
         self._log.debug('Creating cameras: {0}'.format(cams))
         return cams
 
     def _create_setup_commands(self, cams):
         """Returns lists of commands which are passed to Dispatcher handler."""
-        getpic_cmds = []
-        getfullpic_cmds = []
+        cmds = {'getpic': [],
+                'getfullpic': [],
+                'md_on': [],
+                'md_off': []}
 
         for cam in cams.values():
-            getpic_cmds.append(cam['commands'][0])
-            getfullpic_cmds.append(cam['commands'][1])
+            cmds['getpic'].append(cam['commands'][0])
+            cmds['getfullpic'].append(cam['commands'][1])
+            cmds['md_on'].append(cam['commands'][2])
+            cmds['md_off'].append(cam['commands'][3])
 
-        return getpic_cmds, getfullpic_cmds
+        return cmds
 
     def _stop_polling(self):
         """Stops bot and exits application."""
@@ -131,14 +136,21 @@ class CameraBotLauncher:
 
         return conf_dict
 
-    def _setup_commands(self, getpic_cmds, getfullpic_cmds):
+    def _setup_commands(self, cam_instances):
         """Setup for Dispatcher with bot commands and error handler."""
+        cmds = self._create_setup_commands(cam_instances)
         dispatcher = self._updater.dispatcher
 
         dispatcher.add_handler(CommandHandler('help', CameraBot.cmd_help))
         dispatcher.add_handler(CommandHandler('start', CameraBot.cmd_help))
-        dispatcher.add_handler(CommandHandler(getpic_cmds, CameraBot.cmd_getpic))
-        dispatcher.add_handler(CommandHandler(getfullpic_cmds, CameraBot.cmd_getfullpic))
+        dispatcher.add_handler(CommandHandler(cmds['getpic'],
+                                              CameraBot.cmd_getpic))
+        dispatcher.add_handler(CommandHandler(cmds['getfullpic'],
+                                              CameraBot.cmd_getfullpic))
+        dispatcher.add_handler(CommandHandler(cmds['md_on'],
+                                              CameraBot.cmd_motion_detection_on))
+        dispatcher.add_handler(CommandHandler(cmds['md_off'],
+                                              CameraBot.cmd_motion_detection_off))
         dispatcher.add_handler(CommandHandler('list', CameraBot.cmd_list_cams))
         dispatcher.add_handler(CommandHandler('stop', CameraBot.cmd_stop))
 
