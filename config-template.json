@@ -19,7 +19,16 @@
         },
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "/MotionDetection/1/"
+          "motion_detection": "/MotionDetection/1/",
+          "alert_stream": "/ISAPI/Event/notification/alertStream"
+        },
+        "stream_timeout": 300
+      },
+      "motion_detection": {
+        "alert": {
+          "enabled": false,
+          "delay": 20,
+          "fullpic": true
         }
       }
     },
@@ -33,7 +42,16 @@
         },
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "/MotionDetection/1/"
+          "motion_detection": "/MotionDetection/1/",
+          "alert_stream": "/ISAPI/Event/notification/alertStream"
+        },
+        "stream_timeout": 300
+      },
+      "motion_detection": {
+        "alert": {
+          "enabled": false,
+          "delay": 20,
+          "fullpic": true
         }
       }
     }
