@@ -16,4 +16,5 @@ COMMANDS = {'getpic': 'getpic_{0}',
             'alert_on': 'alert_on_{0}',
             'alert_off': 'alert_off_{0}'}
 
-TIMEOUT = 5
+CONN_TIMEOUT = 5
+SEND_TIMEOUT = 300

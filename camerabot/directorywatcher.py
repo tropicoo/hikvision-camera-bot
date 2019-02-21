@@ -69,7 +69,7 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
             now = datetime.datetime.now()
             caption = 'Directory Watcher Alert at {0}'.format(now.strftime('%Y-%m-%d %H:%M:%S'))
             with open(file_path, 'rb') as fd:
-                self._bot.bot.send_cam_photo(photo=fd, caption=caption, from_watchdog=True)
+                self._bot.bot.reply_cam_photo(photo=fd, caption=caption, from_watchdog=True)
         except Exception as err:
             self._log.error('Can\'t open {0} for sending: {1}'.format(file_path, str(err)))
             raise DirectoryWatcherError(err)

@@ -5,7 +5,7 @@ import requests
 import xmltodict
 from requests.auth import HTTPDigestAuth
 
-from camerabot.constants import BAD_RESPONSE_CODES, TIMEOUT
+from camerabot.constants import BAD_RESPONSE_CODES, CONN_TIMEOUT
 from camerabot.errors import (APIError,
                               APITakeSnapshotError,
                               APIMotionDetectionSwitchError,
@@ -50,9 +50,9 @@ class API:
         try:
             is_enabled, xml = self._get_motion_detection_state()
             if is_enabled and enable:
-                return '<b>Motion Detection already enabled.</b>'
+                return '<b>Motion Detection already enabled</b>'
             elif not is_enabled and not enable:
-                return '<b>Motion Detection already disabled.</b>'
+                return '<b>Motion Detection already disabled</b>'
 
             string = r'<enabled>{0}</enabled>'
             regex = string.format(r'[a-z]+')
@@ -93,7 +93,7 @@ class API:
         return is_enabled, xml
 
     def _query_api(self, endpoint, data=None, headers=None, stream=False,
-                                                method='GET', timeout=TIMEOUT):
+                   method='GET', timeout=CONN_TIMEOUT):
         url = '{0}{1}'.format(self._host, endpoint)
         try:
             response = self._sess.request(method, url=url, auth=self._auth,

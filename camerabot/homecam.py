@@ -27,12 +27,17 @@ class HomeCam:
         self.snapshots_taken = 0
         self.alert_on = Event()
 
-        alert_enabled = cam_data['motion_detection']['alert']['enabled']
-        if alert_enabled:
+        self.alert_enabled = cam_data['motion_detection']['alert']['enabled']
+        if self.alert_enabled:
             self.alert_on.set()
-        self._alert_delay = cam_data['motion_detection']['alert']['delay']
+        self.alert_queue = Queue()
+
+        self.alert_delay = cam_data['motion_detection']['alert']['delay']
         self.alert_fullpic = cam_data['motion_detection']['alert']['fullpic']
         self.alert_count = 0
+
+    def __repr__(self):
+        return '<HomeCam desc="{0}">'.format(self.description)
 
     def take_snapshot(self, resize=False):
         """Takes and returns full or resized snapshot from the camera."""
@@ -53,35 +58,17 @@ class HomeCam:
     def alert(self, enable=True):
         if enable and self.alert_on.is_set():
             raise HomeCamAlertAlreadyOnError('<b>Alert Mode already '
-                                             'enabled.</b>')
+                                             'enabled</b>')
         elif not enable and not self.alert_on.is_set():
             raise HomeCamAlertAlreadyOffError('<b>Alert Mode already '
-                                              'disabled.</b>')
-
-        resqueue = Queue()
-        if not enable:
-            self.alert_on.clear()
-        else:
+                                              'disabled</b>')
+        if enable:
             self.alert_on.set()
-            thread = Thread(target=self._alert_listener, args=(resqueue,))
-            thread.start()
-        return resqueue
+        else:
+            self.alert_on.clear()
 
-    def _alert_listener(self, resqueue):
-        while self.alert_on.is_set():
-            wait_before = 0
-            stream = self._api.get_alert_stream()
-            for chunk in stream.iter_lines(chunk_size=1024):
-                if not self.alert_on.is_set():
-                    break
-                while wait_before > int(time.time()):
-                    continue
-                if chunk and chunk.startswith(b'<eventType>VMD<'):
-                    pic, ts = self.take_snapshot(resize=False if
-                                                 self.alert_fullpic else True)
-                    resqueue.put((pic, ts))
-                    self.alert_count += 1
-                    wait_before = int(time.time()) + self._alert_delay
+    def get_alert_stream(self):
+        return self._api.get_alert_stream()
 
     def motion_detection_switch(self, enable=True):
         """Motion Detection Switch."""

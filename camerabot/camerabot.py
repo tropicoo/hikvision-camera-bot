@@ -3,13 +3,15 @@
 import logging
 import os
 import re
+import time
 from datetime import datetime
 from functools import wraps
 from threading import Thread
 
-from telegram import Bot
+from telegram import Bot, ParseMode
 from telegram.utils.request import Request
 
+from camerabot.constants import SEND_TIMEOUT
 from camerabot.errors import (HomeCamError, UserAuthError,
                               HomeCamAlertAlreadyOffError,
                               HomeCamAlertAlreadyOnError)
@@ -58,6 +60,15 @@ class CameraBot(Bot):
         self._user_ids = user_ids
         self._stop_polling = stop_polling
         self._log.info('Initializing {0} bot'.format(self.first_name))
+        self._initialize_alerter()
+
+    def _initialize_alerter(self):
+        for cam_id, cam_instance in self._cam_instances.items():
+            cam = cam_instance['instance']
+            if cam.alert_enabled:
+                thread = Thread(target=self._alert_pusher,
+                                args=(cam_id, cam))
+                thread.start()
 
     def send_startup_message(self):
         """Send welcome message after bot launch."""
@@ -68,16 +79,16 @@ class CameraBot(Bot):
                               '{0} bot started, see /help for available commands'.format(
                                   self.first_name))
 
-    def send_cam_photo(self, photo, update=None, caption=None, reply_text=None,
-                       fullpic_name=None, fullpic=False, reply_html=None,
-                       from_watchdog=False):
+    def reply_cam_photo(self, photo, update=None, caption=None, reply_text=None,
+                        fullpic_name=None, fullpic=False, reply_html=None,
+                        from_watchdog=False):
         """Send received photo."""
         if from_watchdog:
             for uid in self._user_ids:
                 filename = os.path.basename(photo.name)
                 self.send_document(chat_id=uid, document=photo,
                                    caption=caption, filename=filename,
-                                   timeout=300)
+                                   timeout=SEND_TIMEOUT)
         else:
             if reply_text:
                 update.message.reply_text(reply_text)
@@ -109,8 +120,8 @@ class CameraBot(Bot):
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         reply_html = '<b>Sending pic from {0}</b>'.format(cam.description)
         self._log.info('Sending resized cam snapshot')
-        self.send_cam_photo(photo=photo, update=update, caption=caption,
-                            reply_html=reply_html)
+        self.reply_cam_photo(photo=photo, update=update, caption=caption,
+                             reply_html=reply_html)
 
         self._log.info('Resized snapshot sent')
         self._print_helper(update, cam_id)
@@ -135,10 +146,10 @@ class CameraBot(Bot):
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         reply_html = '<b>Sending full pic from {0}</b>'.format(cam.description)
         self._log.info('Sending full snapshot')
-        self.send_cam_photo(photo=photo, update=update, caption=caption,
-                            reply_html=reply_html,
-                            fullpic_name=fullpic_name,
-                            fullpic=True)
+        self.reply_cam_photo(photo=photo, update=update, caption=caption,
+                             reply_html=reply_html,
+                             fullpic_name=fullpic_name,
+                             fullpic=True)
         self._log.info('Full cam snapshot {0} sent'.format(fullpic_name))
         self._print_helper(update, cam_id)
 
@@ -181,10 +192,9 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             msg = cam.motion_detection_switch(enable=False)
-            msg = msg or '<b>Motion Detection successfully disabled.</b>'
+            msg = msg or '<b>Motion Detection successfully disabled</b>'
             update.message.reply_html(msg)
             self._log.info(msg)
-            self._print_helper(update, cam_id)
         except HomeCamError as err:
             update.message.reply_text(str(err))
 
@@ -197,10 +207,9 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             msg = cam.motion_detection_switch(enable=True)
-            msg = msg or '<b>Motion Detection successfully enabled.</b>'
+            msg = msg or '<b>Motion Detection successfully enabled</b>'
             update.message.reply_html(msg)
             self._log.info(msg)
-            self._print_helper(update, cam_id)
         except HomeCamError as err:
             update.message.reply_text(str(err))
 
@@ -211,16 +220,14 @@ class CameraBot(Bot):
         self._log.info('Enabling camera\'s alert mode requested')
         self._log.debug(self._get_user_info(update))
         try:
-            resqueue = cam.alert(enable=True)
-            thread = Thread(target=self._alert_pusher, args=(resqueue,
-                                                          cam_id, cam, update))
+            cam.alert(enable=True)
+            thread = Thread(target=self._alert_pusher,
+                            args=(cam_id, cam))
             thread.start()
             update.message.reply_html('<b>Motion Detection Alert successfully '
-                                      'enabled.</b>')
-            self._print_helper(update, cam_id)
+                                      'enabled</b>')
         except (HomeCamAlertAlreadyOnError, HomeCamError) as err:
             update.message.reply_html(str(err))
-            self._print_helper(update, cam_id)
 
     @authorization_check
     @camera_selection
@@ -230,11 +237,9 @@ class CameraBot(Bot):
         try:
             cam.alert(enable=False)
             update.message.reply_html('<b>Motion Detection Alert successfully '
-                                      'disabled.</b>')
-            self._print_helper(update, cam_id)
+                                      'disabled</b>')
         except (HomeCamAlertAlreadyOffError, HomeCamError) as err:
             update.message.reply_html(str(err))
-            self._print_helper(update, cam_id)
 
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
         """Sends help message to telegram chat."""
@@ -245,7 +250,7 @@ class CameraBot(Bot):
                 'Use /list command to list available cameras and commands')
         elif append:
             update.message.reply_html(
-                '<b>Available commands</b>\n\n{0}\n\n/list available '
+                '<b>Available commands</b>\n\n{0}\n\n/list '
                 'cameras'.format('\n'.join('/{0}'.format(x) for x in
                                  self._cam_instances[cam_id]['commands'])))
 
@@ -263,27 +268,53 @@ class CameraBot(Bot):
         """Sends authorization error to telegram chat."""
         update.message.reply_text('Not authorized')
 
-    def _alert_pusher(self, resqueue, cam_id, cam, update):
+    def _alert_pusher(self, cam_id, cam):
         while cam.alert_on.is_set():
-            data = resqueue.get()
-            caption = 'Alert Pic taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
-                      '#{1})'.format(datetime.fromtimestamp(data[1]), cam.alert_count)
-            reply_html = '<b>Motion Detection Alert</b>\nSending pic ' \
-                         'from {0}'.format(cam.description)
+            self._log.debug('Started thread for '
+                            'camera: "{0}"'.format(cam.description))
+            wait_before = 0
+            stream = cam.get_alert_stream()
+            for chunk in stream.iter_lines(chunk_size=1024):
+                if not cam.alert_on.is_set():
+                    break
+
+                if wait_before > int(time.time()):
+                    continue
+
+                if chunk and chunk.startswith(b'<eventType>VMD<'):
+                    photo, ts = cam.take_snapshot(resize=False if
+                                                  cam.alert_fullpic else True)
+                    cam.alert_count += 1
+                    wait_before = int(time.time()) + cam.alert_delay
+                    self._send_alert(cam, photo, ts)
+
+    def _send_alert(self, cam, photo, ts):
+        caption = 'Alert Pic taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
+                  '#{1})\n/list cameras'.format(datetime.fromtimestamp(ts),
+                                                cam.alert_count)
+        reply_html = '<b>Motion Detection Alert</b>\nSending pic ' \
+                     'from {0}'.format(cam.description)
+
+        for uid in self._user_ids:
+            self.send_message(chat_id=uid, text=reply_html,
+                              parse_mode=ParseMode.HTML)
             if cam.alert_fullpic:
                 name = 'Full_alert_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
-                    datetime.fromtimestamp(data[1]))
+                    datetime.fromtimestamp(ts))
+                self.send_document(chat_id=uid, document=photo,
+                                   caption=caption,
+                                   filename=name,
+                                   timeout=SEND_TIMEOUT)
             else:
-                name = None
-            self.send_cam_photo(photo=data[0], update=update, caption=caption,
-                                reply_html=reply_html,
-                                fullpic=cam.alert_fullpic, fullpic_name=name)
-            self._print_helper(update, cam_id)
+                self.send_photo(chat_id=uid, photo=photo,
+                                caption=caption,
+                                timeout=SEND_TIMEOUT)
 
     def _get_user_info(self, update):
         """Returns user information who interacts with bot."""
-        return 'Request from user_id: {0}, username: {1}, first_name: {2}, last_name: {3}'.format(
-            update.message.chat.id,
-            update.message.chat.username,
-            update.message.chat.first_name,
-            update.message.chat.last_name)
+        return 'Request from user_id: {0}, username: {1},' \
+               'first_name: {2}, last_name: {3}'.format(
+                                                update.message.chat.id,
+                                                update.message.chat.username,
+                                                update.message.chat.first_name,
+                                                update.message.chat.last_name)
