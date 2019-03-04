@@ -1,3 +1,4 @@
+"""HikVision camera API module."""
 import logging
 import re
 
@@ -6,10 +7,10 @@ import xmltodict
 from requests.auth import HTTPDigestAuth
 
 from camerabot.constants import BAD_RESPONSE_CODES, CONN_TIMEOUT
-from camerabot.errors import (APIError,
-                              APITakeSnapshotError,
-                              APIMotionDetectionSwitchError,
-                              APIGetAlertStreamError)
+from camerabot.exceptions import (APIError,
+                                  APITakeSnapshotError,
+                                  APIMotionDetectionSwitchError,
+                                  APIGetAlertStreamError)
 
 
 class API:
@@ -50,16 +51,16 @@ class API:
         try:
             is_enabled, xml = self._get_motion_detection_state()
             if is_enabled and enable:
-                return '<b>Motion Detection already enabled</b>'
+                return 'Motion Detection already enabled'
             elif not is_enabled and not enable:
-                return '<b>Motion Detection already disabled</b>'
+                return 'Motion Detection already disabled'
 
             string = r'<enabled>{0}</enabled>'
             regex = string.format(r'[a-z]+')
             replace_with = string.format('true' if enable else 'false')
             xml = re.sub(regex, replace_with, xml)
             response_xml = self._query_api(endpoint, headers=self._xml_headers,
-                                       data=xml, method='PUT').text
+                                           data=xml, method='PUT').text
             xml_dict = xmltodict.parse(response_xml)['ResponseStatus']
             if xml_dict['statusCode'] != 1 and xml_dict['statusString'] != 'OK':
                 err_msg = 'Camera returned failed errored XML.'
@@ -82,7 +83,7 @@ class API:
         try:
             xml = self._query_api(endpoint, method='GET').text
             state = xmltodict.parse(xml)['MotionDetection']['enabled']
-            is_enabled = True if state == 'true' else False
+            is_enabled = state == 'true'
         except APIError:
             self._log.error('Failed to get motion detection state.')
             raise
@@ -97,7 +98,10 @@ class API:
         url = '{0}{1}'.format(self._host, endpoint)
         try:
             response = self._sess.request(method, url=url, auth=self._auth,
-                    data=data, headers=headers, stream=stream, timeout=timeout)
+                                          data=data,
+                                          headers=headers,
+                                          stream=stream,
+                                          timeout=timeout)
             self._verify_status_code(response)
         except APIError:
             raise

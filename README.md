@@ -5,14 +5,16 @@ Bot which sends snapshots from your HikVision camera(s).
 Installation
 ------------
 
-To install bot, simply `clone` repo and install dependencies using `pip3`.
+To install the bot, simply `clone` repo and install dependencies using `pip3`.
 Make sure you have [Python 3](https://www.python.org/downloads/) installed.
 
 
 ```
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
-pip3 install Pillow python-telegram-bot requests watchdog xmltodict
+pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
 ```
+
+Also, to enable YouTube Live Stream, install the latest [ffmpeg](https://www.ffmpeg.org) build.
 
 Configuration
 -------------
@@ -58,6 +60,17 @@ to `config.json` and edit, which comes with default template:
           "delay": 20,
           "fullpic": true
         }
+      },
+      "live_stream": {
+        "youtube": {
+          "enabled": false,
+          "channel": 101,
+          "restart_period": 39600,
+          "restart_pause": 10,
+          "null_audio": false,
+          "url": "rtmp://a.rtmp.youtube.com/live2",
+          "key": ""
+        }
       }
     },
     "cam_2": {
@@ -80,6 +93,17 @@ to `config.json` and edit, which comes with default template:
           "enabled": false,
           "delay": 20,
           "fullpic": true
+        }
+      },
+      "live_stream": {
+        "youtube": {
+          "enabled": false,
+          "channel": 101,
+          "restart_period": 39600,
+          "restart_pause": 10,
+          "null_audio": false,
+          "url": "rtmp://a.rtmp.youtube.com/live2",
+          "key": ""
         }
       }
     }
@@ -107,6 +131,21 @@ for every camera you want to use.
 7. In `motion_detection` section you can enable sending picture on alert.
 Configure `delay` setting in seconds between pushing alert pictures.
 To send resized picture change `fullpic` to `false`.
+8. To enable YouTube Live Stream (experimental), fill the `youtube` section with
+valid parameters:
+    ```python
+          "enabled": false, # start stream during bot start (true or false)
+          "channel": 101, # camera channel. 101 is main stream, 102 is substream.
+          "restart_period": 39600, # stream restart period in seconds
+          "restart_pause": 10, # stream pause before starting on restart
+          "null_audio": false, # enable fake silent audio (for cameras without mics)
+          "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
+          "key": "aaaa-vvvv-bbbb-cccc-zzzz" # YouTube Live Stream key.
+    ```
+    YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
+    
+    To enable stream in Telegram, simply use available commands 
+    `/yt_stream_on_<cam_id>, /yt_stream_off_<cam_id>`
 
 **Example configuration**
 ```json
@@ -144,6 +183,17 @@ To send resized picture change `fullpic` to `false`.
           "enabled": false,
           "delay": 20,
           "fullpic": true
+        }
+      },
+      "live_stream": {
+        "youtube": {
+          "enabled": false,
+          "channel": 101,
+          "restart_period": 39600,
+          "restart_pause": 10,
+          "null_audio": false,
+          "url": "rtmp://a.rtmp.youtube.com/live2",
+          "key": "aaaa-vvvv-bbbb-cccc-zzzz"
         }
       }
     }

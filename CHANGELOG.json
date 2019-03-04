@@ -1,0 +1,4 @@
+{
+  "1.0": "Initial version.",
+  "1.0.1": "Added experimental YouTube streaming. Small enhancements. Updated config template with new 'live_stream' section. Add new psutil pip3 dependency. Updated README."
+}

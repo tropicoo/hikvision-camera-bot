@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler, Updater
 
 from camerabot.camerabot import CameraBot
 from camerabot.directorywatcher import DirectoryWatcher, DirectoryWatcherError
-from camerabot.errors import ConfigError
+from camerabot.exceptions import ConfigError
 from camerabot.homecam import HomeCam
 from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR, COMMANDS
 
@@ -142,6 +142,11 @@ class CameraBotLauncher:
                                               CameraBot.cmd_alert_on))
         dispatcher.add_handler(CommandHandler(cmds['alert_off'],
                                               CameraBot.cmd_alert_off))
+        dispatcher.add_handler(CommandHandler(cmds['yt_on'],
+                                              CameraBot.cmd_stream_yt_on))
+        dispatcher.add_handler(CommandHandler(cmds['yt_off'],
+                                              CameraBot.cmd_stream_yt_off))
+        dispatcher.add_handler(CommandHandler(cmds['cmds'], CameraBot.cmds))
         dispatcher.add_handler(CommandHandler('list', CameraBot.cmd_list_cams))
         dispatcher.add_handler(CommandHandler('stop', CameraBot.cmd_stop))
 

@@ -30,6 +30,17 @@
           "delay": 20,
           "fullpic": true
         }
+      },
+      "live_stream": {
+        "youtube": {
+          "enabled": false,
+          "channel": 101,
+          "restart_period": 39600,
+          "restart_pause": 10,
+          "null_audio": false,
+          "url": "rtmp://a.rtmp.youtube.com/live2",
+          "key": ""
+        }
       }
     },
     "cam_2": {
@@ -52,6 +63,17 @@
           "enabled": false,
           "delay": 20,
           "fullpic": true
+        }
+      },
+      "live_stream": {
+        "youtube": {
+          "enabled": false,
+          "channel": 101,
+          "restart_period": 39600,
+          "restart_pause": 10,
+          "null_audio": false,
+          "url": "rtmp://a.rtmp.youtube.com/live2",
+          "key": ""
         }
       }
     }

@@ -1,4 +1,4 @@
-"""Bot Errors Module"""
+"""Bot Errors Module."""
 
 
 class ConfigError(Exception):
@@ -10,18 +10,6 @@ class UserAuthError(Exception):
 
 
 class HomeCamError(Exception):
-    pass
-
-
-class HomeCamResizeSnapshotError(HomeCamError):
-    pass
-
-
-class HomeCamAlertAlreadyOnError(HomeCamError):
-    pass
-
-
-class HomeCamAlertAlreadyOffError(HomeCamError):
     pass
 
 

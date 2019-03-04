@@ -1,4 +1,4 @@
-"""Camerabot Module"""
+"""Camerabot Module."""
 
 import logging
 import os
@@ -12,9 +12,8 @@ from telegram import Bot, ParseMode
 from telegram.utils.request import Request
 
 from camerabot.constants import SEND_TIMEOUT
-from camerabot.errors import (HomeCamError, UserAuthError,
-                              HomeCamAlertAlreadyOffError,
-                              HomeCamAlertAlreadyOnError)
+from camerabot.exceptions import (HomeCamError, UserAuthError)
+from camerabot.utils import make_html_bold
 
 
 def authorization_check(func):
@@ -60,24 +59,29 @@ class CameraBot(Bot):
         self._user_ids = user_ids
         self._stop_polling = stop_polling
         self._log.info('Initializing {0} bot'.format(self.first_name))
-        self._initialize_alerter()
+        self._start_enabled_services()
 
-    def _initialize_alerter(self):
+    def _start_enabled_services(self):
+        def start_thread(target_worker, args=None):
+            thread = Thread(target=target_worker, args=args)
+            thread.start()
+
         for cam_id, cam_instance in self._cam_instances.items():
             cam = cam_instance['instance']
             if cam.alert_enabled:
-                thread = Thread(target=self._alert_pusher,
-                                args=(cam_id, cam))
-                thread.start()
+                cam.alert(enable=True)
+                start_thread(self._alert_pusher, args=(cam_id, cam))
+            if cam.stream_yt_enabled:
+                cam.stream_yt_enable()
+                start_thread(self._yt_streamer, args=(cam_id, cam))
 
     def send_startup_message(self):
         """Send welcome message after bot launch."""
         self._log.info('Sending welcome message')
 
         for user_id in self._user_ids:
-            self.send_message(user_id,
-                              '{0} bot started, see /help for available commands'.format(
-                                  self.first_name))
+            self.send_message(user_id, '{0} bot started, see /help for '
+                                       'available commands'.format(self.first_name))
 
     def reply_cam_photo(self, photo, update=None, caption=None, reply_text=None,
                         fullpic_name=None, fullpic=False, reply_html=None,
@@ -103,8 +107,14 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    def cmds(self, update, cam, cam_id):
+        """Print camera commands."""
+        self._print_helper(update, cam_id)
+
+    @authorization_check
+    @camera_selection
     def cmd_getpic(self, update, cam, cam_id):
-        """Gets and sends resized snapshot from the camera."""
+        """Get and send resized snapshot from the camera."""
         self._log.info(
             'Resized cam snapshot from {0} requested'.format(cam.description))
         self._log.debug(self._get_user_info(update))
@@ -118,13 +128,14 @@ class CameraBot(Bot):
 
         caption = 'Pic taken on {0:%a %b %-d %H:%M:%S %Y} (pic #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
-        reply_html = '<b>Sending pic from {0}</b>'.format(cam.description)
+        caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)
+
+        reply_html = 'Sending pic from {0}'.format(cam.description)
         self._log.info('Sending resized cam snapshot')
         self.reply_cam_photo(photo=photo, update=update, caption=caption,
-                             reply_html=reply_html)
+                             reply_html=make_html_bold(reply_html))
 
         self._log.info('Resized snapshot sent')
-        self._print_helper(update, cam_id)
 
     @authorization_check
     @camera_selection
@@ -144,14 +155,14 @@ class CameraBot(Bot):
             datetime.fromtimestamp(snapshot_timestamp))
         caption = 'Full pic taken on {0:%a %b %-d %H:%M:%S %Y} (pic #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
-        reply_html = '<b>Sending full pic from {0}</b>'.format(cam.description)
+        caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)
+        reply_html = 'Sending full pic from {0}'.format(cam.description)
         self._log.info('Sending full snapshot')
         self.reply_cam_photo(photo=photo, update=update, caption=caption,
-                             reply_html=reply_html,
+                             reply_html=make_html_bold(reply_html),
                              fullpic_name=fullpic_name,
                              fullpic=True)
         self._log.info('Full cam snapshot {0} sent'.format(fullpic_name))
-        self._print_helper(update, cam_id)
 
     @authorization_check
     def cmd_stop(self, update):
@@ -169,8 +180,8 @@ class CameraBot(Bot):
         self._log.info('Camera list has been requested')
 
         cam_count = len(self._cam_instances)
-        msg = ['<b>You have {0} camera{1}</b>'.format(cam_count,
-                                                '' if cam_count == 1 else 's')]
+        msg = [make_html_bold('You have {0} camera{1}'.format(
+            cam_count, '' if cam_count == 1 else 's'))]
 
         for cam_id, cam_data in self._cam_instances.items():
             msg.append(
@@ -192,8 +203,8 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             msg = cam.motion_detection_switch(enable=False)
-            msg = msg or '<b>Motion Detection successfully disabled</b>'
-            update.message.reply_html(msg)
+            msg = msg or 'Motion Detection successfully disabled'
+            update.message.reply_html(make_html_bold(msg))
             self._log.info(msg)
         except HomeCamError as err:
             update.message.reply_text(str(err))
@@ -207,11 +218,39 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             msg = cam.motion_detection_switch(enable=True)
-            msg = msg or '<b>Motion Detection successfully enabled</b>'
-            update.message.reply_html(msg)
+            msg = msg or 'Motion Detection successfully enabled'
+            update.message.reply_html(make_html_bold(msg))
             self._log.info(msg)
         except HomeCamError as err:
             update.message.reply_text(str(err))
+
+    @authorization_check
+    @camera_selection
+    def cmd_stream_yt_on(self, update, cam, cam_id):
+        """Start YouTube stream."""
+        self._log.info('Starting YouTube stream.')
+        self._log.debug(self._get_user_info(update))
+        try:
+            cam.stream_yt_enable()
+            thread = Thread(target=self._yt_streamer, args=(cam_id, cam))
+            thread.start()
+            update.message.reply_html(
+                make_html_bold('YT stream successfully enabled'))
+        except HomeCamError as err:
+            update.message.reply_html(make_html_bold(str(err)))
+
+    @authorization_check
+    @camera_selection
+    def cmd_stream_yt_off(self, update, cam, cam_id):
+        """Start YouTube stream."""
+        self._log.info('Starting YouTube stream.')
+        self._log.debug(self._get_user_info(update))
+        try:
+            cam.stream_yt_disable()
+            update.message.reply_html(
+                make_html_bold('YT stream successfully disabled'))
+        except HomeCamError as err:
+            update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
     @camera_selection
@@ -224,10 +263,10 @@ class CameraBot(Bot):
             thread = Thread(target=self._alert_pusher,
                             args=(cam_id, cam))
             thread.start()
-            update.message.reply_html('<b>Motion Detection Alert successfully '
-                                      'enabled</b>')
-        except (HomeCamAlertAlreadyOnError, HomeCamError) as err:
-            update.message.reply_html(str(err))
+            update.message.reply_html(
+                make_html_bold('Motion Detection Alert successfully enabled'))
+        except HomeCamError as err:
+            update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
     @camera_selection
@@ -236,10 +275,10 @@ class CameraBot(Bot):
         self._log.info('Disabling camera\'s alert mode requested')
         try:
             cam.alert(enable=False)
-            update.message.reply_html('<b>Motion Detection Alert successfully '
-                                      'disabled</b>')
-        except (HomeCamAlertAlreadyOffError, HomeCamError) as err:
-            update.message.reply_html(str(err))
+            update.message.reply_html(
+                make_html_bold('Motion Detection Alert successfully disabled'))
+        except HomeCamError as err:
+            update.message.reply_html(make_html_bold(str(err)))
 
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
         """Sends help message to telegram chat."""
@@ -268,9 +307,20 @@ class CameraBot(Bot):
         """Sends authorization error to telegram chat."""
         update.message.reply_text('Not authorized')
 
+    def _yt_streamer(self, cam_id, cam):
+        self._log.debug('Started YT streamer thread for '
+                        'camera: "{0}"'.format(cam.description))
+        while cam.stream_yt_on.is_set():
+            wait_before = int(time.time()) + cam.stream_yt_restart_period
+            while int(time.time()) < wait_before:
+                time.sleep(1)
+            else:
+                self._log.debug('Restarting YT stream.')
+                cam.stream_yt_enable(restart=True)
+
     def _alert_pusher(self, cam_id, cam):
         while cam.alert_on.is_set():
-            self._log.debug('Started thread for '
+            self._log.debug('Started alert pusher thread for '
                             'camera: "{0}"'.format(cam.description))
             wait_before = 0
             stream = cam.get_alert_stream()
