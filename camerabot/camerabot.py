@@ -68,12 +68,20 @@ class CameraBot(Bot):
 
         for cam_id, cam_instance in self._cam_instances.items():
             cam = cam_instance['instance']
-            if cam.alert_enabled:
+            if cam.alert_on.is_set():
                 cam.alert(enable=True)
                 start_thread(self._alert_pusher, args=(cam_id, cam))
-            if cam.stream_yt_enabled:
+            if cam.stream_yt_on.is_set():
                 cam.stream_yt_enable()
                 start_thread(self._yt_streamer, args=(cam_id, cam))
+
+    def _stop_running_services(self):
+        for cam_id, cam_instance in self._cam_instances.items():
+            cam = cam_instance['instance']
+            if cam.alert_on.is_set():
+                cam.alert(enable=False)
+            if cam.stream_yt_on.is_set():
+                cam.stream_yt_disable()
 
     def send_startup_message(self):
         """Send welcome message after bot launch."""
@@ -171,6 +179,7 @@ class CameraBot(Bot):
         self._log.info(msg)
         self._log.debug(self._get_user_info(update))
         update.message.reply_text(msg)
+        self._stop_running_services()
         thread = Thread(target=self._stop_polling)
         thread.start()
 
@@ -280,13 +289,15 @@ class CameraBot(Bot):
         except HomeCamError as err:
             update.message.reply_html(make_html_bold(str(err)))
 
+    @authorization_check
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
         """Sends help message to telegram chat."""
         if requested:
             self._log.info('Help message has been requested')
             self._log.debug(self._get_user_info(update))
             update.message.reply_text(
-                'Use /list command to list available cameras and commands')
+                'Use /list command to list available cameras and commands\n'
+                'Use /stop command to fully stop the bot')
         elif append:
             update.message.reply_html(
                 '<b>Available commands</b>\n\n{0}\n\n/list '
@@ -313,6 +324,10 @@ class CameraBot(Bot):
         while cam.stream_yt_on.is_set():
             wait_before = int(time.time()) + cam.stream_yt_restart_period
             while int(time.time()) < wait_before:
+                if not cam.stream_yt_on.is_set():
+                    self._log.info('Exiting YT stream '
+                                   'thread for {0}'.format(cam.description))
+                    break
                 time.sleep(1)
             else:
                 self._log.debug('Restarting YT stream.')
@@ -326,11 +341,12 @@ class CameraBot(Bot):
             stream = cam.get_alert_stream()
             for chunk in stream.iter_lines(chunk_size=1024):
                 if not cam.alert_on.is_set():
+                    self._log.info('Exiting alert pusher '
+                                   'thread for {0}'.format(cam.description))
                     break
 
                 if wait_before > int(time.time()):
                     continue
-
                 if chunk and chunk.startswith(b'<eventType>VMD<'):
                     photo, ts = cam.take_snapshot(resize=False if
                                                   cam.alert_fullpic else True)

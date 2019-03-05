@@ -142,10 +142,15 @@ valid parameters:
           "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
           "key": "aaaa-vvvv-bbbb-cccc-zzzz" # YouTube Live Stream key.
     ```
-    YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
-    
-    To enable stream in Telegram, simply use available commands 
+    > YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
+
+    > To enable stream in Telegram, simply use available commands 
     `/yt_stream_on_<cam_id>, /yt_stream_off_<cam_id>`
+    
+    > To kill the bot from the terminal with enabled YouTube Live Stream 
+    instead of invoking the `/stop` command from the Telegram, kill
+    it with its process group `kill -TERM -<PID>` else ffmpeg process
+    will be still alive.
 
 **Example configuration**
 ```json
@@ -223,7 +228,8 @@ nohup python3 bot.py -c config.json &>/tmp/camerabot.log &
 nohup python3 bot.py --config config.json &>- &
 ```
 
-### Misc
+Misc
+=====
 If you're on the Raspberry Pi, you can easily add bot execution to the startup.
 
 Simply edit the `/etc/rc.local` add the following line before the last one

@@ -33,18 +33,20 @@ class HomeCam:
         self.__conf = cam_data
 
         self.alert_on = Event()
-        self.alert_enabled = md_conf['alert']['enabled']
+        if md_conf['alert']['enabled']:
+            self.alert_on.set()
         self.alert_queue = Queue()
 
         self.alert_delay = md_conf['alert']['delay']
         self.alert_fullpic = md_conf['alert']['fullpic']
         self.alert_count = 0
 
-        self.stream_yt_enabled = yt_conf['enabled']
         self.stream_yt_restart_period = yt_conf['restart_period']
         self.stream_yt_restart_pause = yt_conf['restart_pause']
 
         self.stream_yt_on = Event()
+        if yt_conf['enabled']:
+            self.stream_yt_on.set()
         self._stream_yt_proc = None
 
     def __repr__(self):
