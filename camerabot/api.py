@@ -1,12 +1,13 @@
 """HikVision camera API module."""
 import logging
+import os
 import re
 
 import requests
 import xmltodict
 from requests.auth import HTTPDigestAuth
 
-from camerabot.constants import BAD_RESPONSE_CODES, CONN_TIMEOUT
+from camerabot.constants import BAD_RESPONSE_CODES, CONN_TIMEOUT, SWITCH_MAP
 from camerabot.exceptions import (APIError,
                                   APITakeSnapshotError,
                                   APIMotionDetectionSwitchError,
@@ -14,13 +15,13 @@ from camerabot.exceptions import (APIError,
 
 
 class API:
-    def __init__(self, api_conf):
+    def __init__(self, conf):
         self._log = logging.getLogger(self.__class__.__name__)
-        self._host = api_conf['host']
-        self._auth = HTTPDigestAuth(api_conf['auth']['user'],
-                                    api_conf['auth']['password'])
-        self._endpoints = api_conf['endpoints']
-        self._stream_timeout = api_conf['stream_timeout']
+        self._host = conf['host']
+        self._auth = HTTPDigestAuth(conf['auth']['user'],
+                                    conf['auth']['password'])
+        self._endpoints = conf['endpoints']
+        self._stream_timeout = conf['stream_timeout']
         self._xml_headers = {'Content-Type': 'application/xml'}
         self._sess = requests.Session()
 
@@ -45,15 +46,16 @@ class API:
             raise APIGetAlertStreamError(err_msg) from err
         return response
 
-    def motion_detection_switch(self, enable):
+    def switch(self, _type, enable):
         msg = ''
-        endpoint = self._endpoints['motion_detection']
+        endpoint = self._endpoints[_type]
+        name = SWITCH_MAP[_type]['name']
         try:
-            is_enabled, xml = self._get_motion_detection_state()
+            is_enabled, xml = self._get_switch_state(_type, name, endpoint)
             if is_enabled and enable:
-                return 'Motion Detection already enabled'
-            elif not is_enabled and not enable:
-                return 'Motion Detection already disabled'
+                return '{0} already enabled'.format(name)
+            if not is_enabled and not enable:
+                return '{0} already disabled'.format(name)
 
             string = r'<enabled>{0}</enabled>'
             regex = string.format(r'[a-z]+')
@@ -68,24 +70,23 @@ class API:
                 raise APIError(err_msg)
 
         except APIError as err:
-            err_msg = 'Failed to {0} motion detection.'.format('enable' if
-                                                         enable else 'disable')
+            err_msg = 'Failed to {0} {1}.'.format(
+                'enable' if enable else 'disable', name)
             raise APIMotionDetectionSwitchError(err_msg) from err
         except Exception as err:
-            err_msg = 'Failed to {0} motion detection.'.format('enable' if
-                                                         enable else 'disable')
+            err_msg = 'Failed to {0} {1}.'.format(
+                'enable' if enable else 'disable', name)
             self._log.exception(err_msg)
             raise APIMotionDetectionSwitchError(err_msg) from err
         return msg
 
-    def _get_motion_detection_state(self):
-        endpoint = self._endpoints['motion_detection']
+    def _get_switch_state(self, _type, name, endpoint):
         try:
             xml = self._query_api(endpoint, method='GET').text
-            state = xmltodict.parse(xml)['MotionDetection']['enabled']
+            state = xmltodict.parse(xml)[SWITCH_MAP[_type]['method']]['enabled']
             is_enabled = state == 'true'
         except APIError:
-            self._log.error('Failed to get motion detection state.')
+            self._log.error('Failed to get {0} state.'.format(name))
             raise
         except KeyError as err:
             err_msg = 'Failed to verify camera response.'
@@ -95,7 +96,7 @@ class API:
 
     def _query_api(self, endpoint, data=None, headers=None, stream=False,
                    method='GET', timeout=CONN_TIMEOUT):
-        url = '{0}{1}'.format(self._host, endpoint)
+        url = '{0}'.format(os.path.join(self._host, endpoint))
         try:
             response = self._sess.request(method, url=url, auth=self._auth,
                                           data=data,

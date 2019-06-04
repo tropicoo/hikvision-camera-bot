@@ -16,6 +16,45 @@ from camerabot.homecam import HomeCam
 from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR, COMMANDS
 
 
+class Config:
+    """Dot notation for JSON config file."""
+
+    def __init__(self, conf_data):
+        self.__conf_data = conf_data
+
+    def __iter__(self):
+        return self.__conf_data
+
+    def __repr__(self):
+        return repr(self.__conf_data)
+
+    def __getitem__(self, item):
+        return self.__conf_data[item]
+
+    def items(self):
+        return self.__conf_data.items()
+
+    @classmethod
+    def from_dict(cls, conf_data):
+        """Make dot-mapped object."""
+        conf_dict = cls._conf_raise_on_duplicates(conf_data)
+        obj = cls(conf_dict)
+        obj.__dict__.update(conf_data)
+        return obj
+
+    @classmethod
+    def _conf_raise_on_duplicates(cls, conf_data):
+        """Raise ConfigError on duplicate keys."""
+        conf_dict = {}
+        for key, value in conf_data:
+            if key in conf_dict:
+                err_msg = "Malformed configuration file, duplicate key: {0}".format(key)
+                raise ConfigError(err_msg)
+            else:
+                conf_dict[key] = value
+        return conf_dict
+
+
 class CameraBotLauncher:
     """Bot launcher which parses configuration file, creates bot and
     camera instances and finally starts bot.
@@ -24,15 +63,18 @@ class CameraBotLauncher:
     def __init__(self, conf_path=CONFIG_FILE):
         self._log = logging.getLogger(self.__class__.__name__)
 
-        conf = self._load_config(conf_path)
+        try:
+            conf = self._load_config(conf_path)
+        except ConfigError as err:
+            sys.exit(str(err))
 
-        tg_token = conf['telegram']['token']
-        tg_allowed_uids = conf['telegram']['allowed_user_ids']
-        cam_list = conf['camera_list']
-        self._wd_is_enabled = conf['watchdog']['enabled']
-        wd_directory = conf['watchdog']['directory']
+        tg_token = conf.telegram.token
+        tg_allowed_uids = conf.telegram.allowed_user_ids
+        cam_list = conf.camera_list
+        self._wd_is_enabled = conf.watchdog.enabled
+        wd_directory = conf.watchdog.directory
 
-        log_level = self._get_int_log_level(conf['log_level'])
+        log_level = self._get_int_log_level(conf.log_level)
         logging.getLogger().setLevel(log_level)
 
         cam_instances, cmds = self._create_cameras(cam_list)
@@ -74,8 +116,8 @@ class CameraBotLauncher:
         """Creates dict with camera ids, instances and commands."""
         cams = {}
         cmds = defaultdict(list)
-        for cam_id, cam_data in camera_list.items():
-            cams[cam_id] = {"instance": HomeCam(cam_data),
+        for cam_id, cam_conf in camera_list.items():
+            cams[cam_id] = {"instance": HomeCam(conf=cam_conf),
                             'commands': []}
             for key, cmd_tpl in COMMANDS.items():
                 cmd = cmd_tpl.format(cam_id)
@@ -96,33 +138,18 @@ class CameraBotLauncher:
         """
         if not os.path.isfile(path):
             err_msg = 'Can\'t find {0} configuration file'.format(path)
-            self._log.error(err_msg)
             raise ConfigError(err_msg)
 
         self._log.info('Reading config file {0}'.format(path))
         with open(path, 'r') as fd:
             config = fd.read()
         try:
-            config = json.loads(config, object_pairs_hook=self._conf_raise_on_duplicates)
+            config = json.loads(config, object_pairs_hook=Config.from_dict)
         except json.decoder.JSONDecodeError:
             err_msg = 'Malformed JSON in {0} configuration file'.format(path)
-            self._log.error(err_msg)
             raise ConfigError(err_msg)
 
         return config
-
-    def _conf_raise_on_duplicates(self, conf_data):
-        """Raise ConfigError on duplicate keys."""
-        conf_dict = {}
-        for key, value in conf_data:
-            if key in conf_dict:
-                err_msg = "Malformed configuration file, duplicate key: {0}".format(key)
-                self._log.error(err_msg)
-                raise ConfigError(err_msg)
-            else:
-                conf_dict[key] = value
-
-        return conf_dict
 
     def _setup_commands(self, cmds):
         """Setup for Dispatcher with bot commands and error handler."""
@@ -138,6 +165,10 @@ class CameraBotLauncher:
                                               CameraBot.cmd_motion_detection_on))
         dispatcher.add_handler(CommandHandler(cmds['md_off'],
                                               CameraBot.cmd_motion_detection_off))
+        dispatcher.add_handler(CommandHandler(cmds['ld_on'],
+                                              CameraBot.cmd_line_detection_on))
+        dispatcher.add_handler(CommandHandler(cmds['ld_off'],
+                                              CameraBot.cmd_line_detection_off))
         dispatcher.add_handler(CommandHandler(cmds['alert_on'],
                                               CameraBot.cmd_alert_on))
         dispatcher.add_handler(CommandHandler(cmds['alert_off'],
@@ -161,8 +192,9 @@ class CameraBotLauncher:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CameraBot')
-    parser.add_argument('-c', '--config', action='store', dest='conf_path',
+    parser = argparse.ArgumentParser(description='HikVision Telegram Camera Bot')
+    parser.add_argument('-c', '--config', action='store',
+                        dest='conf_path', default='config.json',
                         help='path to configuration json file')
     args = parser.parse_args()
 

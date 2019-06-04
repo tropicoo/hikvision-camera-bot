@@ -24,10 +24,14 @@
         },
         "stream_timeout": 300
       },
-      "motion_detection": {
-        "alert": {
+      "alert": {
+        "delay": 20,
+        "motion_detection": {
           "enabled": false,
-          "delay": 20,
+          "fullpic": false
+        },
+        "line_crossing_detection": {
+          "enabled": true,
           "fullpic": true
         }
       },
@@ -58,10 +62,14 @@
         },
         "stream_timeout": 300
       },
-      "motion_detection": {
-        "alert": {
+      "alert": {
+        "delay": 10,
+        "motion_detection": {
           "enabled": false,
-          "delay": 20,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": false,
           "fullpic": true
         }
       },

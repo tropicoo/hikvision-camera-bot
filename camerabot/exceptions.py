@@ -1,6 +1,10 @@
 """Bot Errors Module."""
 
 
+class CameraBotError(Exception):
+    pass
+
+
 class ConfigError(Exception):
     pass
 

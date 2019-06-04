@@ -11,8 +11,9 @@ from threading import Thread
 from telegram import Bot, ParseMode
 from telegram.utils.request import Request
 
-from camerabot.constants import SEND_TIMEOUT
-from camerabot.exceptions import (HomeCamError, UserAuthError)
+from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, MOTION_DETECTION,
+                                 LINE_DETECTION, DETECTION_REGEX)
+from camerabot.exceptions import HomeCamError, UserAuthError, CameraBotError
 from camerabot.utils import make_html_bold
 
 
@@ -62,34 +63,41 @@ class CameraBot(Bot):
         self._start_enabled_services()
 
     def _start_enabled_services(self):
-        def start_thread(target_worker, args=None):
-            thread = Thread(target=target_worker, args=args)
-            thread.start()
+        """Start services enabled in conf."""
 
+        # TODO: implement some better approach with starting/stopping services
         for cam_id, cam_instance in self._cam_instances.items():
             cam = cam_instance['instance']
-            if cam.alert_on.is_set():
-                cam.alert(enable=True)
-                start_thread(self._alert_pusher, args=(cam_id, cam))
-            if cam.stream_yt_on.is_set():
-                cam.stream_yt_enable()
-                start_thread(self._yt_streamer, args=(cam_id, cam))
+            if cam.alarm.is_enabled():
+                Thread(target=self._alert_pusher, args=(cam_id, cam)).start()
+            if cam.stream_yt.is_enabled():
+                cam.stream_yt.start()
+                Thread(target=self._yt_streamer, args=(cam_id, cam)).start()
 
     def _stop_running_services(self):
+        """Stop any running services."""
         for cam_id, cam_instance in self._cam_instances.items():
             cam = cam_instance['instance']
-            if cam.alert_on.is_set():
-                cam.alert(enable=False)
-            if cam.stream_yt_on.is_set():
-                cam.stream_yt_disable()
+            try:
+                cam.alarm.disable()
+            except HomeCamError as err:
+                self._log.warning(str(err))
+            try:
+                cam.stream_yt.stop()
+            except HomeCamError as err:
+                self._log.warning(str(err))
 
     def send_startup_message(self):
         """Send welcome message after bot launch."""
         self._log.info('Sending welcome message')
 
+        msg = '{0} bot started, see /help for ' \
+              'available commands'.format(self.first_name)
+        self._send_message_all(msg)
+
+    def _send_message_all(self, msg):
         for user_id in self._user_ids:
-            self.send_message(user_id, '{0} bot started, see /help for '
-                                       'available commands'.format(self.first_name))
+            self.send_message(user_id, msg)
 
     def reply_cam_photo(self, photo, update=None, caption=None, reply_text=None,
                         fullpic_name=None, fullpic=False, reply_html=None,
@@ -205,29 +213,38 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_motion_detection_off(self, update, cam, cam_id):
+    def cmd_motion_detection_off(self, *args):
         """Disable camera's Motion Detection."""
-        self._log.info('Disabling camera\'s Motion Detection has been '
-                       'requested')
-        self._log.debug(self._get_user_info(update))
-        try:
-            msg = cam.motion_detection_switch(enable=False)
-            msg = msg or 'Motion Detection successfully disabled'
-            update.message.reply_html(make_html_bold(msg))
-            self._log.info(msg)
-        except HomeCamError as err:
-            update.message.reply_text(str(err))
+        self._trigger_switch(enable=False, _type=MOTION_DETECTION, args=args)
 
     @authorization_check
     @camera_selection
-    def cmd_motion_detection_on(self, update, cam, cam_id):
+    def cmd_motion_detection_on(self, *args):
         """Enable camera's Motion Detection."""
-        self._log.info('Enabling camera\'s Motion Detection has been '
-                       'requested')
+        self._trigger_switch(enable=True, _type=MOTION_DETECTION, args=args)
+        
+    @authorization_check
+    @camera_selection
+    def cmd_line_detection_off(self, *args):
+        """Disable camera's Line Crossing Detection."""
+        self._trigger_switch(enable=False, _type=LINE_DETECTION, args=args)
+
+    @authorization_check
+    @camera_selection
+    def cmd_line_detection_on(self, *args):
+        """Enable camera's Line Crossing Detection."""
+        self._trigger_switch(enable=True, _type=LINE_DETECTION, args=args)
+
+    def _trigger_switch(self, enable, _type, args):
+        name = SWITCH_MAP[_type]['name']
+        update, cam, cam_id = args
+        self._log.info('Enabling camera\'s {0} has been requested'.format(
+            name))
         self._log.debug(self._get_user_info(update))
         try:
-            msg = cam.motion_detection_switch(enable=True)
-            msg = msg or 'Motion Detection successfully enabled'
+            msg = cam.trigger_switch(enable=enable, _type=_type)
+            msg = msg or '{0} successfully {1}'.format(
+                name, 'enabled' if enable else 'disabled')
             update.message.reply_html(make_html_bold(msg))
             self._log.info(msg)
         except HomeCamError as err:
@@ -240,11 +257,11 @@ class CameraBot(Bot):
         self._log.info('Starting YouTube stream.')
         self._log.debug(self._get_user_info(update))
         try:
-            cam.stream_yt_enable()
+            cam.stream_yt.start()
             thread = Thread(target=self._yt_streamer, args=(cam_id, cam))
             thread.start()
             update.message.reply_html(
-                make_html_bold('YT stream successfully enabled'))
+                make_html_bold('YouTube stream successfully enabled'))
         except HomeCamError as err:
             update.message.reply_html(make_html_bold(str(err)))
 
@@ -255,9 +272,9 @@ class CameraBot(Bot):
         self._log.info('Starting YouTube stream.')
         self._log.debug(self._get_user_info(update))
         try:
-            cam.stream_yt_disable()
+            cam.stream_yt.stop()
             update.message.reply_html(
-                make_html_bold('YT stream successfully disabled'))
+                make_html_bold('YouTube stream successfully disabled'))
         except HomeCamError as err:
             update.message.reply_html(make_html_bold(str(err)))
 
@@ -268,7 +285,7 @@ class CameraBot(Bot):
         self._log.info('Enabling camera\'s alert mode requested')
         self._log.debug(self._get_user_info(update))
         try:
-            cam.alert(enable=True)
+            cam.alarm.enable()
             thread = Thread(target=self._alert_pusher,
                             args=(cam_id, cam))
             thread.start()
@@ -283,7 +300,7 @@ class CameraBot(Bot):
         """Disable camera's Alert Mode."""
         self._log.info('Disabling camera\'s alert mode requested')
         try:
-            cam.alert(enable=False)
+            cam.alarm.disable()
             update.message.reply_html(
                 make_html_bold('Motion Detection Alert successfully disabled'))
         except HomeCamError as err:
@@ -319,52 +336,70 @@ class CameraBot(Bot):
         update.message.reply_text('Not authorized')
 
     def _yt_streamer(self, cam_id, cam):
-        self._log.debug('Started YT streamer thread for '
+        self._log.debug('Started YouTube streamer thread for '
                         'camera: "{0}"'.format(cam.description))
-        while cam.stream_yt_on.is_set():
-            wait_before = int(time.time()) + cam.stream_yt_restart_period
-            while int(time.time()) < wait_before:
-                if not cam.stream_yt_on.is_set():
-                    self._log.info('Exiting YT stream '
+        while cam.stream_yt.is_enabled():
+            while not cam.stream_yt.need_restart():
+                if not cam.stream_yt.is_started():
+                    self._log.info('Exiting YouTube stream '
                                    'thread for {0}'.format(cam.description))
                     break
                 time.sleep(1)
             else:
-                self._log.debug('Restarting YT stream.')
-                cam.stream_yt_enable(restart=True)
+                self._log.debug('Restarting YouTube stream')
+                cam.stream_yt.restart()
 
     def _alert_pusher(self, cam_id, cam):
-        while cam.alert_on.is_set():
+        while cam.alarm.is_enabled():
             self._log.debug('Started alert pusher thread for '
                             'camera: "{0}"'.format(cam.description))
             wait_before = 0
             stream = cam.get_alert_stream()
             for chunk in stream.iter_lines(chunk_size=1024):
-                if not cam.alert_on.is_set():
+                if not cam.alarm.is_enabled():
                     self._log.info('Exiting alert pusher '
                                    'thread for {0}'.format(cam.description))
                     break
 
                 if wait_before > int(time.time()):
                     continue
-                if chunk and chunk.startswith(b'<eventType>VMD<'):
-                    photo, ts = cam.take_snapshot(resize=False if
-                                                  cam.alert_fullpic else True)
-                    cam.alert_count += 1
-                    wait_before = int(time.time()) + cam.alert_delay
-                    self._send_alert(cam, photo, ts)
+                if chunk:
+                    try:
+                        detection_key = self.chunk_belongs_to_detection(chunk)
+                    except CameraBotError as err:
+                        self._send_message_all(str(err))
+                        continue
+                    if detection_key:
+                        photo, ts = cam.take_snapshot(resize=False if
+                            cam.conf.alert[detection_key].fullpic else True)
+                        cam.alarm.alert_count += 1
+                        wait_before = int(time.time()) + cam.alarm.alert_delay
+                        self._send_alert(cam, photo, ts, detection_key)
 
-    def _send_alert(self, cam, photo, ts):
+    def chunk_belongs_to_detection(self, chunk):
+        match = re.match(DETECTION_REGEX, chunk.decode())
+        if match:
+            event_name = match.group(2)
+            for key, inner_map in SWITCH_MAP.items():
+                if inner_map['event_name'] == event_name:
+                    return key
+            else:
+                raise CameraBotError('Detected event {0} but don\'t know what '
+                                     'to do'.format(event_name))
+        return None
+
+    def _send_alert(self, cam, photo, ts, detection_key):
         caption = 'Alert Pic taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
                   '#{1})\n/list cameras'.format(datetime.fromtimestamp(ts),
-                                                cam.alert_count)
-        reply_html = '<b>Motion Detection Alert</b>\nSending pic ' \
-                     'from {0}'.format(cam.description)
+                                                cam.alarm.alert_count)
+        reply_html = '<b>{0} Alert</b>\nSending pic ' \
+                     'from {1}'.format(cam.description,
+                                       SWITCH_MAP[detection_key]['name'])
 
         for uid in self._user_ids:
             self.send_message(chat_id=uid, text=reply_html,
                               parse_mode=ParseMode.HTML)
-            if cam.alert_fullpic:
+            if cam.conf.alert[detection_key].fullpic:
                 name = 'Full_alert_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
                     datetime.fromtimestamp(ts))
                 self.send_document(chat_id=uid, document=photo,

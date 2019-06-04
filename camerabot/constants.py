@@ -14,6 +14,8 @@ COMMANDS = {'cmds': 'cmds_{0}',
             'getfullpic': 'getfullpic_{0}',
             'md_on': 'mdetection_on_{0}',
             'md_off': 'mdetection_off_{0}',
+            'ld_on': 'lndetection_on_{0}',
+            'ld_off': 'lndetection_off_{0}',
             'alert_on': 'alert_on_{0}',
             'alert_off': 'alert_off_{0}',
             'yt_on': 'yt_stream_on_{0}',
@@ -31,3 +33,15 @@ FFMPEG_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                                'channel_layout=mono:sample_rate=8000',
                      'map': '-map 0:a -map 1:v',
                      'bitrate': '-b:a 5k'}
+
+MOTION_DETECTION = 'motion_detection'
+LINE_DETECTION = 'line_crossing_detection'
+DETECTION_REGEX = r'(<\/?eventType>(VMD|linedetection)?){2}'
+
+SWITCH_MAP = {MOTION_DETECTION: {'method': 'MotionDetection',
+                                 'name': 'Motion Detection',
+                                 'event_name': 'VMD'},
+              LINE_DETECTION: {
+                  'method': 'LineDetection',
+                  'name': 'Line Crossing Detection',
+                  'event_name': 'linedetection'}}

@@ -54,10 +54,14 @@ to `config.json` and edit, which comes with default template:
         },
         "stream_timeout": 300
       },
-      "motion_detection": {
-        "alert": {
+      "alert": {
+        "delay": 10,
+        "motion_detection": {
           "enabled": false,
-          "delay": 20,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": false,
           "fullpic": true
         }
       },
@@ -88,10 +92,14 @@ to `config.json` and edit, which comes with default template:
         },
         "stream_timeout": 300
       },
-      "motion_detection": {
-        "alert": {
+      "alert": {
+        "delay": 10,
+        "motion_detection": {
           "enabled": false,
-          "delay": 20,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": false,
           "fullpic": true
         }
       },
@@ -128,7 +136,8 @@ comes with two cameras. Preferable names of cameras are `cam_1`,
 5. Write authentication credentials in appropriate keys: `user` and `password`
 for every camera you want to use.
 6. Same for `host`, which should include protocol e.g. `http://192.168.10.10`
-7. In `motion_detection` section you can enable sending picture on alert.
+7. In `alert` section you can enable sending picture on alert (Motion Detection 
+and/or Line Crossing Detection).
 Configure `delay` setting in seconds between pushing alert pictures.
 To send resized picture change `fullpic` to `false`.
 8. To enable YouTube Live Stream (experimental), fill the `youtube` section with
@@ -178,15 +187,20 @@ valid parameters:
         },
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "/MotionDetection/1/",
+          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
+          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
           "alert_stream": "/ISAPI/Event/notification/alertStream"
         },
         "stream_timeout": 300
       },
-      "motion_detection": {
-        "alert": {
+      "alert": {
+        "delay": 10,
+        "motion_detection": {
           "enabled": false,
-          "delay": 20,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": false,
           "fullpic": true
         }
       },

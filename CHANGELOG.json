@@ -1,4 +1,5 @@
 {
   "1.0": "Initial version.",
-  "1.0.1": "Added experimental YouTube streaming. Small enhancements. Updated config template with new 'live_stream' section. Add new psutil pip3 dependency. Updated README."
+  "1.0.1": "Added experimental YouTube streaming. Small enhancements. Updated config template with new 'live_stream' section. Add new psutil pip3 dependency. Updated README.",
+  "1.0.2": "Added Line Crossing Detection Alert. Bug fixes. Updated config template with new 'line_crossing_detection' config option. Changed 'endpoints -> motion_detection' config option value."
 }
