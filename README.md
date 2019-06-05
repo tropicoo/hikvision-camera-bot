@@ -50,6 +50,7 @@ to `config.json` and edit, which comes with default template:
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
           "motion_detection": "/MotionDetection/1/",
+          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
           "alert_stream": "/ISAPI/Event/notification/alertStream"
         },
         "stream_timeout": 300
@@ -88,6 +89,7 @@ to `config.json` and edit, which comes with default template:
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
           "motion_detection": "/MotionDetection/1/",
+          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
           "alert_stream": "/ISAPI/Event/notification/alertStream"
         },
         "stream_timeout": 300
