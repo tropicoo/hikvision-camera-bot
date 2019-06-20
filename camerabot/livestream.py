@@ -38,7 +38,9 @@ class YouTubeStream(LiveStream):
     def stop(self, disable=True):
         """Stop the stream."""
         if not self.is_started():
-            raise HomeCamError('YouTube stream already stopped')
+            msg = 'YouTube stream already stopped'
+            self._log.info(msg)
+            raise HomeCamError(msg)
         try:
             kill_proc_tree(self._proc.pid)
             self._started.clear()
@@ -52,7 +54,9 @@ class YouTubeStream(LiveStream):
     def start(self):
         """Start the stream."""
         if self.is_started():
-            raise HomeCamError('YouTube stream already started')
+            msg = 'YouTube stream already started'
+            self._log.info(msg)
+            raise HomeCamError(msg)
 
         try:
             self._enabled.set()

@@ -258,7 +258,7 @@ class CameraBot(Bot):
     @authorization_check
     @camera_selection
     def cmd_stream_yt_off(self, update, cam, cam_id):
-        """Start YouTube stream."""
+        """Stop YouTube stream."""
         self._log.info('Stopping YouTube stream')
         self._log.debug(self._get_user_info(update))
         try:

@@ -42,7 +42,7 @@ to `config.json` and edit, which comes with default template:
     "cam_1": {
       "description": "Kitchen Camera",
       "api": {
-        "host": "",
+        "host": "http://192.168.0.1",
         "auth": {
           "user": "",
           "password": ""
@@ -81,7 +81,7 @@ to `config.json` and edit, which comes with default template:
     "cam_2": {
       "description": "Basement Camera",
       "api": {
-        "host": "",
+        "host": "http://192.168.0.2",
         "auth": {
           "user": "",
           "password": ""
