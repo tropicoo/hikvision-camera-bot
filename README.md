@@ -49,7 +49,7 @@ to `config.json` and edit, which comes with default template:
         },
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "/MotionDetection/1/",
+          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
           "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
           "alert_stream": "/ISAPI/Event/notification/alertStream"
         },
@@ -88,7 +88,7 @@ to `config.json` and edit, which comes with default template:
         },
         "endpoints": {
           "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "/MotionDetection/1/",
+          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
           "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
           "alert_stream": "/ISAPI/Event/notification/alertStream"
         },

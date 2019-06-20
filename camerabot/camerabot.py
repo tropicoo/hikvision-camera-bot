@@ -19,7 +19,7 @@ from camerabot.utils import make_html_bold
 
 def authorization_check(func):
 
-    """Decorator which check that user is authorized to interact with bot."""
+    """Decorator which checks that user is authorized to interact with bot."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -38,7 +38,7 @@ def authorization_check(func):
 
 def camera_selection(func):
 
-    """Decorator which check which camera instance to use."""
+    """Decorator which checks which camera instance to use."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -244,7 +244,7 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_stream_yt_on(self, update, cam, cam_id):
         """Start YouTube stream."""
-        self._log.info('Starting YouTube stream.')
+        self._log.info('Starting YouTube stream')
         self._log.debug(self._get_user_info(update))
         try:
             cam.stream_yt.start()
@@ -259,7 +259,7 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_stream_yt_off(self, update, cam, cam_id):
         """Start YouTube stream."""
-        self._log.info('Starting YouTube stream.')
+        self._log.info('Stopping YouTube stream')
         self._log.debug(self._get_user_info(update))
         try:
             cam.stream_yt.stop()
