@@ -12,7 +12,6 @@ from camerabot.utils import kill_proc_tree
 
 
 class LiveStream:
-
     """Live stream base class."""
 
     def __init__(self):
@@ -20,7 +19,6 @@ class LiveStream:
 
 
 class YouTubeStream(LiveStream):
-
     """YouTube Live stream class."""
 
     def __init__(self, conf, api_conf):

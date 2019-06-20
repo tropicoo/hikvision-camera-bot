@@ -7,7 +7,6 @@ from camerabot.exceptions import HomeCamError
 
 
 class Alarm:
-
     """Alarm class."""
 
     def __init__(self, conf):

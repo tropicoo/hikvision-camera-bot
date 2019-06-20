@@ -18,9 +18,7 @@ from camerabot.utils import make_html_bold
 
 
 def authorization_check(func):
-
     """Decorator which checks that user is authorized to interact with bot."""
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         bot, update = args
@@ -32,14 +30,11 @@ def authorization_check(func):
             bot._log.error('User authorization error')
             bot._log.error(bot._get_user_info(update))
             bot._print_access_error(update)
-
     return wrapper
 
 
 def camera_selection(func):
-
     """Decorator which checks which camera instance to use."""
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         cambot, update = args
@@ -47,12 +42,10 @@ def camera_selection(func):
         cam = cambot._cam_instances[cam_id]['instance']
         args = args + (cam, cam_id)
         return func(*args, **kwargs)
-
     return wrapper
 
 
 class CameraBot(Bot):
-
     """CameraBot class where main bot things are done."""
 
     def __init__(self, token, user_ids, cam_instances, stop_polling):

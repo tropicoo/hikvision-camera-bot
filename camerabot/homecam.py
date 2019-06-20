@@ -14,7 +14,6 @@ from camerabot.livestream import YouTubeStream
 
 
 class HomeCam:
-
     """Camera class."""
 
     def __init__(self, conf):

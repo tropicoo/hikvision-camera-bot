@@ -15,8 +15,15 @@ from camerabot.exceptions import (APIError,
                                   APIBadResponseCodeError)
 
 
-class APIMethods:
+class HeaderParsingErrorFilter:
+    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
 
+    def filter(self, record):
+        """Filter out Header Parsing Errors."""
+        return 'Failed to parse headers' not in record.getMessage()
+
+
+class APIMethods:
     """RESTful API Methods."""
 
     GET = 'GET'
@@ -27,10 +34,11 @@ class APIMethods:
 
 
 class API:
-
     """HikVision API class."""
 
     def __init__(self, conf):
+        logging.getLogger('urllib3.connectionpool').addFilter(
+            HeaderParsingErrorFilter())
         self._log = logging.getLogger(self.__class__.__name__)
         self._host = conf['host']
         self._auth = HTTPDigestAuth(conf['auth']['user'],
