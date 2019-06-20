@@ -1,8 +1,8 @@
 """HikVision camera API module."""
 
 import logging
-import os
 import re
+import urllib.parse
 
 import requests
 import xmltodict
@@ -102,7 +102,7 @@ class API:
 
     def _get(self, endpoint, data=None, headers=None, stream=False,
              method=APIMethods.GET, timeout=CONN_TIMEOUT):
-        url = os.path.join(self._host, endpoint)
+        url = urllib.parse.urljoin(self._host, endpoint)
         self._log.debug('{0} {1}'.format(method, url))
         try:
             response = self._sess.request(method, url=url, auth=self._auth,
