@@ -1,4 +1,5 @@
 """Alarm module."""
+
 from queue import Queue
 from threading import Event
 
@@ -6,6 +7,7 @@ from camerabot.exceptions import HomeCamError
 
 
 class Alarm:
+
     """Alarm class."""
 
     def __init__(self, conf):

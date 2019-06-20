@@ -1,4 +1,5 @@
 """Live stream module."""
+
 import logging
 import subprocess
 import time
@@ -11,6 +12,7 @@ from camerabot.utils import kill_proc_tree
 
 
 class LiveStream:
+
     """Live stream base class."""
 
     def __init__(self):
@@ -18,15 +20,13 @@ class LiveStream:
 
 
 class YouTubeStream(LiveStream):
+
     """YouTube Live stream class."""
 
     def __init__(self, conf, api_conf):
         super().__init__()
         self._conf = conf
         self._api_conf = api_conf
-
-        self._restart_period = self._conf.restart_period
-        self._restart_pause = self._conf.restart_pause
 
         self._proc = None
         self._start_ts = None
@@ -44,10 +44,10 @@ class YouTubeStream(LiveStream):
             self._started.clear()
             if disable:
                 self._enabled.clear()
-        except Exception as err:
-            err_msg = 'Failed to kill/disable YouTube stream.'
+        except Exception:
+            err_msg = 'Failed to kill/disable YouTube stream'
             self._log.exception(err_msg)
-            raise HomeCamError(err_msg) from err
+            raise HomeCamError(err_msg)
 
     def start(self):
         """Start the stream."""
@@ -73,19 +73,19 @@ class YouTubeStream(LiveStream):
                                           stderr=subprocess.STDOUT)
             self._start_ts = int(time.time())
             self._started.set()
-        except Exception as err:
+        except Exception:
             err_msg = 'YouTube stream failed to start'
             self._log.exception(err_msg)
-            raise HomeCamError(err_msg) from err
+            raise HomeCamError(err_msg)
 
     def need_restart(self):
         """Check if the stream needs to be restarted."""
-        return int(time.time()) > self._start_ts + self._restart_period
+        return int(time.time()) > self._start_ts + self._conf.restart_period
 
     def restart(self):
         """Restart the stream."""
         self.stop(disable=False)
-        time.sleep(self._restart_pause)
+        time.sleep(self._conf.restart_pause)
         self.start()
 
     def is_enabled(self):
@@ -95,6 +95,3 @@ class YouTubeStream(LiveStream):
     def is_started(self):
         """Check if stream is started."""
         return self._started.is_set()
-
-
-

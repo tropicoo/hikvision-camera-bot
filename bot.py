@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Bot Launcher Module."""
 
 import argparse
 import json
@@ -17,6 +18,7 @@ from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR, COMMANDS
 
 
 class Config:
+
     """Dot notation for JSON config file."""
 
     def __init__(self, conf_data):
@@ -56,6 +58,7 @@ class Config:
 
 
 class CameraBotLauncher:
+
     """Bot launcher which parses configuration file, creates bot and
     camera instances and finally starts bot.
     """

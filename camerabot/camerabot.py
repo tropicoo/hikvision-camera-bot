@@ -1,4 +1,4 @@
-"""Camerabot Module."""
+"""Camera Bot Module."""
 
 import logging
 import os
@@ -18,7 +18,8 @@ from camerabot.utils import make_html_bold
 
 
 def authorization_check(func):
-    """Decorator which checks that user is authorized to interact with bot."""
+
+    """Decorator which check that user is authorized to interact with bot."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -36,7 +37,8 @@ def authorization_check(func):
 
 
 def camera_selection(func):
-    """Decorator which checks which camera instance to use."""
+
+    """Decorator which check which camera instance to use."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -50,6 +52,7 @@ def camera_selection(func):
 
 
 class CameraBot(Bot):
+
     """CameraBot class where main bot things are done."""
 
     def __init__(self, token, user_ids, cam_instances, stop_polling):
@@ -131,22 +134,23 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_getpic(self, update, cam, cam_id):
         """Get and send resized snapshot from the camera."""
-        self._log.info(
-            'Resized cam snapshot from {0} requested'.format(cam.description))
+        self._log.info('Resized cam snapshot from {0} requested'.format(
+            cam.description))
         self._log.debug(self._get_user_info(update))
 
         try:
             photo, snapshot_timestamp = cam.take_snapshot(resize=True)
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_text(
                 '{0}\nTry later or /list other cameras'.format(str(err)))
             return
 
-        caption = 'Pic taken on {0:%a %b %-d %H:%M:%S %Y} (pic #{1})'.format(
+        caption = 'Snapshot taken on {0:%a %b %-d %H:%M:%S %Y} ' \
+                  '(snapshot #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)
 
-        reply_html = 'Sending pic from {0}'.format(cam.description)
+        reply_html = 'Sending snapshot from {0}'.format(cam.description)
         self._log.info('Sending resized cam snapshot')
         self.reply_cam_photo(photo=photo, update=update, caption=caption,
                              reply_html=make_html_bold(reply_html))
@@ -156,23 +160,24 @@ class CameraBot(Bot):
     @authorization_check
     @camera_selection
     def cmd_getfullpic(self, update, cam, cam_id):
-        """Gets and sends full snapshot from the camera."""
+        """Get and send full snapshot from the camera."""
         self._log.info('Full cam snapshot requested')
         self._log.debug(self._get_user_info(update))
 
         try:
             photo, snapshot_timestamp = cam.take_snapshot(resize=False)
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_text(
                 '{0}\nTry later or /list other cameras'.format(str(err)))
             return
 
         fullpic_name = 'Full_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
             datetime.fromtimestamp(snapshot_timestamp))
-        caption = 'Full pic taken on {0:%a %b %-d %H:%M:%S %Y} (pic #{1})'.format(
+        caption = 'Full snapshot taken on {0:%a %b %-d %H:%M:%S %Y} ' \
+                  '(snapshot #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)
-        reply_html = 'Sending full pic from {0}'.format(cam.description)
+        reply_html = 'Sending full snapshot from {0}'.format(cam.description)
         self._log.info('Sending full snapshot')
         self.reply_cam_photo(photo=photo, update=update, caption=caption,
                              reply_html=make_html_bold(reply_html),
@@ -182,7 +187,7 @@ class CameraBot(Bot):
 
     @authorization_check
     def cmd_stop(self, update):
-        """Terminates bot."""
+        """Terminate bot."""
         msg = 'Stopping {0} bot'.format(self.first_name)
         self._log.info(msg)
         self._log.debug(self._get_user_info(update))
@@ -193,7 +198,7 @@ class CameraBot(Bot):
 
     @authorization_check
     def cmd_list_cams(self, update):
-        """Lists user's cameras."""
+        """List user's cameras."""
         self._log.info('Camera list has been requested')
 
         cam_count = len(self._cam_instances)
@@ -235,21 +240,6 @@ class CameraBot(Bot):
         """Enable camera's Line Crossing Detection."""
         self._trigger_switch(enable=True, _type=LINE_DETECTION, args=args)
 
-    def _trigger_switch(self, enable, _type, args):
-        name = SWITCH_MAP[_type]['name']
-        update, cam, cam_id = args
-        self._log.info('Enabling camera\'s {0} has been requested'.format(
-            name))
-        self._log.debug(self._get_user_info(update))
-        try:
-            msg = cam.trigger_switch(enable=enable, _type=_type)
-            msg = msg or '{0} successfully {1}'.format(
-                name, 'enabled' if enable else 'disabled')
-            update.message.reply_html(make_html_bold(msg))
-            self._log.info(msg)
-        except HomeCamError as err:
-            update.message.reply_text(str(err))
-
     @authorization_check
     @camera_selection
     def cmd_stream_yt_on(self, update, cam, cam_id):
@@ -262,7 +252,7 @@ class CameraBot(Bot):
             thread.start()
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully enabled'))
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
@@ -275,7 +265,7 @@ class CameraBot(Bot):
             cam.stream_yt.stop()
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully disabled'))
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
@@ -291,7 +281,7 @@ class CameraBot(Bot):
             thread.start()
             update.message.reply_html(
                 make_html_bold('Motion Detection Alert successfully enabled'))
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
@@ -303,12 +293,12 @@ class CameraBot(Bot):
             cam.alarm.disable()
             update.message.reply_html(
                 make_html_bold('Motion Detection Alert successfully disabled'))
-        except HomeCamError as err:
+        except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
     @authorization_check
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
-        """Sends help message to telegram chat."""
+        """Send help message to telegram chat."""
         if requested:
             self._log.info('Help message has been requested')
             self._log.debug(self._get_user_info(update))
@@ -324,16 +314,33 @@ class CameraBot(Bot):
         self._log.info('Help message has been sent')
 
     def error_handler(self, update, error):
-        """Handles known telegram bot api errors."""
+        """Handle known Telegram bot api errors."""
         self._log.exception('Got error: {0}'.format(error))
 
     def _print_helper(self, update, cam_id):
-        """Sends help message to telegram chat after sending picture."""
+        """Send help message to telegram chat after sending picture."""
         self.cmd_help(update, append=True, requested=False, cam_id=cam_id)
 
     def _print_access_error(self, update):
-        """Sends authorization error to telegram chat."""
+        """Send authorization error to telegram chat."""
         update.message.reply_text('Not authorized')
+
+    def _trigger_switch(self, enable, _type, args):
+        name = SWITCH_MAP[_type]['name']
+        update, cam, cam_id = args
+        self._log.info('{0} camera\'s {1} has been requested'.format(
+            'Enabling' if enable else 'Disabling', name))
+        self._log.debug(self._get_user_info(update))
+        try:
+            msg = cam.trigger_switch(enable=enable, _type=_type)
+            msg = msg or '{0} successfully {1}'.format(
+                name, 'enabled' if enable else 'disabled')
+            update.message.reply_html(make_html_bold(msg))
+            self._log.info(msg)
+        except Exception as err:
+            err_msg = 'Failed to {0} {1}: {2}'.format(
+                'enable' if enable else 'disable', name, str(err))
+            update.message.reply_text(err_msg)
 
     def _yt_streamer(self, cam_id, cam):
         self._log.debug('Started YouTube streamer thread for '
@@ -389,10 +396,10 @@ class CameraBot(Bot):
         return None
 
     def _send_alert(self, cam, photo, ts, detection_key):
-        caption = 'Alert Pic taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
+        caption = 'Alert snapshot taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
                   '#{1})\n/list cameras'.format(datetime.fromtimestamp(ts),
                                                 cam.alarm.alert_count)
-        reply_html = '<b>{0} Alert</b>\nSending pic ' \
+        reply_html = '<b>{0} Alert</b>\nSending snapshot ' \
                      'from {1}'.format(cam.description,
                                        SWITCH_MAP[detection_key]['name'])
 
@@ -412,7 +419,7 @@ class CameraBot(Bot):
                                 timeout=SEND_TIMEOUT)
 
     def _get_user_info(self, update):
-        """Returns user information who interacts with bot."""
+        """Return user information who interacts with bot."""
         return 'Request from user_id: {0}, username: {1},' \
                'first_name: {2}, last_name: {3}'.format(
                                                 update.message.chat.id,

@@ -1,4 +1,5 @@
 """Utils module."""
+
 import psutil
 
 
@@ -17,4 +18,5 @@ def kill_proc_tree(pid, including_parent=True):
 
 
 def make_html_bold(text):
+    """Wrap input string in HTML bold tag."""
     return '<b>{0}</b>'.format(text)

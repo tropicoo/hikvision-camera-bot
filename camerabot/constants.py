@@ -1,4 +1,4 @@
-"""Bot constants."""
+"""Constants module."""
 
 CONFIG_FILE = 'config.json'
 IMG_SIZE = (1280, 724)
@@ -25,9 +25,8 @@ CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
 CMD_YT_FFMPEG = 'ffmpeg -loglevel error {filter} -rtsp_transport tcp -i ' \
-                'rtsp://{user}:{pw}@{host}/Streaming/Channels' \
-                '/{channel}/ {map} -c:v copy -c:a aac {bitrate} -f flv {' \
-                'url}/{key}'
+                'rtsp://{user}:{pw}@{host}/Streaming/Channels /{channel}/ ' \
+                '{map} -c:v copy -c:a aac {bitrate} -f flv {url}/{key}'
 
 FFMPEG_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                                'channel_layout=mono:sample_rate=8000',
@@ -45,3 +44,6 @@ SWITCH_MAP = {MOTION_DETECTION: {'method': 'MotionDetection',
                   'method': 'LineDetection',
                   'name': 'Line Crossing Detection',
                   'event_name': 'linedetection'}}
+
+SWITCH_ENABLED_XML = r'<enabled>{0}</enabled>'
+XML_HEADERS = {'Content-Type': 'application/xml'}

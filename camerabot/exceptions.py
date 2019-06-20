@@ -21,17 +21,14 @@ class DirectoryWatcherError(Exception):
     pass
 
 
+# API Exceptions
 class APIError(Exception):
     pass
 
 
-class APIMotionDetectionSwitchError(APIError):
+class APIRequestError(APIError):
     pass
 
 
-class APITakeSnapshotError(APIError):
-    pass
-
-
-class APIGetAlertStreamError(APIError):
+class APIBadResponseCodeError(APIRequestError):
     pass

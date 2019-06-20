@@ -14,6 +14,7 @@ from camerabot.exceptions import DirectoryWatcherError
 
 
 class DirectoryWatcher:
+
     """Watchdog class."""
 
     def __init__(self, bot, directory):
@@ -46,6 +47,7 @@ class DirectoryWatcher:
 
 
 class DirectoryWatcherEventHandler(FileSystemEventHandler):
+
     """EventHandler class."""
 
     def __init__(self, bot):
