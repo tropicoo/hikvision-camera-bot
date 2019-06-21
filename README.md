@@ -27,99 +27,103 @@ format.
 
 Copy default configuration file `config-template.json` with name you like e.g.
 to `config.json` and edit, which comes with default template:
-```json
-{
-  "telegram": {
-    "token": "",
-    "allowed_user_ids": []
-  },
-  "watchdog": {
-    "enabled": false,
-    "directory": ""
-  },
-  "log_level": "INFO",
-  "camera_list": {
-    "cam_1": {
-      "description": "Kitchen Camera",
-      "api": {
-        "host": "http://192.168.0.1",
-        "auth": {
-          "user": "",
-          "password": ""
-        },
-        "endpoints": {
-          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-          "alert_stream": "/ISAPI/Event/notification/alertStream"
-        },
-        "stream_timeout": 300
-      },
-      "alert": {
-        "delay": 10,
-        "motion_detection": {
-          "enabled": false,
-          "fullpic": true
-        },
-        "line_crossing_detection": {
-          "enabled": false,
-          "fullpic": true
-        }
-      },
-      "live_stream": {
-        "youtube": {
-          "enabled": false,
-          "channel": 101,
-          "restart_period": 39600,
-          "restart_pause": 10,
-          "null_audio": false,
-          "url": "rtmp://a.rtmp.youtube.com/live2",
-          "key": ""
-        }
-      }
+<details>
+  <summary>config-template.json</summary>
+  
+  ```json
+  {
+    "telegram": {
+      "token": "",
+      "allowed_user_ids": []
     },
-    "cam_2": {
-      "description": "Basement Camera",
-      "api": {
-        "host": "http://192.168.0.2",
-        "auth": {
-          "user": "",
-          "password": ""
+    "watchdog": {
+      "enabled": false,
+      "directory": ""
+    },
+    "log_level": "INFO",
+    "camera_list": {
+      "cam_1": {
+        "description": "Kitchen Camera",
+        "api": {
+          "host": "http://192.168.0.1",
+          "auth": {
+            "user": "",
+            "password": ""
+          },
+          "endpoints": {
+            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
+            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
+            "alert_stream": "/ISAPI/Event/notification/alertStream"
+          },
+          "stream_timeout": 300
         },
-        "endpoints": {
-          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-          "alert_stream": "/ISAPI/Event/notification/alertStream"
+        "alert": {
+          "delay": 10,
+          "motion_detection": {
+            "enabled": false,
+            "fullpic": true
+          },
+          "line_crossing_detection": {
+            "enabled": false,
+            "fullpic": true
+          }
         },
-        "stream_timeout": 300
-      },
-      "alert": {
-        "delay": 10,
-        "motion_detection": {
-          "enabled": false,
-          "fullpic": true
-        },
-        "line_crossing_detection": {
-          "enabled": false,
-          "fullpic": true
+        "live_stream": {
+          "youtube": {
+            "enabled": false,
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "null_audio": false,
+            "url": "rtmp://a.rtmp.youtube.com/live2",
+            "key": ""
+          }
         }
       },
-      "live_stream": {
-        "youtube": {
-          "enabled": false,
-          "channel": 101,
-          "restart_period": 39600,
-          "restart_pause": 10,
-          "null_audio": false,
-          "url": "rtmp://a.rtmp.youtube.com/live2",
-          "key": ""
+      "cam_2": {
+        "description": "Basement Camera",
+        "api": {
+          "host": "http://192.168.0.2",
+          "auth": {
+            "user": "",
+            "password": ""
+          },
+          "endpoints": {
+            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
+            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
+            "alert_stream": "/ISAPI/Event/notification/alertStream"
+          },
+          "stream_timeout": 300
+        },
+        "alert": {
+          "delay": 10,
+          "motion_detection": {
+            "enabled": false,
+            "fullpic": true
+          },
+          "line_crossing_detection": {
+            "enabled": false,
+            "fullpic": true
+          }
+        },
+        "live_stream": {
+          "youtube": {
+            "enabled": false,
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "null_audio": false,
+            "url": "rtmp://a.rtmp.youtube.com/live2",
+            "key": ""
+          }
         }
       }
     }
   }
-}
-```
+  ```
+</details>
 
 To get things done follow the next steps:
 1. Put the obtained bot token to `token` key as string.
@@ -164,63 +168,67 @@ valid parameters:
     will be still alive.
 
 **Example configuration**
-```json
-{
-  "telegram": {
-    "token": "23546745:VjFIo2q34fjkKdasfds0kgSLnh",
-    "allowed_user_ids": [
-      1011111,
-      5462243
-    ]
-  },
-  "watchdog": {
-    "enabled": true,
-    "directory": "/tmp/watchdir"
-  },
-  "log_level": "INFO",
-  "camera_list": {
-    "cam_1": {
-      "description": "Kitchen Camera",
-      "api": {
-        "host": "http://192.168.10.10",
-        "auth": {
-          "user": "admin",
-          "password": "kjjhthOogv"
+<details>
+  <summary>Expand</summary>
+  
+  ```json
+  {
+    "telegram": {
+      "token": "23546745:VjFIo2q34fjkKdasfds0kgSLnh",
+      "allowed_user_ids": [
+        1011111,
+        5462243
+      ]
+    },
+    "watchdog": {
+      "enabled": true,
+      "directory": "/tmp/watchdir"
+    },
+    "log_level": "INFO",
+    "camera_list": {
+      "cam_1": {
+        "description": "Kitchen Camera",
+        "api": {
+          "host": "http://192.168.10.10",
+          "auth": {
+            "user": "admin",
+            "password": "kjjhthOogv"
+          },
+          "endpoints": {
+            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
+            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
+            "alert_stream": "/ISAPI/Event/notification/alertStream"
+          },
+          "stream_timeout": 300
         },
-        "endpoints": {
-          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-          "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-          "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-          "alert_stream": "/ISAPI/Event/notification/alertStream"
+        "alert": {
+          "delay": 10,
+          "motion_detection": {
+            "enabled": false,
+            "fullpic": true
+          },
+          "line_crossing_detection": {
+            "enabled": false,
+            "fullpic": true
+          }
         },
-        "stream_timeout": 300
-      },
-      "alert": {
-        "delay": 10,
-        "motion_detection": {
-          "enabled": false,
-          "fullpic": true
-        },
-        "line_crossing_detection": {
-          "enabled": false,
-          "fullpic": true
-        }
-      },
-      "live_stream": {
-        "youtube": {
-          "enabled": false,
-          "channel": 101,
-          "restart_period": 39600,
-          "restart_pause": 10,
-          "null_audio": false,
-          "url": "rtmp://a.rtmp.youtube.com/live2",
-          "key": "aaaa-vvvv-bbbb-cccc-zzzz"
+        "live_stream": {
+          "youtube": {
+            "enabled": false,
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "null_audio": false,
+            "url": "rtmp://a.rtmp.youtube.com/live2",
+            "key": "aaaa-vvvv-bbbb-cccc-zzzz"
+          }
         }
       }
     }
   }
-}
-```
+  ```
+</details>
 
 Usage
 =====

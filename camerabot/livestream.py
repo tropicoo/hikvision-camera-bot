@@ -71,6 +71,7 @@ class YouTubeStream(LiveStream):
                                        url=self._conf.url,
                                        key=self._conf.key).split()
 
+            self._log.debug('YouTube ffmpeg command: {0}'.format(' '.join(cmd)))
             self._proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT)
             self._start_ts = int(time.time())

@@ -25,7 +25,7 @@ CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
 CMD_YT_FFMPEG = 'ffmpeg -loglevel error {filter} -rtsp_transport tcp -i ' \
-                'rtsp://{user}:{pw}@{host}/Streaming/Channels /{channel}/ ' \
+                'rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/ ' \
                 '{map} -c:v copy -c:a aac {bitrate} -f flv {url}/{key}'
 
 FFMPEG_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
