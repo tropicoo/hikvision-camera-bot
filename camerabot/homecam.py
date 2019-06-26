@@ -6,11 +6,42 @@ from io import BytesIO
 
 from PIL import Image
 
-from camerabot.alarm import Alarm
-from camerabot.api import API
-from camerabot.constants import IMG_SIZE, IMG_FORMAT, IMG_QUALITY, SWITCH_MAP
+from camerabot.alarm import AlarmService
+from camerabot.api import HikVisionAPI
+from camerabot.constants import IMG_SIZE, IMG_FORMAT, IMG_QUALITY
 from camerabot.exceptions import HomeCamError, APIError
-from camerabot.livestream import YouTubeStream
+from camerabot.livestream import YouTubeStreamService
+from camerabot.service import ServiceController
+
+
+class CameraPoolController:
+    """Pool class for containing all camera instances."""
+
+    def __init__(self):
+        self._instances = {}
+
+    def __repr__(self):
+        return '<{0} id={1}>: {2}'.format(self.__class__.__name__, id(self),
+                                          repr(self._instances))
+
+    def __str__(self):
+        return str(self._instances)
+
+    def add(self, cam_id, commands, instance):
+        self._instances[cam_id] = {'instance': instance,
+                                   'commands': commands}
+
+    def get_instance(self, cam_id):
+        return self._instances[cam_id]['instance']
+
+    def get_commands(self, cam_id):
+        return self._instances[cam_id]['commands']
+
+    def get_all(self):
+        return self._instances
+
+    def get_count(self):
+        return len(self._instances)
 
 
 class HomeCam:
@@ -21,11 +52,17 @@ class HomeCam:
         self.conf = conf
         self.description = conf.description
         self._log.debug('Initializing {0}'.format(self.description))
-        self._api = API(conf=conf.api)
+        self._api = HikVisionAPI(conf=conf.api)
         self.snapshots_taken = 0
-        self.alarm = Alarm(conf=conf.alert)
-        self.stream_yt = YouTubeStream(conf=conf.live_stream.youtube,
-                                       api_conf=conf.api)
+        self.alarm = AlarmService(conf=conf.alert, api=self._api)
+        self.stream_yt = YouTubeStreamService(conf=conf.livestream.youtube,
+                                              hik_user=conf.api.auth.user,
+                                              hik_password=conf.api.auth.password,
+                                              hik_host=conf.api.host)
+        self.service_controller = ServiceController()
+        for service in (self.alarm, self.stream_yt):
+            self.service_controller.register_service(service)
+        self._log.debug(self.service_controller)
 
     def __repr__(self):
         return '<HomeCam desc="{0}">'.format(self.description)
@@ -50,27 +87,6 @@ class HomeCam:
             self._log.exception(err_msg)
             raise HomeCamError(err_msg)
         return snapshot, snapshot_timestamp
-
-    def get_alert_stream(self):
-        try:
-            return self._api.get_alert_stream()
-        except APIError:
-            err_msg = 'Failed to get Alert Stream'
-            self._log.error(err_msg)
-            raise HomeCamError(err_msg)
-
-    def trigger_switch(self, enable, _type):
-        """Trigger switch."""
-        name = SWITCH_MAP[_type]['name']
-        self._log.debug('{0} {1}'.format(
-            'Enabling' if enable else 'Disabling', name))
-        try:
-            msg = self._api.switch(enable=enable, _type=_type)
-        except APIError:
-            err_msg = '{0} Switch encountered an error'.format(name)
-            self._log.error(err_msg)
-            raise HomeCamError(err_msg)
-        return msg
 
     def _resize_snapshot(self, raw_snapshot):
         """Return resized JPEG snapshot."""

@@ -21,7 +21,6 @@ class DirectoryWatcherError(Exception):
     pass
 
 
-# API Exceptions
 class APIError(Exception):
     pass
 

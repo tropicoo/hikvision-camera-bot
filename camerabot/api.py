@@ -2,17 +2,40 @@
 
 import logging
 import re
+import time
 import urllib.parse
+from functools import wraps
 
 import requests
 import xmltodict
-from requests.auth import HTTPDigestAuth
 
 from camerabot.constants import (BAD_RESPONSE_CODES, CONN_TIMEOUT, SWITCH_MAP,
                                  XML_HEADERS, SWITCH_ENABLED_XML)
 from camerabot.exceptions import (APIError,
                                   APIRequestError,
                                   APIBadResponseCodeError)
+
+
+def retry(delay=5, retries=3):
+    retries = retries if retries > 0 else 1
+
+    def decorator(f):
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            _err = None
+            for ret in range(retries):
+                try:
+                    return f(*args, **kwargs)
+                except Exception as err:
+                    time.sleep(delay)
+                    _err = err
+            else:
+                raise _err
+
+        return wrapper
+
+    return decorator
 
 
 class HeaderParsingErrorFilter:
@@ -33,20 +56,21 @@ class APIMethods:
     DELETE = 'DELETE'
 
 
-class API:
+class HikVisionAPI:
     """HikVision API class."""
 
     def __init__(self, conf):
         logging.getLogger('urllib3.connectionpool').addFilter(
             HeaderParsingErrorFilter())
         self._log = logging.getLogger(self.__class__.__name__)
-        self._host = conf['host']
-        self._auth = HTTPDigestAuth(conf['auth']['user'],
-                                    conf['auth']['password'])
-        self._endpoints = conf['endpoints']
-        self._stream_timeout = conf['stream_timeout']
+        self._host = conf.host
+        self._endpoints = conf.endpoints
+        self._stream_timeout = conf.stream_timeout
         self._xml_headers = XML_HEADERS
+
         self._sess = requests.Session()
+        self._sess.auth = requests.auth.HTTPDigestAuth(conf.auth.user,
+                                                       conf.auth.password)
 
     def take_snapshot(self):
         return self._get(self._endpoints['picture'], stream=True)
@@ -108,12 +132,14 @@ class API:
         state = xmltodict.parse(xml)[SWITCH_MAP[_type]['method']]['enabled']
         return state == 'true', xml
 
+    @retry()
     def _get(self, endpoint, data=None, headers=None, stream=False,
              method=APIMethods.GET, timeout=CONN_TIMEOUT):
         url = urllib.parse.urljoin(self._host, endpoint)
         self._log.debug('{0} {1}'.format(method, url))
         try:
-            response = self._sess.request(method, url=url, auth=self._auth,
+            response = self._sess.request(method,
+                                          url=url,
                                           data=data,
                                           headers=headers,
                                           stream=stream,

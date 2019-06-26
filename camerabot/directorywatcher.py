@@ -2,23 +2,25 @@
 
 import datetime
 import logging
-import os
 import time
 
-from pathlib import Path
+from pathlib import Path, PurePath
 from subprocess import call
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from camerabot.config import get_main_config
 from camerabot.exceptions import DirectoryWatcherError
 
 
 class DirectoryWatcher:
-    """Watchdog class."""
+    """Watchdog class.
+    TODO: Make as service
+    """
 
-    def __init__(self, bot, directory):
+    def __init__(self, bot):
         self._log = logging.getLogger(self.__class__.__name__)
-        self.directory = directory
+        self.directory = get_main_config().watchdog.directory
         self._event_handler = DirectoryWatcherEventHandler(bot=bot)
         self._observer = Observer()
 
@@ -56,7 +58,7 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
         """Handles Watchdog's 'on_create' event."""
         file_path = event.src_path
         cmd = "lsof|awk 'match($9,/{0}/){{print $9}}'".format(
-            os.path.basename(file_path))
+            PurePath(file_path).name)
         while True:
             try:
                 if not call(cmd, shell=True):
@@ -80,7 +82,7 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
             raise DirectoryWatcherError(err)
         try:
             self._log.info('{0} sent, deleting'.format(file_path))
-            os.remove(file_path)
+            Path.unlink(file_path)
         except Exception as err:
             self._log.error('Can\'t delete {0}: {1}'.format(file_path, str(err)))
             raise DirectoryWatcherError(err)

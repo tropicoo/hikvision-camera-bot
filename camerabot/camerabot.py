@@ -1,16 +1,17 @@
 """Camera Bot Module."""
 
 import logging
-import os
 import re
 import time
 from datetime import datetime
 from functools import wraps
+from pathlib import PurePath
 from threading import Thread
 
 from telegram import Bot, ParseMode
 from telegram.utils.request import Request
 
+from camerabot.config import get_main_config
 from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, MOTION_DETECTION,
                                  LINE_DETECTION, DETECTION_REGEX)
 from camerabot.exceptions import HomeCamError, UserAuthError, CameraBotError
@@ -39,7 +40,7 @@ def camera_selection(func):
     def wrapper(*args, **kwargs):
         cambot, update = args
         cam_id = re.split(r'^.*(?=cam_)', update.message.text)[-1]
-        cam = cambot._cam_instances[cam_id]['instance']
+        cam = cambot._pool.get_instance(cam_id)
         args = args + (cam, cam_id)
         return func(*args, **kwargs)
     return wrapper
@@ -48,40 +49,37 @@ def camera_selection(func):
 class CameraBot(Bot):
     """CameraBot class where main bot things are done."""
 
-    def __init__(self, token, user_ids, cam_instances, stop_polling):
-        super(CameraBot, self).__init__(token,
+    def __init__(self, pool, stop_polling):
+        conf = get_main_config()
+        super(CameraBot, self).__init__(conf.telegram.token,
                                         request=(Request(con_pool_size=10)))
         self._log = logging.getLogger(self.__class__.__name__)
-        self._cam_instances = cam_instances
-        self._user_ids = user_ids
-        self._stop_polling = stop_polling
         self._log.info('Initializing {0} bot'.format(self.first_name))
+        self._pool = pool
+        self._stop_polling = stop_polling
+        self._user_ids = conf.telegram.allowed_user_ids
+
+        self._monitoring_funcs = (self._yt_streamer, self._alert_pusher)
         self._start_enabled_services()
+
+    def _start_thread(self, target_func, cam_id, cam, update=None):
+        Thread(target=target_func, args=(cam_id, cam, update)).start()
 
     def _start_enabled_services(self):
         """Start services enabled in conf."""
-
-        # TODO: implement some better approach with starting/stopping services
-        for cam_id, cam_instance in self._cam_instances.items():
-            cam = cam_instance['instance']
-            if cam.alarm.is_enabled():
-                Thread(target=self._alert_pusher, args=(cam_id, cam)).start()
-            if cam.stream_yt.is_enabled():
-                cam.stream_yt.start()
-                Thread(target=self._yt_streamer, args=(cam_id, cam)).start()
+        for cam_id, cam_data in self._pool.get_all().items():
+            cam = cam_data['instance']
+            cam.service_controller.start_services(
+                enabled_in_conf=True)
+            for func in self._monitoring_funcs:
+                self._start_thread(target_func=func,
+                                   cam_id=cam_id,
+                                   cam=cam)
 
     def _stop_running_services(self):
         """Stop any running services."""
-        for cam_id, cam_instance in self._cam_instances.items():
-            cam = cam_instance['instance']
-            try:
-                cam.alarm.disable()
-            except HomeCamError as err:
-                self._log.warning(str(err))
-            try:
-                cam.stream_yt.stop()
-            except HomeCamError as err:
-                self._log.warning(str(err))
+        for cam_id, cam_data in self._pool.get_all().items():
+            cam_data['instance'].service_controller.stop_services()
 
     def send_startup_message(self):
         """Send welcome message after bot launch."""
@@ -101,9 +99,10 @@ class CameraBot(Bot):
         """Send received photo."""
         if from_watchdog:
             for uid in self._user_ids:
-                filename = os.path.basename(photo.name)
-                self.send_document(chat_id=uid, document=photo,
-                                   caption=caption, filename=filename,
+                self.send_document(chat_id=uid,
+                                   document=photo,
+                                   caption=caption,
+                                   filename=PurePath(photo.name).name,
                                    timeout=SEND_TIMEOUT)
         else:
             if reply_text:
@@ -194,11 +193,11 @@ class CameraBot(Bot):
         """List user's cameras."""
         self._log.info('Camera list has been requested')
 
-        cam_count = len(self._cam_instances)
+        cam_count = self._pool.get_count()
         msg = [make_html_bold('You have {0} camera{1}'.format(
             cam_count, '' if cam_count == 1 else 's'))]
 
-        for cam_id, cam_data in self._cam_instances.items():
+        for cam_id, cam_data in self._pool.get_all().items():
             msg.append(
                 '<b>Camera:</b> {0}\n<b>Description:</b> '
                 '{1}\n<b>Commands</b>\n{2}'.format(
@@ -241,8 +240,9 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             cam.stream_yt.start()
-            thread = Thread(target=self._yt_streamer, args=(cam_id, cam))
-            thread.start()
+            self._start_thread(target_func=self._yt_streamer,
+                               cam_id=cam_id,
+                               cam=cam)
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully enabled'))
         except Exception as err:
@@ -268,12 +268,12 @@ class CameraBot(Bot):
         self._log.info('Enabling camera\'s alert mode requested')
         self._log.debug(self._get_user_info(update))
         try:
-            cam.alarm.enable()
-            thread = Thread(target=self._alert_pusher,
-                            args=(cam_id, cam))
-            thread.start()
+            cam.alarm.start()
+            self._start_thread(target_func=self._alert_pusher,
+                               cam_id=cam_id,
+                               cam=cam)
             update.message.reply_html(
-                make_html_bold('Motion Detection Alert successfully enabled'))
+                make_html_bold('Alarm alert mode successfully enabled'))
         except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
@@ -283,9 +283,9 @@ class CameraBot(Bot):
         """Disable camera's Alert Mode."""
         self._log.info('Disabling camera\'s alert mode requested')
         try:
-            cam.alarm.disable()
+            cam.alarm.stop()
             update.message.reply_html(
-                make_html_bold('Motion Detection Alert successfully disabled'))
+                make_html_bold('Alarm alert mode successfully disabled'))
         except Exception as err:
             update.message.reply_html(make_html_bold(str(err)))
 
@@ -302,7 +302,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 '<b>Available commands</b>\n\n{0}\n\n/list '
                 'cameras'.format('\n'.join('/{0}'.format(x) for x in
-                                 self._cam_instances[cam_id]['commands'])))
+                                 self._pool.get_commands(cam_id))))
 
         self._log.info('Help message has been sent')
 
@@ -325,7 +325,7 @@ class CameraBot(Bot):
             'Enabling' if enable else 'Disabling', name))
         self._log.debug(self._get_user_info(update))
         try:
-            msg = cam.trigger_switch(enable=enable, _type=_type)
+            msg = cam.alarm.trigger_switch(enable=enable, _type=_type)
             msg = msg or '{0} successfully {1}'.format(
                 name, 'enabled' if enable else 'disabled')
             update.message.reply_html(make_html_bold(msg))
@@ -335,28 +335,51 @@ class CameraBot(Bot):
                 'enable' if enable else 'disable', name, str(err))
             update.message.reply_text(err_msg)
 
-    def _yt_streamer(self, cam_id, cam):
-        self._log.debug('Started YouTube streamer thread for '
+    def _yt_streamer(self, cam_id, cam, update):
+        self._log.debug('Starting YouTube streamer thread for '
                         'camera: "{0}"'.format(cam.description))
-        while cam.stream_yt.is_enabled():
-            while not cam.stream_yt.need_restart():
-                if not cam.stream_yt.is_started():
-                    self._log.info('Exiting YouTube stream '
-                                   'thread for {0}'.format(cam.description))
-                    break
-                time.sleep(1)
-            else:
-                self._log.debug('Restarting YouTube stream')
-                cam.stream_yt.restart()
 
-    def _alert_pusher(self, cam_id, cam):
-        while cam.alarm.is_enabled():
-            self._log.debug('Started alert pusher thread for '
+        def should_exit():
+            if not cam.stream_yt.is_started():
+                self._log.info('Exiting YouTube stream '
+                               'thread for {0}'.format(cam.description))
+                return True
+            return False
+        try:
+            while cam.stream_yt.is_started():
+                while not cam.stream_yt.need_restart() and cam.stream_yt.is_alive():
+                    if should_exit():
+                        break
+                    time.sleep(1)
+                else:
+                    if should_exit():
+                        break
+                    self._log.info('Restarting YouTube stream')
+                    cam.stream_yt.restart()
+        except HomeCamError as err:
+            if update:
+                update.message.reply_text(str(err))
+            else:
+                for uid in self._user_ids:
+                    self.send_message(chat_id=uid, text=str(err))
+        except Exception as err:
+            err_msg = 'Unknown error in YouTube Streamer Thread'
+            self._log.exception(err_msg)
+            err_msg = '{0}: {1}'.format(err_msg, str(err))
+            if update:
+                update.message.reply_text(err_msg)
+            else:
+                for uid in self._user_ids:
+                    self.send_message(chat_id=uid, text=err_msg)
+
+    def _alert_pusher(self, cam_id, cam, update):
+        while cam.alarm.is_started():
+            self._log.debug('Starting alert pusher thread for '
                             'camera: "{0}"'.format(cam.description))
             wait_before = 0
-            stream = cam.get_alert_stream()
+            stream = cam.alarm.get_alert_stream()
             for chunk in stream.iter_lines(chunk_size=1024):
-                if not cam.alarm.is_enabled():
+                if not cam.alarm.is_started():
                     self._log.info('Exiting alert pusher '
                                    'thread for {0}'.format(cam.description))
                     break

@@ -39,12 +39,7 @@
       "live_stream": {
         "youtube": {
           "enabled": false,
-          "channel": 101,
-          "restart_period": 39600,
-          "restart_pause": 10,
-          "null_audio": false,
-          "url": "rtmp://a.rtmp.youtube.com/live2",
-          "key": ""
+          "template": "direct.tpl_kitchen",
         }
       }
     },
@@ -78,12 +73,7 @@
       "live_stream": {
         "youtube": {
           "enabled": false,
-          "channel": 101,
-          "restart_period": 39600,
-          "restart_pause": 10,
-          "null_audio": false,
-          "url": "rtmp://a.rtmp.youtube.com/live2",
-          "key": ""
+          "template": "transcode.tpl_basement"
         }
       }
     }

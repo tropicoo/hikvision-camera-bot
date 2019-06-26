@@ -1,0 +1,40 @@
+{
+  "youtube": {
+    "direct": {
+      "tpl_kitchen": {
+        "channel": 101,
+        "restart_period": 39600,
+        "restart_pause": 10,
+        "null_audio": false,
+        "url": "rtmp://a.rtmp.youtube.com/live2",
+        "key": "aaaa-bbbb-cccc-dddd"
+      },
+      "tpl_basement": {
+      }
+    },
+    "transcode": {
+      "tpl_basement": {
+        "channel": 101,
+        "restart_period": 39600,
+        "restart_pause": 10,
+        "null_audio": false,
+        "url": "rtmp://a.rtmp.youtube.com/live2",
+        "key": "aaaa-bbbb-cccc-dddd",
+        "encode": {
+          "pix_fmt": "yuv420p",
+          "framerate": 25,
+          "preset": "superfast",
+          "maxrate": "3000k",
+          "bufsize": "2000k",
+          "tune": "zerolatency",
+          "scale": {
+            "enabled": true,
+            "width": 640,
+            "height": -1,
+            "format": "yuv420p"
+          }
+        }
+      }
+    }
+  }
+}

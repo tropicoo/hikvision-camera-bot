@@ -1,60 +1,35 @@
 #!/usr/bin/env python3
 """Bot Launcher Module."""
 
-import argparse
-import json
 import logging
-import os
+import itertools
 import sys
 from collections import defaultdict
 
 from telegram.ext import CommandHandler, Updater
 
 from camerabot.camerabot import CameraBot
-from camerabot.directorywatcher import DirectoryWatcher, DirectoryWatcherError
-from camerabot.exceptions import ConfigError
-from camerabot.homecam import HomeCam
-from camerabot.constants import CONFIG_FILE, LOG_LEVELS_STR, COMMANDS
+from camerabot.config import get_main_config
+from camerabot.constants import LOG_LEVELS_STR
+from camerabot.directorywatcher import DirectoryWatcher
+from camerabot.exceptions import ConfigError, DirectoryWatcherError
+from camerabot.homecam import HomeCam, CameraPoolController
 
+COMMANDS_TPL = {CameraBot.cmds: 'cmds_{0}',
+                CameraBot.cmd_getpic: 'getpic_{0}',
+                CameraBot.cmd_getfullpic: 'getfullpic_{0}',
+                CameraBot.cmd_motion_detection_on: 'md_on_{0}',
+                CameraBot.cmd_motion_detection_off: 'md_off_{0}',
+                CameraBot.cmd_line_detection_on: 'ld_on_{0}',
+                CameraBot.cmd_line_detection_off: 'ld_off_{0}',
+                CameraBot.cmd_alert_on: 'alert_on_{0}',
+                CameraBot.cmd_alert_off: 'alert_off_{0}',
+                CameraBot.cmd_stream_yt_on: 'yt_on_{0}',
+                CameraBot.cmd_stream_yt_off: 'yt_off_{0}'}
 
-class Config:
-
-    """Dot notation for JSON config file."""
-
-    def __init__(self, conf_data):
-        self.__conf_data = conf_data
-
-    def __iter__(self):
-        return self.__conf_data
-
-    def __repr__(self):
-        return repr(self.__conf_data)
-
-    def __getitem__(self, item):
-        return self.__conf_data[item]
-
-    def items(self):
-        return self.__conf_data.items()
-
-    @classmethod
-    def from_dict(cls, conf_data):
-        """Make dot-mapped object."""
-        conf_dict = cls._conf_raise_on_duplicates(conf_data)
-        obj = cls(conf_dict)
-        obj.__dict__.update(conf_data)
-        return obj
-
-    @classmethod
-    def _conf_raise_on_duplicates(cls, conf_data):
-        """Raise ConfigError on duplicate keys."""
-        conf_dict = {}
-        for key, value in conf_data:
-            if key in conf_dict:
-                err_msg = "Malformed configuration file, duplicate key: {0}".format(key)
-                raise ConfigError(err_msg)
-            else:
-                conf_dict[key] = value
-        return conf_dict
+COMMANDS = {CameraBot.cmd_help: ('start', 'help'),
+            CameraBot.cmd_stop: 'stop',
+            CameraBot.cmd_list_cams: 'list'}
 
 
 class CameraBotLauncher:
@@ -63,35 +38,26 @@ class CameraBotLauncher:
     camera instances and finally starts bot.
     """
 
-    def __init__(self, conf_path=CONFIG_FILE):
+    def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
 
         try:
-            conf = self._load_config(conf_path)
+            self._conf = get_main_config()
         except ConfigError as err:
             sys.exit(str(err))
 
-        tg_token = conf.telegram.token
-        tg_allowed_uids = conf.telegram.allowed_user_ids
-        cam_list = conf.camera_list
-        self._wd_is_enabled = conf.watchdog.enabled
-        wd_directory = conf.watchdog.directory
-
-        log_level = self._get_int_log_level(conf.log_level)
+        log_level = self._get_int_log_level()
         logging.getLogger().setLevel(log_level)
 
-        cam_instances, cmds = self._create_cameras(cam_list)
+        cam_pool, cmds = self._create_cameras()
 
-        cambot = CameraBot(token=tg_token,
-                           user_ids=tg_allowed_uids,
-                           cam_instances=cam_instances,
+        cambot = CameraBot(pool=cam_pool,
                            stop_polling=self._stop_polling)
 
         self._updater = Updater(bot=cambot)
         self._setup_commands(cmds)
 
-        self._directory_watcher = DirectoryWatcher(bot=self._updater,
-                                                   directory=wd_directory)
+        self._directory_watcher = DirectoryWatcher(bot=self._updater)
         self._welcome_sent = False
 
     def run(self):
@@ -109,100 +75,55 @@ class CameraBotLauncher:
         # self._updater.idle()
 
         try:
-            if self._wd_is_enabled:
+            if self._conf.watchdog.enabled:
                 self._directory_watcher.watch()
         except DirectoryWatcherError as err:
             self._stop_polling()
             sys.exit(str(err))
 
-    def _create_cameras(self, camera_list):
+    def _create_cameras(self):
         """Creates dict with camera ids, instances and commands."""
-        cams = {}
-        cmds = defaultdict(list)
-        for cam_id, cam_conf in camera_list.items():
-            cams[cam_id] = {"instance": HomeCam(conf=cam_conf),
-                            'commands': []}
-            for key, cmd_tpl in COMMANDS.items():
+        cmd_cam_map = defaultdict(list)
+        cam_pool = CameraPoolController()
+        for cam_id, cam_conf in self._conf.camera_list.items():
+            cam_cmds = []
+            for handler_func, cmd_tpl in COMMANDS_TPL.items():
                 cmd = cmd_tpl.format(cam_id)
-                cams[cam_id]['commands'].append(cmd)
-                cmds[key].append(cmd)
+                cam_cmds.append(cmd)
+                cmd_cam_map[handler_func].append(cmd)
 
-        self._log.debug('Creating cameras: {0}'.format(cams))
-        return cams, cmds
+            cam_pool.add(cam_id, cam_cmds, HomeCam(conf=cam_conf))
+
+        self._log.debug('Created Camera Pool: {0}'.format(cam_pool))
+        return cam_pool, cmd_cam_map
 
     def _stop_polling(self):
         """Stops bot and exits application."""
         self._updater.stop()
         self._updater.is_idle = False
 
-    def _load_config(self, path):
-        """Loads telegram and camera configuration from config file
-        and returns json object.
-        """
-        if not os.path.isfile(path):
-            err_msg = 'Can\'t find {0} configuration file'.format(path)
-            raise ConfigError(err_msg)
-
-        self._log.info('Reading config file {0}'.format(path))
-        with open(path, 'r') as fd:
-            config = fd.read()
-        try:
-            config = json.loads(config, object_pairs_hook=Config.from_dict)
-        except json.decoder.JSONDecodeError:
-            err_msg = 'Malformed JSON in {0} configuration file'.format(path)
-            raise ConfigError(err_msg)
-
-        return config
-
     def _setup_commands(self, cmds):
         """Setup for Dispatcher with bot commands and error handler."""
         dispatcher = self._updater.dispatcher
 
-        dispatcher.add_handler(CommandHandler('help', CameraBot.cmd_help))
-        dispatcher.add_handler(CommandHandler('start', CameraBot.cmd_help))
-        dispatcher.add_handler(CommandHandler(cmds['getpic'],
-                                              CameraBot.cmd_getpic))
-        dispatcher.add_handler(CommandHandler(cmds['getfullpic'],
-                                              CameraBot.cmd_getfullpic))
-        dispatcher.add_handler(CommandHandler(cmds['md_on'],
-                                              CameraBot.cmd_motion_detection_on))
-        dispatcher.add_handler(CommandHandler(cmds['md_off'],
-                                              CameraBot.cmd_motion_detection_off))
-        dispatcher.add_handler(CommandHandler(cmds['ld_on'],
-                                              CameraBot.cmd_line_detection_on))
-        dispatcher.add_handler(CommandHandler(cmds['ld_off'],
-                                              CameraBot.cmd_line_detection_off))
-        dispatcher.add_handler(CommandHandler(cmds['alert_on'],
-                                              CameraBot.cmd_alert_on))
-        dispatcher.add_handler(CommandHandler(cmds['alert_off'],
-                                              CameraBot.cmd_alert_off))
-        dispatcher.add_handler(CommandHandler(cmds['yt_on'],
-                                              CameraBot.cmd_stream_yt_on))
-        dispatcher.add_handler(CommandHandler(cmds['yt_off'],
-                                              CameraBot.cmd_stream_yt_off))
-        dispatcher.add_handler(CommandHandler(cmds['cmds'], CameraBot.cmds))
-        dispatcher.add_handler(CommandHandler('list', CameraBot.cmd_list_cams))
-        dispatcher.add_handler(CommandHandler('stop', CameraBot.cmd_stop))
+        for handler_func, event_funcs \
+                in itertools.chain(cmds.items(), COMMANDS.items()):
+            dispatcher.add_handler(CommandHandler(event_funcs, handler_func))
 
         dispatcher.add_error_handler(CameraBot.error_handler)
 
-    def _get_int_log_level(self, log_level_str):
-        if log_level_str not in LOG_LEVELS_STR:
+    def _get_int_log_level(self):
+        if self._conf.log_level not in LOG_LEVELS_STR:
             warn_msg = 'Invalid log level "{0}", using "INFO". ' \
-                       'Choose from {1})'.format(log_level_str, LOG_LEVELS_STR)
+                       'Choose from {1})'.format(self._conf.log_level,
+                                                 LOG_LEVELS_STR)
             self._log.warning(warn_msg)
-        return getattr(logging, log_level_str, logging.INFO)
+        return getattr(logging, self._conf.log_level, logging.INFO)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='HikVision Telegram Camera Bot')
-    parser.add_argument('-c', '--config', action='store',
-                        dest='conf_path', default='config.json',
-                        help='path to configuration json file')
-    args = parser.parse_args()
-
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(format=log_format)
 
-    bot = CameraBotLauncher(conf_path=args.conf_path)
+    bot = CameraBotLauncher()
     bot.run()

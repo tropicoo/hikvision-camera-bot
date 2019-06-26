@@ -5,16 +5,18 @@ Bot which sends snapshots from your HikVision camera(s).
 Installation
 ------------
 
-To install the bot, simply `clone` repo and install dependencies using `pip3`.
+To install HikVision Telegram Camera Bot, simply `clone` repo and install 
+dependencies using `pip3`.
 Make sure you have [Python 3](https://www.python.org/downloads/) installed.
 
 
 ```
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
 pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
-```
 
-Also, to enable YouTube Live Stream, install the latest [ffmpeg](https://www.ffmpeg.org) build.
+# To be able to use YouTube Livestream install ffmpeg
+sudo apt-get install ffmpeg
+```
 
 Configuration
 -------------
@@ -22,11 +24,10 @@ First of all you need to [create Telegram Bot](https://core.telegram.org/bots#6-
  and obtain its token.
 
 Before starting HikVision Telegram Camera Bot needs to be configured.
-Configuration is simply stored in [JSON](https://spring.io/understanding/JSON#structure) 
-format.
+Configuration is simply stored in JSON format.
 
-Copy default configuration file `config-template.json` with name you like e.g.
-to `config.json` and edit, which comes with default template:
+Copy default configuration file with predefined template `config-template.json`
+ to `config.json` and edit it:
 <details>
   <summary>config-template.json</summary>
   
@@ -69,15 +70,10 @@ to `config.json` and edit, which comes with default template:
             "fullpic": true
           }
         },
-        "live_stream": {
+        "livestream": {
           "youtube": {
             "enabled": false,
-            "channel": 101,
-            "restart_period": 39600,
-            "restart_pause": 10,
-            "null_audio": false,
-            "url": "rtmp://a.rtmp.youtube.com/live2",
-            "key": ""
+            "template": "direct.tpl_kitchen"
           }
         }
       },
@@ -111,12 +107,7 @@ to `config.json` and edit, which comes with default template:
         "live_stream": {
           "youtube": {
             "enabled": false,
-            "channel": 101,
-            "restart_period": 39600,
-            "restart_pause": 10,
-            "null_audio": false,
-            "url": "rtmp://a.rtmp.youtube.com/live2",
-            "key": ""
+            "template": "transcode.tpl_basement"
           }
         }
       }
@@ -146,21 +137,106 @@ for every camera you want to use.
 and/or Line Crossing Detection).
 Configure `delay` setting in seconds between pushing alert pictures.
 To send resized picture change `fullpic` to `false`.
-8. To enable YouTube Live Stream (experimental), fill the `youtube` section with
-valid parameters:
+8. To enable YouTube Live Stream (experimental), enable it in the `youtube` key.
     ```python
-          "enabled": false, # start stream during bot start (true or false)
+          "enabled": false, # set `true` to start stream during bot start
+          "template": "direct.tpl_kitchen" # stream template, read below
+    ```
+    
+    *Livestream templates*
+    To start particular livestream, user needs to set which already template 
+    should be used for streaming (basically template contains ffmpeg arguments).
+    There are two template categories: `direct` and `transcode`.
+    
+    `direct` means that video stream will not be re-encoded (transcoded) and will
+    be sent to YouTube servers "as is", only audio can be disabled.
+    
+    `transcode` means that video stream will be re-encoded on your machine/server
+    where bot is running.
+    
+    User can create its own templates in file named `livestream_templates.json`.
+    Predefined template names are starting with `tpl_` e.g. `tpl_kitchen`, but
+    any can be used.
+    
+    Default dummy template file is named `livestream_templates_template.json` 
+    (not very funny name but anyway) which should be copied or renamed to 
+    `livestream_templates.json`.
+    
+    <details>
+      <summary>livestream_templates.json</summary>
+      
+      ```json
+      {
+        "youtube": {
+          "direct": {
+            "tpl_kitchen": {
+              "channel": 101,
+              "restart_period": 39600,
+              "restart_pause": 10,
+              "null_audio": false,
+              "url": "rtmp://a.rtmp.youtube.com/live2",
+              "key": "aaaa-bbbb-cccc-dddd"
+            },
+            "tpl_basement": {
+            }
+          },
+          "transcode": {
+            "tpl_kitchen": {
+              "channel": 101,
+              "restart_period": 39600,
+              "restart_pause": 10,
+              "null_audio": false,
+              "url": "rtmp://a.rtmp.youtube.com/live2",
+              "key": "aaaa-bbbb-cccc-dddd",
+              "encode": {
+                "pix_fmt": "yuv420p",
+                "framerate": 25,
+                "preset": "superfast",
+                "maxrate": "3000k",
+                "bufsize": "2000k",
+                "tune": "zerolatency",
+                "scale": {
+                  "enabled": true,
+                  "width": 640,
+                  "height": -1,
+                  "format": "yuv420p"
+                }
+              }
+            }
+          }
+        }
+      }
+      ```
+    </details>
+    
+    Where:
+    ```python
           "channel": 101, # camera channel. 101 is main stream, 102 is substream.
           "restart_period": 39600, # stream restart period in seconds
           "restart_pause": 10, # stream pause before starting on restart
           "null_audio": false, # enable fake silent audio (for cameras without mics)
           "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
-          "key": "aaaa-vvvv-bbbb-cccc-zzzz" # YouTube Live Stream key.
+          "key": "aaaa-bbbb-cccc-dddd" # YouTube Live Stream key.
+          "encode": { # key with transcode configuration
+            "pix_fmt": "yuv420p", # pixel format, HikVision streams in yuvj420p
+            "framerate": 25, # encode framerate, YouTube will re-encode any to 30 anyway
+            "preset": "superfast", # libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264
+            "maxrate": "3000k", # max variable bitrate
+            "bufsize": "2000k", # rate control buffer
+            "tune": "zerolatency", # tune for zero latency
+            "scale": { # re-scale video size
+              "enabled": true, # false to disable and re-encode with source width and height
+              "width": 640, # width
+              "height": -1, # height, -1 means will be automatically determined
+              "format": "yuv420p" # pixel format
+            }
+          }
     ```
+    
     > YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
 
     > To enable stream in Telegram, simply use available commands 
-    `/yt_stream_on_<cam_id>, /yt_stream_off_<cam_id>`
+    `/yt_on_<cam_id>, /yt_off_<cam_id>`
     
     > To kill the bot from the terminal with enabled YouTube Live Stream 
     instead of invoking the `/stop` command from the Telegram, kill
@@ -216,12 +292,7 @@ valid parameters:
         "live_stream": {
           "youtube": {
             "enabled": false,
-            "channel": 101,
-            "restart_period": 39600,
-            "restart_pause": 10,
-            "null_audio": false,
-            "url": "rtmp://a.rtmp.youtube.com/live2",
-            "key": "aaaa-vvvv-bbbb-cccc-zzzz"
+            "template": "direct.tpl_kitchen",
           }
         }
       }
@@ -229,16 +300,16 @@ valid parameters:
   }
   ```
 </details>
-
+  
 Usage
 =====
-Simply run and see for welcome message in Telegram client.
+Simply run and wait for welcome message in your Telegram client.
 > Note: This will log the output to the stdout/stderr (your terminal). Closing
 the terminal will shutdown the bot.
 ```bash
 python3 bot.py -c config.json
 
-# Or make the script executable by adding 'x' flag
+# Or make the script executable by adding 'x' flag (it should be already with it)
 chmod +x bot.py
 ./bot.py -c config.json
 ```
