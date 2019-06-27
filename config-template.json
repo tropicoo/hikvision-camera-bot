@@ -36,7 +36,7 @@
           "fullpic": true
         }
       },
-      "live_stream": {
+      "livestream": {
         "youtube": {
           "enabled": false,
           "template": "direct.tpl_kitchen",
@@ -70,7 +70,7 @@
           "fullpic": true
         }
       },
-      "live_stream": {
+      "livestream": {
         "youtube": {
           "enabled": false,
           "template": "transcode.tpl_basement"

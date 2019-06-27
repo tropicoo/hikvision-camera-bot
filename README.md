@@ -104,7 +104,7 @@ Copy default configuration file with predefined template `config-template.json`
             "fullpic": true
           }
         },
-        "live_stream": {
+        "livestream": {
           "youtube": {
             "enabled": false,
             "template": "transcode.tpl_basement"
@@ -289,7 +289,7 @@ To send resized picture change `fullpic` to `false`.
             "fullpic": true
           }
         },
-        "live_stream": {
+        "livestream": {
           "youtube": {
             "enabled": false,
             "template": "direct.tpl_kitchen",
@@ -311,16 +311,16 @@ python3 bot.py -c config.json
 
 # Or make the script executable by adding 'x' flag (it should be already with it)
 chmod +x bot.py
-./bot.py -c config.json
+./bot.py
 ```
 
 If you want to run the bot in the background use the following commands
 ```bash
 # With writing to the log file
-nohup python3 bot.py -c config.json &>/tmp/camerabot.log &
+nohup python3 bot.py &>/tmp/camerabot.log &
 
 # Without writing to the log file
-nohup python3 bot.py --config config.json &>- &
+nohup python3 bot.py &>- &
 ```
 
 Misc
@@ -330,6 +330,5 @@ If you're on the Raspberry Pi, you can easily add bot execution to the startup.
 Simply edit the `/etc/rc.local` add the following line before the last one
 (which is `exit 0`):
 ```bash
-# The path '/home/pi/hikvision-camera-bot/config.json' is an absolute path to the config file (same for 'bot.py')
-nohup python3 /home/pi/hikvision-camera-bot/bot.py --config /home/pi/hikvision-camera-bot/config.json &>- &
+nohup python3 /home/pi/hikvision-camera-bot/bot.py &>- &
 ```
