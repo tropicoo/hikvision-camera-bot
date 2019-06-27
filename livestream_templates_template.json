@@ -7,7 +7,8 @@
         "restart_pause": 10,
         "null_audio": false,
         "url": "rtmp://a.rtmp.youtube.com/live2",
-        "key": "aaaa-bbbb-cccc-dddd"
+        "key": "aaaa-bbbb-cccc-dddd",
+        "loglevel": "quiet"
       },
       "tpl_basement": {
       }
@@ -20,6 +21,7 @@
         "null_audio": false,
         "url": "rtmp://a.rtmp.youtube.com/live2",
         "key": "aaaa-bbbb-cccc-dddd",
+        "loglevel": "quiet",
         "encode": {
           "pix_fmt": "yuv420p",
           "framerate": 25,

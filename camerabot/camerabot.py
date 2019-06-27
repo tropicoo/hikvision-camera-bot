@@ -350,7 +350,8 @@ class CameraBot(Bot):
                 while not cam.stream_yt.need_restart() and cam.stream_yt.is_alive():
                     if should_exit():
                         break
-                    time.sleep(1)
+                    self._log.info('FFMPEG: {0}'.format(
+                        cam.stream_yt.get_stdout()))
                 else:
                     if should_exit():
                         break

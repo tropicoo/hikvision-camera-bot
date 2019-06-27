@@ -175,7 +175,8 @@ To send resized picture change `fullpic` to `false`.
               "restart_pause": 10,
               "null_audio": false,
               "url": "rtmp://a.rtmp.youtube.com/live2",
-              "key": "aaaa-bbbb-cccc-dddd"
+              "key": "aaaa-bbbb-cccc-dddd",
+              "loglevel": "quiet"
             },
             "tpl_basement": {
             }
@@ -188,6 +189,7 @@ To send resized picture change `fullpic` to `false`.
               "null_audio": false,
               "url": "rtmp://a.rtmp.youtube.com/live2",
               "key": "aaaa-bbbb-cccc-dddd",
+              "loglevel": "quiet",
               "encode": {
                 "pix_fmt": "yuv420p",
                 "framerate": 25,
@@ -217,6 +219,7 @@ To send resized picture change `fullpic` to `false`.
           "null_audio": false, # enable fake silent audio (for cameras without mics)
           "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
           "key": "aaaa-bbbb-cccc-dddd" # YouTube Live Stream key.
+          "loglevel": "quiet", # ffmpeg log levels, default "quiet"
           "encode": { # key with transcode configuration
             "pix_fmt": "yuv420p", # pixel format, HikVision streams in yuvj420p
             "framerate": 25, # encode framerate, YouTube will re-encode any to 30 anyway

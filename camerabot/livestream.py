@@ -54,13 +54,19 @@ class YouTubeStreamService(LiveStreamService):
         try:
             self._log.debug('YouTube ffmpeg command: {0}'.format(
                 ' '.join(self._cmd)))
-            self._proc = subprocess.Popen(self._cmd, stderr=subprocess.STDOUT)
+            self._proc = subprocess.Popen(self._cmd,
+                                          stderr=subprocess.STDOUT,
+                                          stdout=subprocess.PIPE,
+                                          universal_newlines=True)
             self._start_ts = int(time.time())
             self._started.set()
         except Exception:
             err_msg = 'YouTube stream failed to start'
             self._log.exception(err_msg)
             raise HomeCamError(err_msg)
+
+    def get_stdout(self):
+        return self._proc.stdout.readline().rstrip()
 
     def stop(self, disable=True):
         """Stop the stream."""
@@ -137,6 +143,7 @@ class YouTubeStreamService(LiveStreamService):
                                    filter=null_audio['filter'],
                                    host=urlsplit(self._hik_host).netloc,
                                    key=self._stream_conf.key,
+                                   loglevel=self._stream_conf.loglevel,
                                    map=null_audio['map'],
                                    pw=self._hik_password,
                                    url=self._stream_conf.url,

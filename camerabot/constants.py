@@ -11,7 +11,7 @@ CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
 # Livestream constants
-CMD_YT_FFMPEG_CMD = 'ffmpeg -loglevel error {{filter}} -rtsp_transport tcp -i ' \
+CMD_YT_FFMPEG_CMD = 'ffmpeg -loglevel {{loglevel}} {{filter}} -rtsp_transport tcp -i ' \
     'rtsp://{{user}}:{{pw}}@{{host}}/Streaming/Channels/{{channel}}/ {{map}} ' \
     '{inner_cmd} -c:a aac {{bitrate}} ' \
     '-f flv {{url}}/{{key}}'
