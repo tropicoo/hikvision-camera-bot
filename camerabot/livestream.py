@@ -165,6 +165,7 @@ class YouTubeStreamService(LiveStreamService):
                                    group=self._stream_conf.encode.framerate*2,
                                    host=urlsplit(self._hik_host).netloc,
                                    key=self._stream_conf.key,
+                                   loglevel=self._stream_conf.loglevel,
                                    map=null_audio['map'],
                                    maxrate=self._stream_conf.encode.maxrate,
                                    pix_fmt=self._stream_conf.encode.pix_fmt,
