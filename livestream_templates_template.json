@@ -7,27 +7,35 @@
         "restart_pause": 10,
         "null_audio": false,
         "url": "rtmp://a.rtmp.youtube.com/live2",
-        "key": "aaaa-bbbb-cccc-dddd",
-        "loglevel": "quiet"
-      },
-      "tpl_basement": {
+        "key": "xxxx-xxxx-xxxx-xxxx",
+        "loglevel": "quiet",
+        "vcodec": "copy",
+        "acodec": "aac",
+        "format": "flv",
+        "rtsp_transport_type": "tcp"
       }
     },
     "transcode": {
-      "tpl_basement": {
+      "tpl_kitchen": {
         "channel": 101,
         "restart_period": 39600,
         "restart_pause": 10,
         "null_audio": false,
         "url": "rtmp://a.rtmp.youtube.com/live2",
-        "key": "aaaa-bbbb-cccc-dddd",
+        "key": "xxxx-xxxx-xxxx-xxxx",
         "loglevel": "quiet",
+        "vcodec": "libx264",
+        "acodec": "aac",
+        "format": "flv",
+        "rtsp_transport_type": "tcp",
         "encode": {
           "pix_fmt": "yuv420p",
+          "pass_mode": 1,
           "framerate": 25,
           "preset": "superfast",
+          "average_bitrate": "1000K",
           "maxrate": "3000k",
-          "bufsize": "2000k",
+          "bufsize": "6000k",
           "tune": "zerolatency",
           "scale": {
             "enabled": true,
@@ -35,6 +43,46 @@
             "height": -1,
             "format": "yuv420p"
           }
+        }
+      }
+    }
+  },
+  "icecast": {
+    "transcode": {
+      "tpl_kitchen": {
+        "channel": 101,
+        "restart_period": 39600,
+        "restart_pause": 10,
+        "null_audio": false,
+        "loglevel": "info",
+        "vcodec": "libvpx-vp9",
+        "acodec": "libopus",
+        "format": "webm",
+        "rtsp_transport_type": "tcp",
+        "encode": {
+          "pix_fmt": "yuv420p",
+          "pass_mode": 1,
+          "framerate": 10,
+          "average_bitrate": "1000K",
+          "maxrate": "3000k",
+          "bufsize": "6000k",
+          "scale": {
+            "enabled": true,
+            "width": 640,
+            "height": -1,
+            "format": "yuv420p"
+          }
+        },
+        "ice_stream": {
+          "ice_genre": "Default",
+          "ice_name": "Default",
+          "ice_description": "Default",
+          "ice_public": 1,
+          "url": "icecast://source@10.10.10.10:8000/video.webm",
+          "password": "hackme",
+          "content_type": "video/webm",
+          "deadline": "realtime",
+          "speed": 5
         }
       }
     }

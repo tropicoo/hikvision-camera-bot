@@ -3,7 +3,7 @@
 from queue import Queue
 from threading import Event
 
-from camerabot.constants import SWITCH_MAP, ALARM_TRIGGERS
+from camerabot.constants import SWITCH_MAP, ALARM_TRIGGERS, AlarmMap
 from camerabot.exceptions import HomeCamError, APIError
 from camerabot.service import BaseService
 
@@ -19,6 +19,7 @@ class AlarmService(BaseService):
         self.alert_delay = conf.delay
         self.alert_count = 0
         self._started = Event()
+        self.type = self.name = AlarmMap.type
 
     def is_started(self):
         """Check if alarm is enabled."""

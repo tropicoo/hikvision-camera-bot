@@ -10,7 +10,6 @@ from telegram.ext import CommandHandler, Updater
 
 from camerabot.camerabot import CameraBot
 from camerabot.config import get_main_config
-from camerabot.constants import LOG_LEVELS_STR
 from camerabot.directorywatcher import DirectoryWatcher
 from camerabot.exceptions import ConfigError, DirectoryWatcherError
 from camerabot.homecam import HomeCam, CameraPoolController
@@ -25,7 +24,10 @@ COMMANDS_TPL = {CameraBot.cmds: 'cmds_{0}',
                 CameraBot.cmd_alert_on: 'alert_on_{0}',
                 CameraBot.cmd_alert_off: 'alert_off_{0}',
                 CameraBot.cmd_stream_yt_on: 'yt_on_{0}',
-                CameraBot.cmd_stream_yt_off: 'yt_off_{0}'}
+                CameraBot.cmd_stream_yt_off: 'yt_off_{0}',
+                CameraBot.cmd_stream_icecast_on: 'icecast_on_{0}',
+                CameraBot.cmd_stream_icecast_off: 'icecast_off_{0}'
+                }
 
 COMMANDS = {CameraBot.cmd_help: ('start', 'help'),
             CameraBot.cmd_stop: 'stop',
@@ -46,8 +48,7 @@ class CameraBotLauncher:
         except ConfigError as err:
             sys.exit(str(err))
 
-        log_level = self._get_int_log_level()
-        logging.getLogger().setLevel(log_level)
+        logging.getLogger().setLevel(self._conf.log_level)
 
         cam_pool, cmds = self._create_cameras()
 
@@ -111,14 +112,6 @@ class CameraBotLauncher:
             dispatcher.add_handler(CommandHandler(event_funcs, handler_func))
 
         dispatcher.add_error_handler(CameraBot.error_handler)
-
-    def _get_int_log_level(self):
-        if self._conf.log_level not in LOG_LEVELS_STR:
-            warn_msg = 'Invalid log level "{0}", using "INFO". ' \
-                       'Choose from {1})'.format(self._conf.log_level,
-                                                 LOG_LEVELS_STR)
-            self._log.warning(warn_msg)
-        return getattr(logging, self._conf.log_level, logging.INFO)
 
 
 if __name__ == '__main__':

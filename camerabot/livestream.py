@@ -1,34 +1,44 @@
-"""Live stream module."""
+"""livestream module."""
 
+import abc
 import subprocess
 import time
 from threading import Event
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 
 from psutil import NoSuchProcess
 
 from camerabot.config import get_livestream_tpl_config
-from camerabot.constants import (LIVESTREAM_YT_CMD_MAP, LIVESTREAM_DIRECT,
-                                 LIVESTREAM_TRANSCODE, CMD_YT_FFMPEG_CMD,
-                                 FFMPEG_NULL_AUDIO, FFMPEG_SCALE_FILTER)
+from camerabot.constants import (LIVESTREAM_DIRECT, StreamMap,
+                                 LIVESTREAM_TRANSCODE,
+                                 FFMPEG_CMD, FFMPEG_CMD_NULL_AUDIO,
+                                 FFMPEG_CMD_SCALE_FILTER,
+                                 FFMPEG_CMD_TRANSCODE_GENERAL,
+                                 FFMPEG_TRANSCODE_MAP)
 from camerabot.exceptions import HomeCamError
 from camerabot.service import BaseService
 from camerabot.utils import kill_proc_tree
 
 
-class LiveStreamService(BaseService):
-    """Live Stream Service Base class."""
-    pass
+class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
+    """livestream Service Base class."""
 
+    # Not needed since abc.abstractethods are defined
+    # def __new__(cls, *args, **kwargs):
+    #     if cls is FFMPEGBaseStreamService:
+    #         raise TypeError('{0} class may not be instantiated'.format(
+    #             cls.__name__))
+    #     return super().__new__(cls)
 
-class YouTubeStreamService(LiveStreamService):
-    """YouTube Live Stream Service class."""
-
-    def __init__(self, conf, hik_user, hik_password, hik_host):
+    def __init__(self, stream_name, conf, hik_user, hik_password, hik_host):
         super().__init__()
 
-        self._cmd_gen_dispatcher = {LIVESTREAM_DIRECT: self._generate_direct_cmd,
-                                    LIVESTREAM_TRANSCODE: self._generate_transcode_cmd}
+        self._cmd_gen_dispatcher = {
+            LIVESTREAM_DIRECT: self._generate_direct_cmd,
+            LIVESTREAM_TRANSCODE: self._generate_transcode_cmd}
+
+        self.name = stream_name
+        self.type = StreamMap.type
 
         self._conf = conf
         self._conf_tpl = get_livestream_tpl_config()
@@ -48,12 +58,12 @@ class YouTubeStreamService(LiveStreamService):
     def start(self, skip_check=False):
         """Start the stream."""
         if not skip_check and self.is_started():
-            msg = 'YouTube stream already started'
+            msg = '{0} stream already started'.format(self._cls_name)
             self._log.info(msg)
             raise HomeCamError(msg)
         try:
-            self._log.debug('YouTube ffmpeg command: {0}'.format(
-                ' '.join(self._cmd)))
+            self._log.debug('{0} ffmpeg command: {1}'.format(
+                self._cls_name, ' '.join(self._cmd)))
             self._proc = subprocess.Popen(self._cmd,
                                           stderr=subprocess.STDOUT,
                                           stdout=subprocess.PIPE,
@@ -61,12 +71,9 @@ class YouTubeStreamService(LiveStreamService):
             self._start_ts = int(time.time())
             self._started.set()
         except Exception:
-            err_msg = 'YouTube stream failed to start'
+            err_msg = '{0} failed to start'.format(self._cls_name)
             self._log.exception(err_msg)
             raise HomeCamError(err_msg)
-
-    def get_stdout(self):
-        return self._proc.stdout.readline().rstrip()
 
     def stop(self, disable=True):
         """Stop the stream."""
@@ -75,7 +82,7 @@ class YouTubeStreamService(LiveStreamService):
                 self._started.clear()
 
         if not self.is_started():
-            msg = 'YouTube stream already stopped'
+            msg = '{0} already stopped'.format(self._cls_name)
             self._log.info(msg)
             raise HomeCamError(msg)
         try:
@@ -119,77 +126,118 @@ class YouTubeStreamService(LiveStreamService):
             self._started.clear()
         return alive_state
 
+    def get_stdout(self):
+        return self._proc.stdout.readline().rstrip()
+
     def _generate_cmd(self):
         try:
-            stream_type, tpl_name = self._conf.template.split('.')
+            # e.g. transcode, tpl_kitchen
+            processing_type, tpl_name = self._conf.template.split('.')
         except ValueError:
-            err_msg = 'Failed to load YouTube Livestream ' \
-                      'template "{0}"'.format(self._conf.template)
+            err_msg = 'Failed to load {0} template "{1}"'.format(
+                self._cls_name, self._conf.template)
             self._log.error(err_msg)
             raise HomeCamError(err_msg)
 
-        inner_cmd_tpl = LIVESTREAM_YT_CMD_MAP[stream_type]
-        cmd_tpl = CMD_YT_FFMPEG_CMD.format(inner_cmd=inner_cmd_tpl)
-        self._stream_conf = self._conf_tpl.youtube[stream_type][tpl_name]
+        self._stream_conf = self._conf_tpl[self.name][processing_type][tpl_name]
 
-        null_audio = FFMPEG_NULL_AUDIO if self._stream_conf.null_audio else \
-            {k: '' for k in FFMPEG_NULL_AUDIO}
+        null_audio = FFMPEG_CMD_NULL_AUDIO if self._stream_conf.null_audio else \
+            {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
 
-        self._cmd_gen_dispatcher[stream_type](cmd_tpl, null_audio)
+        cmd_transcode = ''
+        if processing_type == LIVESTREAM_TRANSCODE:
+            cmd_transcode = FFMPEG_CMD_TRANSCODE_GENERAL.format(
+                average_bitrate=self._stream_conf.encode.average_bitrate,
+                bufsize=self._stream_conf.encode.bufsize,
+                framerate=self._stream_conf.encode.framerate,
+                maxrate=self._stream_conf.encode.maxrate,
+                pass_mode=self._stream_conf.encode.pass_mode,
+                pix_fmt=self._stream_conf.encode.pix_fmt,
+                scale=self._generate_scale_cmd())
 
-    def _generate_direct_cmd(self, cmd_tpl, null_audio):
-        self._cmd = cmd_tpl.format(bitrate=null_audio['bitrate'],
-                                   channel=self._stream_conf.channel,
-                                   filter=null_audio['filter'],
-                                   host=urlsplit(self._hik_host).netloc,
-                                   key=self._stream_conf.key,
-                                   loglevel=self._stream_conf.loglevel,
-                                   map=null_audio['map'],
-                                   pw=self._hik_password,
-                                   url=self._stream_conf.url,
-                                   user=self._hik_user).split()
+        cmd_tpl = FFMPEG_CMD.format(abitrate=null_audio['bitrate'],
+                                    acodec=self._stream_conf.acodec,
+                                    channel=self._stream_conf.channel,
+                                    filter=null_audio['filter'],
+                                    format=self._stream_conf.format,
+                                    host=urlsplit(self._hik_host).netloc,
+                                    inner_args=cmd_transcode,
+                                    loglevel=self._stream_conf.loglevel,
+                                    map=null_audio['map'],
+                                    pw=self._hik_password,
+                                    rtsp_transport_type=
+                                        self._stream_conf.rtsp_transport_type,
+                                    user=self._hik_user,
+                                    vcodec=self._stream_conf.vcodec)
 
-    def _generate_transcode_cmd(self, cmd_tpl, null_audio):
-        scale = ''
-        if self._stream_conf.encode.scale.enabled:
-            scale = FFMPEG_SCALE_FILTER.format(
+        self._cmd_gen_dispatcher[processing_type](cmd_tpl)
+
+    def _generate_scale_cmd(self):
+        return FFMPEG_CMD_SCALE_FILTER.format(
                 width=self._stream_conf.encode.scale.width,
                 height=self._stream_conf.encode.scale.height,
-                format=self._stream_conf.encode.scale.format)
+                format=self._stream_conf.encode.scale.format) \
+            if self._stream_conf.encode.scale.enabled else ''
 
-        self._cmd = cmd_tpl.format(bitrate=null_audio['bitrate'],
-                                   bufsize=self._stream_conf.encode.bufsize,
-                                   channel=self._stream_conf.channel,
-                                   filter=null_audio['filter'],
-                                   framerate=self._stream_conf.encode.framerate,
-                                   group=self._stream_conf.encode.framerate*2,
-                                   host=urlsplit(self._hik_host).netloc,
-                                   key=self._stream_conf.key,
-                                   loglevel=self._stream_conf.loglevel,
-                                   map=null_audio['map'],
-                                   maxrate=self._stream_conf.encode.maxrate,
-                                   pix_fmt=self._stream_conf.encode.pix_fmt,
-                                   preset=self._stream_conf.encode.preset,
-                                   pw=self._hik_password,
-                                   scale=scale,
-                                   tune=self._stream_conf.encode.tune,
-                                   url=self._stream_conf.url,
-                                   user=self._hik_user).split()
+    @abc.abstractmethod
+    def _generate_direct_cmd(self, cmd_tpl):
+        # self._cmd = cmd_tpl.format(...)
+        pass
+
+    @abc.abstractmethod
+    def _generate_transcode_cmd(self, cmd_tpl):
+        # self._cmd = cmd_tpl.format(...)
+        pass
 
 
-class TwitchStreamService(LiveStreamService):
-    """Twitch Live stream class."""
-    def __init__(self):
-        super().__init__()
+class YouTubeStreamService(FFMPEGBaseStreamService):
+    """YouTube livestream Service class."""
 
-    def start(self):
-        raise NotImplementedError
+    def __init__(self, conf, hik_user, hik_password, hik_host):
+        super().__init__(StreamMap.YOUTUBE, conf, hik_user, hik_password, hik_host)
 
-    def stop(self):
-        raise NotImplementedError
+    def _generate_direct_cmd(self, cmd_tpl):
+        self._cmd = cmd_tpl.format(output=self._generate_output()).split()
 
-    def is_started(self):
-        raise NotImplementedError
+    def _generate_transcode_cmd(self, cmd_tpl):
+        inner_args = FFMPEG_TRANSCODE_MAP[self.name].format(
+            preset=self._stream_conf.encode.preset,
+            tune=self._stream_conf.encode.tune)
+        self._cmd = cmd_tpl.format(output=self._generate_output(),
+                                   inner_args=inner_args).split()
 
-    def is_enabled_in_conf(self):
+    def _generate_output(self):
+        # urljoin does not support rtmp protocol
+        return '{0}/{1}'.format(self._stream_conf.url, self._stream_conf.key)
+
+
+class IcecastStreamService(FFMPEGBaseStreamService):
+    """Icecast livestream class."""
+
+    def __init__(self, conf, hik_user, hik_password, hik_host):
+        super().__init__(StreamMap.ICECAST, conf, hik_user, hik_password, hik_host)
+
+    def _generate_direct_cmd(self):
+        raise HomeCamError('{0} does not support direct streaming, change'
+                           'template type'.format(self._cls_name))
+
+    def _generate_transcode_cmd(self, cmd_tpl):
+        inner_args = FFMPEG_TRANSCODE_MAP[self.name].format(
+            ice_genre=self._stream_conf.ice_stream.ice_genre,
+            ice_name=self._stream_conf.ice_stream.ice_name,
+            ice_description=self._stream_conf.ice_stream.ice_description,
+            ice_public=self._stream_conf.ice_stream.ice_public,
+            content_type=self._stream_conf.ice_stream.content_type,
+            deadline=self._stream_conf.ice_stream.deadline,
+            password=self._stream_conf.ice_stream.password,
+            speed=self._stream_conf.ice_stream.speed)
+        self._cmd = cmd_tpl.format(output=self._stream_conf.ice_stream.url,
+                                   inner_args=inner_args).split()
+
+
+class TwitchStreamService(FFMPEGBaseStreamService):
+    """Twitch livestream class."""
+
+    def __init__(self, conf, hik_user, hik_password, hik_host):
+        super().__init__(StreamMap.TWITCH, conf, hik_user, hik_password, hik_host)
         raise NotImplementedError

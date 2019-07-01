@@ -10,7 +10,7 @@ from camerabot.alarm import AlarmService
 from camerabot.api import HikVisionAPI
 from camerabot.constants import IMG_SIZE, IMG_FORMAT, IMG_QUALITY
 from camerabot.exceptions import HomeCamError, APIError
-from camerabot.livestream import YouTubeStreamService
+from camerabot.livestream import YouTubeStreamService, IcecastStreamService
 from camerabot.service import ServiceController
 
 
@@ -59,8 +59,13 @@ class HomeCam:
                                               hik_user=conf.api.auth.user,
                                               hik_password=conf.api.auth.password,
                                               hik_host=conf.api.host)
+        self.stream_icecast = IcecastStreamService(
+            conf=conf.livestream.icecast,
+            hik_user=conf.api.auth.user,
+            hik_password=conf.api.auth.password,
+            hik_host=conf.api.host)
         self.service_controller = ServiceController()
-        for service in (self.alarm, self.stream_yt):
+        for service in (self.alarm, self.stream_yt, self.stream_icecast):
             self.service_controller.register_service(service)
         self._log.debug(self.service_controller)
 

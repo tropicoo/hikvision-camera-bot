@@ -3,32 +3,54 @@
 IMG_SIZE = (1280, 724)
 IMG_FORMAT = 'JPEG'
 IMG_QUALITY = 90
-LOG_LEVELS_STR = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 BAD_RESPONSE_CODES = {401: 'Got 401: Unauthorized. Wrong credentials?',
                       403: 'Got 403: Forbidden. Wrong URL?\n{0}',
                       404: 'Got 404: URL Not Found\n{0}'}
 CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
+
+class StreamMap:
+    type = 'stream'
+    YOUTUBE = 'youtube'
+    ICECAST = 'icecast'
+    TWITCH = 'twitch'
+
+
+class AlarmMap:
+    ALARM = type = 'alarm'
+
+
 # Livestream constants
-CMD_YT_FFMPEG_CMD = 'ffmpeg -loglevel {{loglevel}} {{filter}} -rtsp_transport tcp -i ' \
-    'rtsp://{{user}}:{{pw}}@{{host}}/Streaming/Channels/{{channel}}/ {{map}} ' \
-    '{inner_cmd} -c:a aac {{bitrate}} ' \
-    '-f flv {{url}}/{{key}}'
-_CMD_YT_DIRECT_FFMPEG = '-c:v copy'
-_CMD_YT_TRANSCODE_FFMPEG = '-c:v libx264 -pix_fmt {pix_fmt} -preset {preset} ' \
-                           '-maxrate {maxrate} -bufsize {bufsize} ' \
-                           '-tune {tune} {scale} -r {framerate} -g {group}'
-FFMPEG_SCALE_FILTER = '-vf scale={width}:{height},format={format}'
-FFMPEG_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
+FFMPEG_CMD = 'ffmpeg -loglevel {loglevel} ' \
+             '{filter} ' \
+             '-rtsp_transport {rtsp_transport_type} ' \
+             '-i rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/ ' \
+             '{map} ' \
+             '-c:v {vcodec} ' \
+             '{inner_args} ' \
+             '-c:a {acodec} {abitrate} ' \
+             '-f {format} ' \
+             '{{output}}'
+FFMPEG_CMD_TRANSCODE_GENERAL = '-b:v {average_bitrate} -maxrate {maxrate} ' \
+                               '-bufsize {bufsize} ' \
+                               '-pass {pass_mode} -pix_fmt {pix_fmt} ' \
+                               '-r {framerate} {scale} {{inner_args}}'
+_FFMPEG_CMD_TRANSCODE_YT = '-preset {preset} -tune {tune}'
+_FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre {ice_genre} -ice_name {ice_name} ' \
+                                '-ice_description {ice_description} ' \
+                                '-ice_public {ice_public} -password {password} ' \
+                                '-content_type {content_type} ' \
+                                '-deadline {deadline} -speed {speed}'
+FFMPEG_CMD_SCALE_FILTER = '-vf scale={width}:{height},format={format}'
+FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                                'channel_layout=mono:sample_rate=8000',
                      'map': '-map 0:a -map 1:v',
                      'bitrate': '-b:a 5k'}
+FFMPEG_TRANSCODE_MAP = {StreamMap.YOUTUBE: _FFMPEG_CMD_TRANSCODE_YT,
+                        StreamMap.ICECAST: _FFMPEG_CMD_TRANSCODE_ICECAST}
 LIVESTREAM_DIRECT = 'direct'
 LIVESTREAM_TRANSCODE = 'transcode'
-LIVESTREAM_YT_CMD_MAP = {LIVESTREAM_DIRECT: _CMD_YT_DIRECT_FFMPEG,
-                         LIVESTREAM_TRANSCODE: _CMD_YT_TRANSCODE_FFMPEG}
-
 
 # Alert (alarm) constants
 MOTION_DETECTION = 'motion_detection'
