@@ -77,7 +77,7 @@
           "ice_genre": "Default",
           "ice_name": "Default",
           "ice_description": "Default",
-          "ice_public": 1,
+          "ice_public": 0,
           "url": "icecast://source@10.10.10.10:8000/video.webm",
           "password": "hackme",
           "content_type": "video/webm",

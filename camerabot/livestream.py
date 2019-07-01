@@ -4,7 +4,7 @@ import abc
 import subprocess
 import time
 from threading import Event
-from urllib.parse import urlsplit, urljoin
+from urllib.parse import urlsplit
 
 from psutil import NoSuchProcess
 
@@ -63,8 +63,9 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
             raise HomeCamError(msg)
         try:
             self._log.debug('{0} ffmpeg command: {1}'.format(
-                self._cls_name, ' '.join(self._cmd)))
+                self._cls_name, self._cmd))
             self._proc = subprocess.Popen(self._cmd,
+                                          shell=True,
                                           stderr=subprocess.STDOUT,
                                           stdout=subprocess.PIPE,
                                           universal_newlines=True)
@@ -197,14 +198,14 @@ class YouTubeStreamService(FFMPEGBaseStreamService):
         super().__init__(StreamMap.YOUTUBE, conf, hik_user, hik_password, hik_host)
 
     def _generate_direct_cmd(self, cmd_tpl):
-        self._cmd = cmd_tpl.format(output=self._generate_output()).split()
+        self._cmd = cmd_tpl.format(output=self._generate_output())
 
     def _generate_transcode_cmd(self, cmd_tpl):
         inner_args = FFMPEG_TRANSCODE_MAP[self.name].format(
             preset=self._stream_conf.encode.preset,
             tune=self._stream_conf.encode.tune)
         self._cmd = cmd_tpl.format(output=self._generate_output(),
-                                   inner_args=inner_args).split()
+                                   inner_args=inner_args)
 
     def _generate_output(self):
         # urljoin does not support rtmp protocol
@@ -232,7 +233,7 @@ class IcecastStreamService(FFMPEGBaseStreamService):
             password=self._stream_conf.ice_stream.password,
             speed=self._stream_conf.ice_stream.speed)
         self._cmd = cmd_tpl.format(output=self._stream_conf.ice_stream.url,
-                                   inner_args=inner_args).split()
+                                   inner_args=inner_args)
 
 
 class TwitchStreamService(FFMPEGBaseStreamService):

@@ -37,10 +37,10 @@ FFMPEG_CMD_TRANSCODE_GENERAL = '-b:v {average_bitrate} -maxrate {maxrate} ' \
                                '-pass {pass_mode} -pix_fmt {pix_fmt} ' \
                                '-r {framerate} {scale} {{inner_args}}'
 _FFMPEG_CMD_TRANSCODE_YT = '-preset {preset} -tune {tune}'
-_FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre {ice_genre} -ice_name {ice_name} ' \
-                                '-ice_description {ice_description} ' \
-                                '-ice_public {ice_public} -password {password} ' \
-                                '-content_type {content_type} ' \
+_FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre "{ice_genre}" -ice_name "{ice_name}" ' \
+                                '-ice_description "{ice_description}" ' \
+                                '-ice_public {ice_public} -password "{password}" ' \
+                                '-content_type "{content_type}" ' \
                                 '-deadline {deadline} -speed {speed}'
 FFMPEG_CMD_SCALE_FILTER = '-vf scale={width}:{height},format={format}'
 FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='

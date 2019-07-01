@@ -1,20 +1,25 @@
 HikVision Telegram Camera Bot
 =============================
 Bot which sends snapshots from your HikVision camera(s).
+Features:
+1. Send snapshots on Motion Alert
+2. Send snapshots on Line Crossing Detection
+3. Send resized/full snapshots on request
+4. YouTube and Icecast re-encoded or direct stream
 
 Installation
 ------------
 
 To install HikVision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
-Make sure you have [Python 3](https://www.python.org/downloads/) installed.
+Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed.
 
 
 ```
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
 pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
 
-# To be able to use YouTube Livestream install ffmpeg
+# To be able to use YouTube/Icecast Livestream install ffmpeg
 sudo apt-get install ffmpeg
 ```
 
