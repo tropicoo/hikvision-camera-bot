@@ -29,6 +29,8 @@
         "format": "flv",
         "rtsp_transport_type": "tcp",
         "encode": {
+        "preset": "ultrafast",
+        "threads": "0",          
           "pix_fmt": "yuv420p",
           "pass_mode": 1,
           "framerate": 25,
