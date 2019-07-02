@@ -203,6 +203,7 @@ class YouTubeStreamService(FFMPEGBaseStreamService):
     def _generate_transcode_cmd(self, cmd_tpl):
         inner_args = FFMPEG_TRANSCODE_MAP[self.name].format(
             preset=self._stream_conf.encode.preset,
+            threads=self._stream_conf.encode.threads,          
             tune=self._stream_conf.encode.tune)
         self._cmd = cmd_tpl.format(output=self._generate_output(),
                                    inner_args=inner_args)
@@ -229,6 +230,8 @@ class IcecastStreamService(FFMPEGBaseStreamService):
             ice_description=self._stream_conf.ice_stream.ice_description,
             ice_public=self._stream_conf.ice_stream.ice_public,
             content_type=self._stream_conf.ice_stream.content_type,
+            preset=self._stream_conf.encode.preset,
+            threads=self._stream_conf.encode.threads,          
             deadline=self._stream_conf.ice_stream.deadline,
             password=self._stream_conf.ice_stream.password,
             speed=self._stream_conf.ice_stream.speed)
