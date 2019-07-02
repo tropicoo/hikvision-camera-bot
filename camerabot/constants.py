@@ -41,7 +41,7 @@ _FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre "{ice_genre}" -ice_name "{ice_name}"
                                 '-ice_description "{ice_description}" ' \
                                 '-ice_public {ice_public} -password "{password}" ' \
                                 '-content_type "{content_type}" ' \
-                                '-deadline {deadline} -speed {speed}'
+                                '-threads {threads} -preset {preset} -deadline {deadline} -speed {speed}'
 FFMPEG_CMD_SCALE_FILTER = '-vf scale={width}:{height},format={format}'
 FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                                'channel_layout=mono:sample_rate=8000',
