@@ -35,14 +35,14 @@ class DirectoryWatcher:
             self._log.error(err_msg)
             raise DirectoryWatcherError(err_msg)
 
-        self._log.info('Starting to watch {0}'.format(self.directory))
+        self._log.info('Starting to watch %s', self.directory)
         self._observer.schedule(self._event_handler, self.directory)
         self._observer.start()
         try:
             while True:
                 time.sleep(1)
         except Exception as err:
-            self._log.error('Watchdog encountered an error: {0}'.format(str(err)))
+            self._log.error('Watchdog encountered an error: %s', str(err))
             self._observer.stop()
         self._observer.join()
 
@@ -64,12 +64,11 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
                 if not call(cmd, shell=True):
                     break
             except Exception as err:
-                self._log.error('EventHandler encountered an '
-                                'error: {0}'.format(str(err)))
+                self._log.error('EventHandler encountered an error: %s', str(err))
                 raise DirectoryWatcherError(err)
         try:
-            self._log.info('Sending {0} to {1}'.format(file_path,
-                                                       self._bot.bot.first_name))
+            self._log.info('Sending %s to %s', file_path,
+                           self._bot.bot.first_name)
             now = datetime.datetime.now()
             caption = 'Directory Watcher Alert at {0}'.format(
                 now.strftime('%Y-%m-%d %H:%M:%S'))
@@ -77,12 +76,12 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
                 self._bot.bot.reply_cam_photo(photo=fd, caption=caption,
                                               from_watchdog=True)
         except Exception as err:
-            self._log.error('Can\'t open {0} for sending: {1}'.format(file_path,
-                                                                      str(err)))
+            self._log.error('Can\'t open %s for sending: %s',
+                            file_path, str(err))
             raise DirectoryWatcherError(err)
         try:
-            self._log.info('{0} sent, deleting'.format(file_path))
+            self._log.info('%s sent, deleting', file_path)
             Path.unlink(file_path)
         except Exception as err:
-            self._log.error('Can\'t delete {0}: {1}'.format(file_path, str(err)))
+            self._log.error('Can\'t delete %s: %s', file_path, str(err))
             raise DirectoryWatcherError(err)

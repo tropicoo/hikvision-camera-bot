@@ -8,7 +8,7 @@ from PIL import Image
 
 from camerabot.alarm import AlarmService
 from camerabot.api import HikVisionAPI
-from camerabot.constants import IMG_SIZE, IMG_FORMAT, IMG_QUALITY
+from camerabot.constants import IMG
 from camerabot.exceptions import HomeCamError, APIError
 from camerabot.livestream import YouTubeStreamService, IcecastStreamService
 from camerabot.service import ServiceController
@@ -51,22 +51,24 @@ class HomeCam:
         self._log = logging.getLogger(self.__class__.__name__)
         self.conf = conf
         self.description = conf.description
-        self._log.debug('Initializing {0}'.format(self.description))
+        self._log.debug('Initializing %s', self.description)
         self._api = HikVisionAPI(conf=conf.api)
         self.snapshots_taken = 0
+
         self.alarm = AlarmService(conf=conf.alert, api=self._api)
-        self.stream_yt = YouTubeStreamService(conf=conf.livestream.youtube,
-                                              hik_user=conf.api.auth.user,
-                                              hik_password=conf.api.auth.password,
-                                              hik_host=conf.api.host)
+        self.stream_yt = YouTubeStreamService(
+            conf=conf.livestream.youtube,
+            hik_user=conf.api.auth.user,
+            hik_password=conf.api.auth.password,
+            hik_host=conf.api.host)
         self.stream_icecast = IcecastStreamService(
             conf=conf.livestream.icecast,
             hik_user=conf.api.auth.user,
             hik_password=conf.api.auth.password,
             hik_host=conf.api.host)
         self.service_controller = ServiceController()
-        for service in (self.alarm, self.stream_yt, self.stream_icecast):
-            self.service_controller.register_service(service)
+        self.service_controller.register_services((self.alarm, self.stream_yt,
+                                                   self.stream_icecast))
         self._log.debug(self.service_controller)
 
     def __repr__(self):
@@ -74,7 +76,7 @@ class HomeCam:
 
     def take_snapshot(self, resize=False):
         """Take and return full or resized snapshot from the camera."""
-        self._log.debug('Taking snapshot from {0}'.format(self.description))
+        self._log.debug('Taking snapshot from %s', self.description)
         try:
             res = self._api.take_snapshot()
             snapshot_timestamp = int(datetime.now().timestamp())
@@ -98,12 +100,12 @@ class HomeCam:
         snapshot = Image.open(raw_snapshot)
         resized_snapshot = BytesIO()
 
-        snapshot.resize(IMG_SIZE, Image.ANTIALIAS)
-        snapshot.save(resized_snapshot, IMG_FORMAT, quality=IMG_QUALITY)
+        snapshot.resize(IMG.SIZE, Image.ANTIALIAS)
+        snapshot.save(resized_snapshot, IMG.FORMAT, quality=IMG.QUALITY)
         resized_snapshot.seek(0)
 
-        self._log.debug("Raw snapshot: {0}, {1}, {2}".format(snapshot.format,
-                                                             snapshot.mode,
-                                                             snapshot.size))
-        self._log.debug("Resized snapshot: {0}".format(IMG_SIZE))
+        self._log.debug('Raw snapshot: %s, %s, %s', snapshot.format,
+                        snapshot.mode,
+                        snapshot.size)
+        self._log.debug('Resized snapshot: %s', IMG.SIZE)
         return resized_snapshot

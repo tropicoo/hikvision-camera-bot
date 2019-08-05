@@ -39,7 +39,13 @@
       "livestream": {
         "youtube": {
           "enabled": false,
-          "template": "direct.tpl_kitchen",
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "x264.kitchen"
+        },
+        "icecast": {
+          "enabled": false,
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "vp9.kitchen"
         }
       }
     },
@@ -73,7 +79,13 @@
       "livestream": {
         "youtube": {
           "enabled": false,
-          "template": "transcode.tpl_basement"
+          "livestream_template": "tpl_basement",
+          "encoding_template": "x264.basement"
+        },
+        "icecast": {
+          "enabled": false,
+          "livestream_template": "tpl_basement",
+          "encoding_template": "vp9.basement"
         }
       }
     }

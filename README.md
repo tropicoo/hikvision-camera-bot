@@ -1,19 +1,18 @@
 HikVision Telegram Camera Bot
 =============================
 Bot which sends snapshots from your HikVision camera(s).
+
 Features:
-1. Send snapshots on Motion Alert
-2. Send snapshots on Line Crossing Detection
-3. Send resized/full snapshots on request
-4. YouTube and Icecast re-encoded or direct stream
+1. Send snapshots on **Motion** and **Line Crossing Detection**
+2. Send resized/full snapshots on request
+3. YouTube and Icecast direct or re-encoded stream
 
 Installation
 ------------
 
 To install HikVision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
-Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed.
-
+Make sure you have [Python 3.6 or higher](https://www.python.org/downloads/) installed.
 
 ```
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
@@ -65,20 +64,26 @@ Copy default configuration file with predefined template `config-template.json`
           "stream_timeout": 300
         },
         "alert": {
-          "delay": 10,
+          "delay": 20,
           "motion_detection": {
             "enabled": false,
-            "fullpic": true
+            "fullpic": false
           },
           "line_crossing_detection": {
-            "enabled": false,
+            "enabled": true,
             "fullpic": true
           }
         },
         "livestream": {
           "youtube": {
             "enabled": false,
-            "template": "direct.tpl_kitchen"
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "x264.kitchen"
+          },
+          "icecast": {
+            "enabled": false,
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "vp9.kitchen"
           }
         }
       },
@@ -112,7 +117,13 @@ Copy default configuration file with predefined template `config-template.json`
         "livestream": {
           "youtube": {
             "enabled": false,
-            "template": "transcode.tpl_basement"
+            "livestream_template": "tpl_basement",
+            "encoding_template": "x264.basement"
+          },
+          "icecast": {
+            "enabled": false,
+            "livestream_template": "tpl_basement",
+            "encoding_template": "vp9.basement"
           }
         }
       }
@@ -145,70 +156,59 @@ To send resized picture change `fullpic` to `false`.
 8. To enable YouTube Live Stream (experimental), enable it in the `youtube` key.
     ```python
           "enabled": false, # set `true` to start stream during bot start
-          "template": "direct.tpl_kitchen" # stream template, read below
+          "livestream_template": "tpl_kitchen", # stream template, read below
+          "encoding_template": "x264.kitchen" # stream template, read below
     ```
     
-    *Livestream templates*
-    To start particular livestream, user needs to set which already template 
-    should be used for streaming (basically template contains ffmpeg arguments).
-    There are two template categories: `direct` and `transcode`.
+    **Livestream templates**
+    
+    To start particular livestream, user needs to set both *livestream* and
+    *encoding* templates with stream settings and encoding type/arguments.
+    
+    Encoding templates
     
     `direct` means that video stream will not be re-encoded (transcoded) and will
-    be sent to YouTube servers "as is", only audio can be disabled.
+    be sent to YouTube/Icecast servers "as is", only audio can be disabled.
     
-    `transcode` means that video stream will be re-encoded on your machine/server
-    where bot is running.
+    `x264` or `vp9` means that video stream will be re-encoded on your machine/server
+    where bot is running using respective encoding codecs.
     
-    User can create its own templates in file named `livestream_templates.json`.
-    Predefined template names are starting with `tpl_` e.g. `tpl_kitchen`, but
-    any can be used.
+    User can create its own templates in file named `livestream_templates.json` 
+    and `encoding_templates.json`.
     
     Default dummy template file is named `livestream_templates_template.json` 
     (not very funny name but anyway) which should be copied or renamed to 
     `livestream_templates.json`.
     
+    Same for `encoding_templates_template.json` -> `encoding_templates.json`
+    
     <details>
-      <summary>livestream_templates.json</summary>
+      <summary>livestream_templates_template.json</summary>
       
       ```json
       {
         "youtube": {
-          "direct": {
-            "tpl_kitchen": {
-              "channel": 101,
-              "restart_period": 39600,
-              "restart_pause": 10,
-              "null_audio": false,
-              "url": "rtmp://a.rtmp.youtube.com/live2",
-              "key": "aaaa-bbbb-cccc-dddd",
-              "loglevel": "quiet"
-            },
-            "tpl_basement": {
-            }
-          },
-          "transcode": {
-            "tpl_kitchen": {
-              "channel": 101,
-              "restart_period": 39600,
-              "restart_pause": 10,
-              "null_audio": false,
-              "url": "rtmp://a.rtmp.youtube.com/live2",
-              "key": "aaaa-bbbb-cccc-dddd",
-              "loglevel": "quiet",
-              "encode": {
-                "pix_fmt": "yuv420p",
-                "framerate": 25,
-                "preset": "superfast",
-                "maxrate": "3000k",
-                "bufsize": "2000k",
-                "tune": "zerolatency",
-                "scale": {
-                  "enabled": true,
-                  "width": 640,
-                  "height": -1,
-                  "format": "yuv420p"
-                }
-              }
+          "tpl_kitchen": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "url": "rtmp://a.rtmp.youtube.com/live2",
+            "key": "xxxx-xxxx-xxxx-xxxx"
+          }
+        },
+        "icecast": {
+          "tpl_kitchen": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "ice_stream": {
+              "ice_genre": "Default",
+              "ice_name": "Default",
+              "ice_description": "Default",
+              "ice_public": 0,
+              "url": "icecast://source@x.x.x.x:8000/video.webm",
+              "password": "xxxx",
+              "content_type": "video/webm"
             }
           }
         }
@@ -221,23 +221,154 @@ To send resized picture change `fullpic` to `false`.
           "channel": 101, # camera channel. 101 is main stream, 102 is substream.
           "restart_period": 39600, # stream restart period in seconds
           "restart_pause": 10, # stream pause before starting on restart
+          "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
+          "key": "aaaa-bbbb-cccc-dddd" # YouTube Live Stream key.
+   
+          "ice_genre": "Default", # Icecast stream genre
+          "ice_name": "Default", # Icecast stream name
+          "ice_description": "Default", # Icecast stream description
+          "ice_public": 0, # Icecast public switch, default 0
+          "url": "icecast://source@x.x.x.x:8000/video.webm", # Icecast server URL, Port and media mount point
+          "password": "xxxx", # Icecast authentication password
+          "content_type": "video/webm" # FFMPEG content-type for Icecast stream
+    ```
+    
+    <details>
+      <summary>encoding_templates_template.json</summary>
+      
+      ```json
+      {
+        "x264": {
+          "kitchen": {
+            "null_audio": false,
+            "loglevel": "quiet",
+            "vcodec": "libx264",
+            "acodec": "aac",
+            "format": "flv",
+            "rtsp_transport_type": "tcp",
+            "pix_fmt": "yuv420p",
+            "pass_mode": 1,
+            "framerate": 25,
+            "preset": "superfast",
+            "average_bitrate": "1000K",
+            "maxrate": "3000k",
+            "bufsize": "6000k",
+            "tune": "zerolatency",
+            "scale": {
+              "enabled": true,
+              "width": 640,
+              "height": -1,
+              "format": "yuv420p"
+            }
+          },
+          "basement": {
+            "null_audio": false,
+            "loglevel": "quiet",
+            "vcodec": "libx264",
+            "acodec": "aac",
+            "format": "flv",
+            "rtsp_transport_type": "tcp",
+            "pix_fmt": "yuv420p",
+            "pass_mode": 1,
+            "framerate": 25,
+            "preset": "superfast",
+            "average_bitrate": "1000K",
+            "maxrate": "3000k",
+            "bufsize": "6000k",
+            "tune": "zerolatency",
+            "scale": {
+              "enabled": true,
+              "width": 640,
+              "height": -1,
+              "format": "yuv420p"
+            }
+          }
+        },
+        "vp9": {
+          "kitchen": {
+            "null_audio": false,
+            "loglevel": "info",
+            "vcodec": "libvpx-vp9",
+            "acodec": "libopus",
+            "format": "webm",
+            "rtsp_transport_type": "tcp",
+            "pix_fmt": "yuv420p",
+            "pass_mode": 1,
+            "framerate": 10,
+            "average_bitrate": "1000K",
+            "maxrate": "2000k",
+            "bufsize": "4000k",
+            "deadline": "realtime",
+            "speed": 5,
+            "scale": {
+              "enabled": true,
+              "width": 640,
+              "height": -1,
+              "format": "yuv420p"
+            }
+          },
+          "basement": {
+            "null_audio": false,
+            "loglevel": "info",
+            "vcodec": "libvpx-vp9",
+            "acodec": "libopus",
+            "format": "webm",
+            "rtsp_transport_type": "tcp",
+            "pix_fmt": "yuv420p",
+            "pass_mode": 1,
+            "framerate": 10,
+            "average_bitrate": "1000K",
+            "maxrate": "2000k",
+            "bufsize": "4000k",
+            "deadline": "realtime",
+            "speed": 5,
+            "scale": {
+              "enabled": true,
+              "width": 640,
+              "height": -1,
+              "format": "yuv420p"
+            }
+          }
+        },
+        "direct": {
+          "kitchen": {
+            "null_audio": false,
+            "loglevel": "quiet",
+            "vcodec": "copy",
+            "acodec": "aac",
+            "format": "flv",
+            "rtsp_transport_type": "tcp"
+          },
+          "basement": {
+            "null_audio": false,
+            "loglevel": "quiet",
+            "vcodec": "copy",
+            "acodec": "aac",
+            "format": "flv",
+            "rtsp_transport_type": "tcp"
+          }
+        }
+      }
+      ```
+    </details>
+    
+    Where:
+    ```python
           "null_audio": false, # enable fake silent audio (for cameras without mics)
           "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
           "key": "aaaa-bbbb-cccc-dddd" # YouTube Live Stream key.
           "loglevel": "quiet", # ffmpeg log levels, default "quiet"
-          "encode": { # key with transcode configuration
-            "pix_fmt": "yuv420p", # pixel format, HikVision streams in yuvj420p
-            "framerate": 25, # encode framerate, YouTube will re-encode any to 30 anyway
-            "preset": "superfast", # libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264
-            "maxrate": "3000k", # max variable bitrate
-            "bufsize": "2000k", # rate control buffer
-            "tune": "zerolatency", # tune for zero latency
-            "scale": { # re-scale video size
-              "enabled": true, # false to disable and re-encode with source width and height
-              "width": 640, # width
-              "height": -1, # height, -1 means will be automatically determined
-              "format": "yuv420p" # pixel format
-            }
+          "pix_fmt": "yuv420p", # pixel format, HikVision streams in yuvj420p
+          "framerate": 25, # encode framerate, YouTube will re-encode any to 30 anyway
+          "preset": "superfast", # libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264
+          "maxrate": "3000k", # max variable bitrate
+          "bufsize": "2000k", # rate control buffer
+          "tune": "zerolatency", # tune for zero latency
+          "scale": { # re-scale video size
+          "enabled": true, # false to disable and re-encode with source width and height
+          "width": 640, # width
+          "height": -1, # height, -1 means will be automatically determined
+          "format": "yuv420p" # pixel format
           }
     ```
     
@@ -300,7 +431,13 @@ To send resized picture change `fullpic` to `false`.
         "livestream": {
           "youtube": {
             "enabled": false,
-            "template": "direct.tpl_kitchen",
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "x264.kitchen",
+          },
+          "icecast": {
+            "enabled": false,
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "vp9.kitchen"
           }
         }
       }
@@ -315,7 +452,7 @@ Simply run and wait for welcome message in your Telegram client.
 > Note: This will log the output to the stdout/stderr (your terminal). Closing
 the terminal will shutdown the bot.
 ```bash
-python3 bot.py -c config.json
+python3 bot.py
 
 # Or make the script executable by adding 'x' flag (it should be already with it)
 chmod +x bot.py

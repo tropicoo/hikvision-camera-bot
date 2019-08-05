@@ -11,8 +11,8 @@ from telegram import Bot
 from telegram.utils.request import Request
 
 from camerabot.config import get_main_config
-from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, MOTION_DETECTION,
-                                 LINE_DETECTION, StreamMap, AlarmMap)
+from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTIONS,
+                                 STREAMS, ALARMS)
 from camerabot.exceptions import UserAuthError
 from camerabot.service import ServiceStreamerThread, ServiceAlarmPusher
 from camerabot.utils import make_html_bold
@@ -54,7 +54,7 @@ class CameraBot(Bot):
         super(CameraBot, self).__init__(conf.telegram.token,
                                         request=(Request(con_pool_size=10)))
         self._log = logging.getLogger(self.__class__.__name__)
-        self._log.info('Initializing {0} bot'.format(self.first_name))
+        self._log.info('Initializing %s bot', self.first_name)
         self._pool = pool
         self._stop_polling = stop_polling
         self.user_ids = conf.telegram.allowed_user_ids
@@ -94,6 +94,7 @@ class CameraBot(Bot):
         self.send_message_all(msg)
 
     def send_message_all(self, msg):
+        """Send message to all defined user IDs in config.json."""
         for user_id in self.user_ids:
             self.send_message(user_id, msg)
 
@@ -130,8 +131,8 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_getpic(self, update, cam, cam_id):
         """Get and send resized snapshot from the camera."""
-        self._log.info('Resized cam snapshot from {0} requested'.format(
-            cam.description))
+        self._log.info('Resized cam snapshot from %s requested',
+                       cam.description)
         self._log.debug(self._get_user_info(update))
 
         try:
@@ -179,7 +180,7 @@ class CameraBot(Bot):
                              reply_html=make_html_bold(reply_html),
                              fullpic_name=fullpic_name,
                              fullpic=True)
-        self._log.info('Full cam snapshot {0} sent'.format(fullpic_name))
+        self._log.info('Full cam snapshot %s sent', fullpic_name)
 
     @authorization_check
     def cmd_stop(self, update):
@@ -216,25 +217,25 @@ class CameraBot(Bot):
     @camera_selection
     def cmd_motion_detection_off(self, *args):
         """Disable camera's Motion Detection."""
-        self._trigger_switch(enable=False, _type=MOTION_DETECTION, args=args)
+        self._trigger_switch(enable=False, _type=DETECTIONS.MOTION, args=args)
 
     @authorization_check
     @camera_selection
     def cmd_motion_detection_on(self, *args):
         """Enable camera's Motion Detection."""
-        self._trigger_switch(enable=True, _type=MOTION_DETECTION, args=args)
-        
+        self._trigger_switch(enable=True, _type=DETECTIONS.MOTION, args=args)
+
     @authorization_check
     @camera_selection
     def cmd_line_detection_off(self, *args):
         """Disable camera's Line Crossing Detection."""
-        self._trigger_switch(enable=False, _type=LINE_DETECTION, args=args)
+        self._trigger_switch(enable=False, _type=DETECTIONS.LINE, args=args)
 
     @authorization_check
     @camera_selection
     def cmd_line_detection_on(self, *args):
         """Enable camera's Line Crossing Detection."""
-        self._trigger_switch(enable=True, _type=LINE_DETECTION, args=args)
+        self._trigger_switch(enable=True, _type=DETECTIONS.LINE, args=args)
 
     @authorization_check
     @camera_selection
@@ -244,11 +245,12 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             cam.stream_yt.start()
-            self._start_thread(thread=self._service_threads.get(StreamMap.type),
-                               cam_id=cam_id,
-                               cam=cam,
-                               service_name=StreamMap.YOUTUBE,
-                               update=update)
+            self._start_thread(
+                thread=self._service_threads.get(STREAMS.SERVICE_TYPE),
+                cam_id=cam_id,
+                cam=cam,
+                service_name=STREAMS.YOUTUBE,
+                update=update)
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully enabled'))
         except Exception as err:
@@ -275,11 +277,12 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             cam.stream_icecast.start()
-            self._start_thread(thread=self._service_threads.get(StreamMap.type),
-                               cam_id=cam_id,
-                               cam=cam,
-                               service_name=StreamMap.ICECAST,
-                               update=update)
+            self._start_thread(
+                thread=self._service_threads.get(STREAMS.SERVICE_TYPE),
+                cam_id=cam_id,
+                cam=cam,
+                service_name=STREAMS.ICECAST,
+                update=update)
             update.message.reply_html(
                 make_html_bold('Icecast stream successfully enabled'))
         except Exception as err:
@@ -306,11 +309,12 @@ class CameraBot(Bot):
         self._log.debug(self._get_user_info(update))
         try:
             cam.alarm.start()
-            self._start_thread(thread=self._service_threads.get(AlarmMap.type),
-                               cam_id=cam_id,
-                               cam=cam,
-                               service_name=AlarmMap.ALARM,
-                               update=update)
+            self._start_thread(
+                thread=self._service_threads.get(ALARMS.SERVICE_TYPE),
+                cam_id=cam_id,
+                cam=cam,
+                service_name=ALARMS.ALARM,
+                update=update)
             update.message.reply_html(
                 make_html_bold('Alarm alert mode successfully enabled'))
         except Exception as err:
@@ -347,7 +351,7 @@ class CameraBot(Bot):
 
     def error_handler(self, update, error):
         """Handle known Telegram bot api errors."""
-        self._log.exception('Got error: {0}'.format(error))
+        self._log.exception('Got error: %s', error)
 
     def _print_helper(self, update, cam_id):
         """Send help message to telegram chat after sending picture."""
@@ -360,8 +364,8 @@ class CameraBot(Bot):
     def _trigger_switch(self, enable, _type, args):
         name = SWITCH_MAP[_type]['name']
         update, cam, cam_id = args
-        self._log.info('{0} camera\'s {1} has been requested'.format(
-            'Enabling' if enable else 'Disabling', name))
+        self._log.info('%s camera\'s %s has been requested',
+                       'Enabling' if enable else 'Disabling', name)
         self._log.debug(self._get_user_info(update))
         try:
             msg = cam.alarm.trigger_switch(enable=enable, _type=_type)

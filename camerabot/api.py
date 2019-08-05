@@ -17,16 +17,17 @@ from camerabot.exceptions import (APIError,
 
 
 def retry(delay=5, retries=3):
+    """Retry decorator."""
     retries = retries if retries > 0 else 1
 
-    def decorator(f):
+    def decorator(func):
 
-        @wraps(f)
+        @wraps(func)
         def wrapper(*args, **kwargs):
             _err = None
             for ret in range(retries):
                 try:
-                    return f(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except Exception as err:
                     time.sleep(delay)
                     _err = err
@@ -73,16 +74,18 @@ class HikVisionAPI:
                                                        conf.auth.password)
 
     def take_snapshot(self):
+        """Take snapshot."""
         return self._get(self._endpoints['picture'], stream=True)
 
     def get_alert_stream(self):
+        """Get Alert Stream."""
         return self._get(self._endpoints['alert_stream'], stream=True,
                          timeout=self._stream_timeout)
 
     def switch(self, _type, enable):
+        """Switch method to enable/disable HikVision functions."""
         endpoint = self._endpoints[_type]
         name = SWITCH_MAP[_type]['name']
-
         try:
             is_enabled, xml = self._get_switch_state(_type, endpoint)
         except APIRequestError:
@@ -136,7 +139,7 @@ class HikVisionAPI:
     def _get(self, endpoint, data=None, headers=None, stream=False,
              method=APIMethods.GET, timeout=CONN_TIMEOUT):
         url = urllib.parse.urljoin(self._host, endpoint)
-        self._log.debug('{0} {1}'.format(method, url))
+        self._log.debug('%s %s', method, url)
         try:
             response = self._sess.request(method,
                                           url=url,

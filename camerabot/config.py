@@ -8,7 +8,10 @@ from camerabot.exceptions import ConfigError
 
 _CONFIG_FILE_MAIN = 'config.json'
 _CONFIG_FILE_LIVESTREAM = 'livestream_templates.json'
-_CONFIG_FILES = (_CONFIG_FILE_MAIN, _CONFIG_FILE_LIVESTREAM)
+_CONFIG_FILE_ENCODING = 'encoding_templates.json'
+_CONFIG_FILES = (_CONFIG_FILE_MAIN,
+                 _CONFIG_FILE_LIVESTREAM,
+                 _CONFIG_FILE_ENCODING)
 
 _LOG = logging.getLogger(__name__)
 
@@ -31,6 +34,12 @@ class Config:
     def items(self):
         return self.__conf_data.items()
 
+    def pop(self, key):
+        return self.__conf_data.pop(key)
+
+    def get(self, key, default=None):
+        return self.__conf_data.get(key, default)
+
     @classmethod
     def from_dict(cls, conf_data):
         """Make dot-mapped object."""
@@ -45,8 +54,8 @@ class Config:
         conf_dict = {}
         for key, value in conf_data:
             if key in conf_dict:
-                err_msg = "Malformed configuration file, " \
-                          "duplicate key: {0}".format(key)
+                err_msg = 'Malformed configuration file, ' \
+                          'duplicate key: {0}'.format(key)
                 raise ConfigError(err_msg)
             else:
                 conf_dict[key] = value
@@ -66,7 +75,7 @@ def _load_configs():
             _LOG.error(err_msg)
             raise ConfigError(err_msg)
 
-        _LOG.info('Reading config file {0}'.format(conf_file))
+        _LOG.info('Reading config file %s', conf_file)
         with open(conf_file, 'r') as fd:
             config = fd.read()
         try:
@@ -80,7 +89,7 @@ def _load_configs():
     return config_data
 
 
-_CONF_MAIN, _CONF_LIVESTREAM_TPL = _load_configs()
+_CONF_MAIN, _CONF_LIVESTREAM_TPL, _CONF_ENCODING_TPL = _load_configs()
 
 
 def get_main_config():
@@ -89,3 +98,7 @@ def get_main_config():
 
 def get_livestream_tpl_config():
     return _CONF_LIVESTREAM_TPL
+
+
+def get_encoding_tpl_config():
+    return _CONF_ENCODING_TPL

@@ -26,8 +26,7 @@ COMMANDS_TPL = {CameraBot.cmds: 'cmds_{0}',
                 CameraBot.cmd_stream_yt_on: 'yt_on_{0}',
                 CameraBot.cmd_stream_yt_off: 'yt_off_{0}',
                 CameraBot.cmd_stream_icecast_on: 'icecast_on_{0}',
-                CameraBot.cmd_stream_icecast_off: 'icecast_off_{0}'
-                }
+                CameraBot.cmd_stream_icecast_off: 'icecast_off_{0}'}
 
 COMMANDS = {CameraBot.cmd_help: ('start', 'help'),
             CameraBot.cmd_stop: 'stop',
@@ -35,7 +34,6 @@ COMMANDS = {CameraBot.cmd_help: ('start', 'help'),
 
 
 class CameraBotLauncher:
-
     """Bot launcher which parses configuration file, creates bot and
     camera instances and finally starts bot.
     """
@@ -51,9 +49,7 @@ class CameraBotLauncher:
         logging.getLogger().setLevel(self._conf.log_level)
 
         cam_pool, cmds = self._create_cameras()
-
-        cambot = CameraBot(pool=cam_pool,
-                           stop_polling=self._stop_polling)
+        cambot = CameraBot(pool=cam_pool, stop_polling=self._stop_polling)
 
         self._updater = Updater(bot=cambot)
         self._setup_commands(cmds)
@@ -63,7 +59,7 @@ class CameraBotLauncher:
 
     def run(self):
         """Run bot and DirectoryWatcher."""
-        self._log.info('Starting {0} bot'.format(self._updater.bot.first_name))
+        self._log.info('Starting %s bot', self._updater.bot.first_name)
 
         if not self._welcome_sent:
             self._updater.bot.send_startup_message()
@@ -95,7 +91,7 @@ class CameraBotLauncher:
 
             cam_pool.add(cam_id, cam_cmds, HomeCam(conf=cam_conf))
 
-        self._log.debug('Created Camera Pool: {0}'.format(cam_pool))
+        self._log.debug('Created Camera Pool: %s', cam_pool)
         return cam_pool, cmd_cam_map
 
     def _stop_polling(self):
@@ -115,8 +111,8 @@ class CameraBotLauncher:
 
 
 if __name__ == '__main__':
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(format=log_format)
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(format=LOG_FORMAT)
 
-    bot = CameraBotLauncher()
-    bot.run()
+    BOT = CameraBotLauncher()
+    BOT.run()

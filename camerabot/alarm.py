@@ -3,7 +3,7 @@
 from queue import Queue
 from threading import Event
 
-from camerabot.constants import SWITCH_MAP, ALARM_TRIGGERS, AlarmMap
+from camerabot.constants import SWITCH_MAP, ALARM_TRIGGERS, ALARMS
 from camerabot.exceptions import HomeCamError, APIError
 from camerabot.service import BaseService
 
@@ -19,7 +19,7 @@ class AlarmService(BaseService):
         self.alert_delay = conf.delay
         self.alert_count = 0
         self._started = Event()
-        self.type = self.name = AlarmMap.type
+        self.type = self.name = ALARMS.SERVICE_TYPE
 
     def is_started(self):
         """Check if alarm is enabled."""
@@ -48,6 +48,7 @@ class AlarmService(BaseService):
         self._started.clear()
 
     def get_alert_stream(self):
+        """Get Alarm stream from HikVision Camera."""
         try:
             return self._api.get_alert_stream()
         except APIError:
@@ -58,8 +59,7 @@ class AlarmService(BaseService):
     def trigger_switch(self, enable, _type):
         """Trigger switch."""
         name = SWITCH_MAP[_type]['name']
-        self._log.debug('{0} {1}'.format(
-            'Enabling' if enable else 'Disabling', name))
+        self._log.debug('%s %s', 'Enabling' if enable else 'Disabling', name)
         try:
             msg = self._api.switch(enable=enable, _type=_type)
         except APIError:
