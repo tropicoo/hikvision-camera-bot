@@ -26,6 +26,9 @@ class BaseService(metaclass=abc.ABCMeta):
         # e.g. alarm, stream (are used from constants.py module)
         self.type = None
 
+    def __str__(self):
+        return self._cls_name
+
     @abc.abstractmethod
     def start(self):
         pass
@@ -56,7 +59,8 @@ class ServiceController:
 
     def register_services(self, service_instances):
         """Register service instances.
-        One instance or iterable object."""
+        One instance or iterable object.
+        """
         try:
             iterator = iter(service_instances)
             for obj in iterator:
@@ -74,6 +78,9 @@ class ServiceController:
                 if enabled_in_conf:
                     if service.is_enabled_in_conf():
                         service.start()
+                    else:
+                        self._log.info('Cannot start service "%s" - disabled by '
+                                       'default', service)
                 else:
                     service.start()
 
@@ -111,36 +118,45 @@ class ServiceController:
 class ServiceThread(Thread, metaclass=abc.ABCMeta):
     type = None
 
-    def __init__(self, bot, cam_id, cam, update, log, service_name):
-        super().__init__()
+    def __init__(self, bot, cam_id, cam, update, log, service, service_name, name):
+        super().__init__(name=name)
         self._log = log
         self._bot = bot
+        self._service = service
         self._service_name = service_name
         self._cam_id = cam_id
         self._cam = cam
         self._update = update
+
+        if self._service and self._service_name:
+            raise HomeCamError('Provide service instance or service name, '
+                               'not both')
+        if self._service_name:
+            self._service = self._cam.service_controller.get_service(type(self).type,
+                                                                     self._service_name)
 
     @abc.abstractmethod
     def run(self):
         pass
 
 
-class ServiceAlarmPusher(ServiceThread):
+class ServiceAlarmPusherThread(ServiceThread):
     """Alarm Pusher Service Class."""
 
     type = ALARMS.SERVICE_TYPE
 
-    def __init__(self, bot, cam_id, cam, update, log, service_name):
-        super().__init__(bot, cam_id, cam, update, log, service_name)
+    def __init__(self, bot, cam_id, cam, update, log, service, service_name):
+        super().__init__(bot, cam_id, cam, update, log, service, service_name,
+                         name=self.__class__.__name__)
 
     def run(self):
-        while self._cam.alarm.is_started():
+        while self._service.is_started():
             self._log.debug('Starting alert pusher thread for camera: "%s"',
                             self._cam.description)
             wait_before = 0
-            stream = self._cam.alarm.get_alert_stream()
+            stream = self._service.get_alert_stream()
             for chunk in stream.iter_lines(chunk_size=1024):
-                if not self._cam.alarm.is_started():
+                if not self._service.is_started():
                     self._log.info('Exiting alert pusher thread for %s',
                                    self._cam.description)
                     break
@@ -156,9 +172,9 @@ class ServiceAlarmPusher(ServiceThread):
                     if detection_key:
                         photo, ts = self._cam.take_snapshot(resize=
                         not self._cam.conf.alert[detection_key].fullpic)
-                        self._cam.alarm.alert_count += 1
+                        self._service.alert_count += 1
                         wait_before = int(
-                            time.time()) + self._cam.alarm.alert_delay
+                            time.time()) + self._service.alert_delay
                         self._send_alert(photo, ts, detection_key)
 
     def chunk_belongs_to_detection(self, chunk):
@@ -176,7 +192,7 @@ class ServiceAlarmPusher(ServiceThread):
     def _send_alert(self, photo, ts, detection_key):
         caption = 'Alert snapshot taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
                   '#{1})\n/list cameras'.format(datetime.fromtimestamp(ts),
-                                                self._cam.alarm.alert_count)
+                                                self._service.alert_count)
         reply_html = '<b>{0} Alert</b>\nSending snapshot ' \
                      'from {1}'.format(self._cam.description,
                                        SWITCH_MAP[detection_key]['name'])
@@ -200,38 +216,37 @@ class ServiceAlarmPusher(ServiceThread):
 class ServiceStreamerThread(ServiceThread):
     type = STREAMS.SERVICE_TYPE
 
-    def __init__(self, bot, cam_id, cam, update, log, service_name):
-        super().__init__(bot, cam_id, cam, update, log, service_name)
+    def __init__(self, bot, cam_id, cam, update, log, service, service_name):
+        super().__init__(bot, cam_id, cam, update, log, service, service_name,
+                         name=self.__class__.name)
+        self._exit_msg = 'Exiting {0} stream thread for "{1}"'.format(
+                    self._service.name, self._cam.description)
 
     def run(self):
-        service = self._cam.service_controller.get_service(type(self).type,
-                                                           self._service_name)
-        self._log.debug('Starting %s streamer thread for '
-                        'camera: "%s"', service.name, self._cam.description)
-        if not service:
+        self._log.debug('Starting %s streamer thread for "%s"',
+                        self._service.name, self._cam.description)
+        if not self._service:
             raise HomeCamError(
-                'No such service: {0}'.format(self._service_name))
+                'No such self._service: {0}'.format(self._service_name))
 
         def should_exit():
-            if not service.is_started():
-                msg = 'Exiting {0} stream thread for {1}'.format(
-                    service.name, self._cam.description)
-                self._log.info(msg)
-                self._bot.send_message_all(msg)
+            if not self._service.is_started():
+                self._log.info(self._exit_msg)
+                self._bot.send_message_all(self._exit_msg)
                 return True
             return False
 
         try:
-            while service.is_started():
-                while not service.need_restart() and service.is_alive():
+            while self._service.is_started():
+                while not self._service.need_restart() and self._service.is_alive():
                     if should_exit():
                         break
-                    self._log.info('FFMPEG: %s', service.get_stdout())
+                    self._log.info('FFMPEG: %s', self._service.get_stdout())
                 else:
                     if should_exit():
                         break
-                    self._log.info('Restarting %s stream', service.name)
-                    service.restart()
+                    self._log.info('Restarting %s stream', self._service.name)
+                    self._service.restart()
         except HomeCamError as err:
             if self._update:
                 self._update.message.reply_text(str(err))
@@ -239,7 +254,7 @@ class ServiceStreamerThread(ServiceThread):
                 for uid in self._bot.user_ids:
                     self._bot.send_message(chat_id=uid, text=str(err))
         except Exception as err:
-            err_msg = 'Unknown error in {0} stream thread'.format(service.name)
+            err_msg = 'Unknown error in {0} stream thread'.format(self._service.name)
             self._log.exception(err_msg)
             err_msg = '{0}: {1}'.format(err_msg, str(err))
             if self._update:
@@ -247,3 +262,4 @@ class ServiceStreamerThread(ServiceThread):
             else:
                 for uid in self._bot.user_ids:
                     self._bot.send_message(chat_id=uid, text=err_msg)
+        self._log.debug(self._exit_msg)

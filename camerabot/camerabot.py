@@ -14,7 +14,7 @@ from camerabot.config import get_main_config
 from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTIONS,
                                  STREAMS, ALARMS)
 from camerabot.exceptions import UserAuthError
-from camerabot.service import ServiceStreamerThread, ServiceAlarmPusher
+from camerabot.service import ServiceStreamerThread, ServiceAlarmPusherThread
 from camerabot.utils import make_html_bold
 
 
@@ -60,25 +60,25 @@ class CameraBot(Bot):
         self.user_ids = conf.telegram.allowed_user_ids
         self._service_threads = {
             ServiceStreamerThread.type: ServiceStreamerThread,
-            ServiceAlarmPusher.type: ServiceAlarmPusher}
+            ServiceAlarmPusherThread.type: ServiceAlarmPusherThread}
 
         self._start_enabled_services()
 
-    def _start_thread(self, thread, cam_id, cam, service_name, update=None):
-        thread(self, cam_id, cam, update, self._log, service_name).start()
+    def _start_thread(self, thread, cam_id, cam, service=None, service_name=None,
+                      update=None):
+        thread(self, cam_id, cam, update, self._log, service, service_name).start()
 
     def _start_enabled_services(self):
         """Start services enabled in conf."""
         for cam_id, cam_data in self._pool.get_all().items():
             cam = cam_data['instance']
-            cam.service_controller.start_services(
-                enabled_in_conf=True)
+            cam.service_controller.start_services(enabled_in_conf=True)
 
-            for service in cam.service_controller.get_services():
-                self._start_thread(thread=self._service_threads.get(service.type),
+            for svc in cam.service_controller.get_services():
+                self._start_thread(thread=self._service_threads.get(svc.type),
                                    cam_id=cam_id,
                                    cam=cam,
-                                   service_name=service.name)
+                                   service=svc)
 
     def _stop_running_services(self):
         """Stop any running services."""
