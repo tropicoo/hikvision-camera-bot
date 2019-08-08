@@ -1,4 +1,4 @@
-"""Base Service Module."""
+"""Camera Services Module."""
 
 import abc
 import logging
@@ -91,7 +91,7 @@ class ServiceController:
                     service.stop()
                 except HomeCamError as err:
                     self._log.warning('Warning while stopping service "%s": '
-                                      '%s', service.name, str(err))
+                                      '%s', service.name, err)
 
     def get_service(self, service_type, service_name):
         return self._services[service_type][service_name]
@@ -132,7 +132,7 @@ class ServiceThread(Thread, metaclass=abc.ABCMeta):
             raise HomeCamError('Provide service instance or service name, '
                                'not both')
         if self._service_name:
-            self._service = self._cam.service_controller.get_service(type(self).type,
+            self._service = self._cam.service_controller.get_service(self.type,
                                                                      self._service_name)
 
     @abc.abstractmethod
@@ -167,7 +167,7 @@ class ServiceAlarmPusherThread(ServiceThread):
                     try:
                         detection_key = self.chunk_belongs_to_detection(chunk)
                     except CameraBotError as err:
-                        self._bot.send_message_all(str(err))
+                        self._bot.send_message_all(err)
                         continue
                     if detection_key:
                         photo, ts = self._cam.take_snapshot(resize=
@@ -249,14 +249,14 @@ class ServiceStreamerThread(ServiceThread):
                     self._service.restart()
         except HomeCamError as err:
             if self._update:
-                self._update.message.reply_text(str(err))
+                self._update.message.reply_text(err)
             else:
                 for uid in self._bot.user_ids:
-                    self._bot.send_message(chat_id=uid, text=str(err))
+                    self._bot.send_message(chat_id=uid, text=err)
         except Exception as err:
             err_msg = 'Unknown error in {0} stream thread'.format(self._service.name)
             self._log.exception(err_msg)
-            err_msg = '{0}: {1}'.format(err_msg, str(err))
+            err_msg = '{0}: {1}'.format(err_msg, err)
             if self._update:
                 self._update.message.reply_text(err_msg)
             else:

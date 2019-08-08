@@ -42,7 +42,7 @@ class DirectoryWatcher:
             while True:
                 time.sleep(1)
         except Exception as err:
-            self._log.error('Watchdog encountered an error: %s', str(err))
+            self._log.error('Watchdog encountered an error: %s', err)
             self._observer.stop()
         self._observer.join()
 
@@ -64,7 +64,7 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
                 if not call(cmd, shell=True):
                     break
             except Exception as err:
-                self._log.error('EventHandler encountered an error: %s', str(err))
+                self._log.error('EventHandler encountered an error: %s', err)
                 raise DirectoryWatcherError(err)
         try:
             self._log.info('Sending %s to %s', file_path,
@@ -77,11 +77,11 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
                                               from_watchdog=True)
         except Exception as err:
             self._log.error('Can\'t open %s for sending: %s',
-                            file_path, str(err))
+                            file_path, err)
             raise DirectoryWatcherError(err)
         try:
             self._log.info('%s sent, deleting', file_path)
             Path.unlink(file_path)
         except Exception as err:
-            self._log.error('Can\'t delete %s: %s', file_path, str(err))
+            self._log.error('Can\'t delete %s: %s', file_path, err)
             raise DirectoryWatcherError(err)

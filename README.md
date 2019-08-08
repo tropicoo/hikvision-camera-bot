@@ -1,6 +1,6 @@
-HikVision Telegram Camera Bot
+Hikvision Telegram Camera Bot
 =============================
-Bot which sends snapshots from your HikVision camera(s).
+Bot which sends snapshots from your Hikvision camera(s).
 
 Features:
 1. Send snapshots on **Motion** and **Line Crossing Detection**
@@ -10,7 +10,7 @@ Features:
 Installation
 ------------
 
-To install HikVision Telegram Camera Bot, simply `clone` repo and install 
+To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
 Make sure you have [Python 3.6 or higher](https://www.python.org/downloads/) installed.
 
@@ -27,7 +27,7 @@ Configuration
 First of all you need to [create Telegram Bot](https://core.telegram.org/bots#6-botfather)
  and obtain its token.
 
-Before starting HikVision Telegram Camera Bot needs to be configured.
+Before starting Hikvision Telegram Camera Bot needs to be configured.
 Configuration is simply stored in JSON format.
 
 Copy default configuration file with predefined template `config-template.json`
@@ -143,7 +143,7 @@ path to be monitored e.g. `/tmp/watchdir`. Make sure that directory exists.
 For example configure your camera to take and put snapshot on move detection
 through FTP to watched folder. Watchdog looks for `on_create` events, sends
 created file and deletes it.
-4. HikVision camera settings are placed inside the `camera_list` section. Template
+4. Hikvision camera settings are placed inside the `camera_list` section. Template
 comes with two cameras. Preferable names of cameras are `cam_1`,
 `cam_2`, `cam_3` and so on with any description.
 5. Write authentication credentials in appropriate keys: `user` and `password`
@@ -358,7 +358,7 @@ To send resized picture change `fullpic` to `false`.
           "url": "rtmp://a.rtmp.youtube.com/live2", # YouTube rtmp server
           "key": "aaaa-bbbb-cccc-dddd" # YouTube Live Stream key.
           "loglevel": "quiet", # ffmpeg log levels, default "quiet"
-          "pix_fmt": "yuv420p", # pixel format, HikVision streams in yuvj420p
+          "pix_fmt": "yuv420p", # pixel format, Hikvision streams in yuvj420p
           "framerate": 25, # encode framerate, YouTube will re-encode any to 30 anyway
           "preset": "superfast", # libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264
           "maxrate": "3000k", # max variable bitrate

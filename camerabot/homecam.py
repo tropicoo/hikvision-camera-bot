@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 
 from camerabot.alarm import AlarmService
-from camerabot.api import HikVisionAPI
+from camerabot.api import HikvisionAPI
 from camerabot.constants import IMG
 from camerabot.exceptions import HomeCamError, APIError
 from camerabot.livestream import YouTubeStreamService, IcecastStreamService
@@ -52,7 +52,7 @@ class HomeCam:
         self.conf = conf
         self.description = conf.description
         self._log.debug('Initializing %s', self.description)
-        self._api = HikVisionAPI(conf=conf.api)
+        self._api = HikvisionAPI(conf=conf.api)
         self.snapshots_taken = 0
 
         self.alarm = AlarmService(conf=conf.alert, api=self._api)

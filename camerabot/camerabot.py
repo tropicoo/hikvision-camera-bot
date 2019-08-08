@@ -139,7 +139,7 @@ class CameraBot(Bot):
             photo, snapshot_timestamp = cam.take_snapshot(resize=True)
         except Exception as err:
             update.message.reply_text(
-                '{0}\nTry later or /list other cameras'.format(str(err)))
+                '{0}\nTry later or /list other cameras'.format(err))
             return
 
         caption = 'Snapshot taken on {0:%a %b %-d %H:%M:%S %Y} ' \
@@ -165,7 +165,7 @@ class CameraBot(Bot):
             photo, snapshot_timestamp = cam.take_snapshot(resize=False)
         except Exception as err:
             update.message.reply_text(
-                '{0}\nTry later or /list other cameras'.format(str(err)))
+                '{0}\nTry later or /list other cameras'.format(err))
             return
 
         fullpic_name = 'Full_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
@@ -254,7 +254,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully enabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     @camera_selection
@@ -267,7 +267,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('YouTube stream successfully disabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     @camera_selection
@@ -286,7 +286,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('Icecast stream successfully enabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     @camera_selection
@@ -299,7 +299,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('Icecast stream successfully disabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     @camera_selection
@@ -318,7 +318,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('Alarm alert mode successfully enabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     @camera_selection
@@ -330,7 +330,7 @@ class CameraBot(Bot):
             update.message.reply_html(
                 make_html_bold('Alarm alert mode successfully disabled'))
         except Exception as err:
-            update.message.reply_html(make_html_bold(str(err)))
+            update.message.reply_html(make_html_bold(err))
 
     @authorization_check
     def cmd_help(self, update, append=False, requested=True, cam_id=None):
@@ -375,7 +375,7 @@ class CameraBot(Bot):
             self._log.info(msg)
         except Exception as err:
             err_msg = 'Failed to {0} {1}: {2}'.format(
-                'enable' if enable else 'disable', name, str(err))
+                'enable' if enable else 'disable', name, err)
             update.message.reply_text(err_msg)
 
     def _get_user_info(self, update):

@@ -1,9 +1,10 @@
-"""HikVision camera API module."""
+"""Hikvision camera API module."""
 
 import logging
 import re
 import time
 import urllib.parse
+from collections import namedtuple
 from functools import wraps
 
 import requests
@@ -14,6 +15,10 @@ from camerabot.constants import (BAD_RESPONSE_CODES, CONN_TIMEOUT, SWITCH_MAP,
 from camerabot.exceptions import (APIError,
                                   APIRequestError,
                                   APIBadResponseCodeError)
+
+
+_HTTP_METHODS = ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')
+HTTPMethods = namedtuple('HTTPMethods', _HTTP_METHODS)(*_HTTP_METHODS)
 
 
 def retry(delay=5, retries=3):
@@ -47,18 +52,8 @@ class HeaderParsingErrorFilter:
         return 'Failed to parse headers' not in record.getMessage()
 
 
-class APIMethods:
-    """RESTful API Methods."""
-
-    GET = 'GET'
-    PUT = 'PUT'
-    POST = 'POST'
-    PATCH = 'PATCH'
-    DELETE = 'DELETE'
-
-
-class HikVisionAPI:
-    """HikVision API class."""
+class HikvisionAPI:
+    """Hikvision API class."""
 
     def __init__(self, conf):
         logging.getLogger('urllib3.connectionpool').addFilter(
@@ -83,7 +78,7 @@ class HikVisionAPI:
                          timeout=self._stream_timeout)
 
     def switch(self, _type, enable):
-        """Switch method to enable/disable HikVision functions."""
+        """Switch method to enable/disable Hikvision functions."""
         endpoint = self._endpoints[_type]
         name = SWITCH_MAP[_type]['name']
         try:
@@ -94,7 +89,7 @@ class HikVisionAPI:
             raise
         except KeyError as err:
             err_msg = 'Failed to verify API response for {0}: {1}'.format(
-                name, str(err))
+                name, err)
             self._log.error(err_msg)
             raise APIError(err_msg)
 
@@ -110,7 +105,7 @@ class HikVisionAPI:
 
         try:
             response_xml = self._get(endpoint, headers=self._xml_headers,
-                                     data=xml, method=APIMethods.PUT).text
+                                     data=xml, method=HTTPMethods.PUT).text
         except APIRequestError:
             err_msg = 'Failed to {0} {1}.'.format(
                 'enable' if enable else 'disable', name)
@@ -124,20 +119,20 @@ class HikVisionAPI:
                 self._log.error(err_msg)
                 raise APIError(err_msg)
         except KeyError as err:
-            err_msg = 'Failed to parse response XML: {0}'.format(str(err))
+            err_msg = 'Failed to parse response XML: {0}'.format(err)
             self._log.error(err)
             raise APIError(err_msg)
 
         return None
 
     def _get_switch_state(self, _type, endpoint):
-        xml = self._get(endpoint, method=APIMethods.GET).text
+        xml = self._get(endpoint, method=HTTPMethods.GET).text
         state = xmltodict.parse(xml)[SWITCH_MAP[_type]['method']]['enabled']
         return state == 'true', xml
 
     @retry()
     def _get(self, endpoint, data=None, headers=None, stream=False,
-             method=APIMethods.GET, timeout=CONN_TIMEOUT):
+             method=HTTPMethods.GET, timeout=CONN_TIMEOUT):
         url = urllib.parse.urljoin(self._host, endpoint)
         self._log.debug('%s %s', method, url)
         try:
@@ -150,7 +145,7 @@ class HikVisionAPI:
         except Exception as err:
             err_msg = 'API encountered an unknown error.'
             self._log.exception(err_msg)
-            raise APIRequestError('{0}: {1}'.format(err_msg, str(err)))
+            raise APIRequestError('{0}: {1}'.format(err_msg, err))
         self._verify_status_code(response)
         return response
 

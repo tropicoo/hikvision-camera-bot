@@ -48,7 +48,7 @@ class AlarmService(BaseService):
         self._started.clear()
 
     def get_alert_stream(self):
-        """Get Alarm stream from HikVision Camera."""
+        """Get Alarm stream from Hikvision Camera."""
         try:
             return self._api.get_alert_stream()
         except APIError:

@@ -61,8 +61,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
             self._log.info(msg)
             raise HomeCamError(msg)
         try:
-            self._log.debug('%s ffmpeg command: %s',
-                            self._cls_name, self._cmd)
+            self._log.debug('%s ffmpeg command: %s', self._cls_name, self._cmd)
             self._proc = subprocess.Popen(self._cmd,
                                           shell=True,
                                           stderr=subprocess.STDOUT,
@@ -89,8 +88,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
             kill_proc_tree(self._proc.pid)
             clear_status()
         except NoSuchProcess as err:
-            self._log.warning('PID %s is not running: %s', self._proc.pid,
-                              str(err))
+            self._log.warning('PID %s is not running: %s', self._proc.pid, err)
             clear_status()
         except Exception:
             err_msg = 'Failed to kill/disable YouTube stream'

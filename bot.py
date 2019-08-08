@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler, Updater
 from camerabot.camerabot import CameraBot
 from camerabot.config import get_main_config
 from camerabot.directorywatcher import DirectoryWatcher
-from camerabot.exceptions import ConfigError, DirectoryWatcherError
+from camerabot.exceptions import DirectoryWatcherError
 from camerabot.homecam import HomeCam, CameraPoolController
 
 COMMANDS_TPL = {CameraBot.cmds: 'cmds_{0}',
@@ -35,16 +35,12 @@ COMMANDS = {CameraBot.cmd_help: ('start', 'help'),
 
 class CameraBotLauncher:
     """Bot launcher which parses configuration file, creates bot and
-    camera instances and finally starts bot.
+    camera instances and finally starts the bot.
     """
 
     def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
-
-        try:
-            self._conf = get_main_config()
-        except ConfigError as err:
-            sys.exit(str(err))
+        self._conf = get_main_config()
 
         logging.getLogger().setLevel(self._conf.log_level)
 
@@ -76,10 +72,10 @@ class CameraBotLauncher:
                 self._directory_watcher.watch()
         except DirectoryWatcherError as err:
             self._stop_polling()
-            sys.exit(str(err))
+            sys.exit(err)
 
     def _create_cameras(self):
-        """Creates dict with camera ids, instances and commands."""
+        """Create dict with camera IDs, instances and commands."""
         cmd_cam_map = defaultdict(list)
         cam_pool = CameraPoolController()
         for cam_id, cam_conf in self._conf.camera_list.items():
@@ -95,7 +91,7 @@ class CameraBotLauncher:
         return cam_pool, cmd_cam_map
 
     def _stop_polling(self):
-        """Stops bot and exits application."""
+        """Stop bot and exits application."""
         self._updater.stop()
         self._updater.is_idle = False
 
