@@ -1,0 +1,64 @@
+{
+  "youtube": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "url": "rtmp://a.rtmp.youtube.com/live2",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "url": "rtmp://a.rtmp.youtube.com/live2",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    }
+  },
+  "icecast": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "ice_stream": {
+        "ice_genre": "333Default",
+        "ice_name": "222Default",
+        "ice_description": "111Default",
+        "ice_public": 0,
+        "url": "icecast://source@192.168.10.1:8000/video.webm",
+        "password": "hackme",
+        "content_type": "video/webm"
+      }
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "ice_stream": {
+        "ice_genre": "333Default",
+        "ice_name": "222Default",
+        "ice_description": "111Default",
+        "ice_public": 0,
+        "url": "icecast://source@192.168.10.2:8000/video.webm",
+        "password": "hackme",
+        "content_type": "video/webm"
+      }
+    }
+  },
+  "twitch": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "url": "rtmp://live-waw.twitch.tv/app",
+      "key": ""
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "url": "rtmp://live-waw.twitch.tv/app",
+      "key": ""
+    }
+  }
+}

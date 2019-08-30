@@ -18,10 +18,10 @@
           "password": ""
         },
         "endpoints": {
-          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "picture": "Streaming/channels/102/picture?snapShotImageType=JPEG",
           "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
           "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-          "alert_stream": "/ISAPI/Event/notification/alertStream"
+          "alert_stream": "ISAPI/Event/notification/alertStream"
         },
         "stream_timeout": 300
       },
@@ -32,8 +32,8 @@
           "fullpic": false
         },
         "line_crossing_detection": {
-          "enabled": true,
-          "fullpic": true
+          "enabled": false,
+          "fullpic": false
         }
       },
       "livestream": {
@@ -58,10 +58,10 @@
           "password": ""
         },
         "endpoints": {
-          "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
+          "picture": "Streaming/channels/102/picture?snapShotImageType=JPEG",
           "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
           "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-          "alert_stream": "/ISAPI/Event/notification/alertStream"
+          "alert_stream": "ISAPI/Event/notification/alertStream"
         },
         "stream_timeout": 300
       },
@@ -69,11 +69,11 @@
         "delay": 10,
         "motion_detection": {
           "enabled": false,
-          "fullpic": true
+          "fullpic": false
         },
         "line_crossing_detection": {
           "enabled": false,
-          "fullpic": true
+          "fullpic": false
         }
       },
       "livestream": {

@@ -1,9 +1,5 @@
 """Constants module."""
 
-from collections import namedtuple
-
-IMG = namedtuple('IMG', ('SIZE', 'FORMAT', 'QUALITY'))((1280, 724),
-                                                       'JPEG', 90)
 BAD_RESPONSE_CODES = {401: 'Got 401: Unauthorized. Wrong credentials?',
                       403: 'Got 403: Forbidden. Wrong URL?\n{0}',
                       404: 'Got 404: URL Not Found\n{0}'}
@@ -11,15 +7,65 @@ CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
 _STREAMS_ARGS = ('YOUTUBE', 'ICECAST', 'TWITCH')
-STREAMS = namedtuple('STREAMS',
-                     ('SERVICE_TYPE',) + _STREAMS_ARGS)('stream', *map(lambda x: x.lower(), _STREAMS_ARGS))
 
-ALARMS = namedtuple('ALARM_MAP', ('SERVICE_TYPE', 'ALARM'))('alarm', 'alarm')
 
+class _HTTPMethods:
+    __slots__ = ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')
+
+    def __init__(self):
+        for method in self.__slots__:
+            setattr(self, method, method)
+
+
+class _Alarms:
+    __slots__ = ('SERVICE_TYPE', 'ALARM')
+
+    def __init__(self):
+        self.SERVICE_TYPE = self.ALARM = 'alarm'
+
+
+class _Detections:
+    __slots__ = ('MOTION', 'LINE')
+
+    def __init__(self):
+        self.MOTION = 'motion_detection'
+        self.LINE = 'line_crossing_detection'
+
+
+class _Image:
+    __slots__ = ('SIZE', 'FORMAT', 'QUALITY')
+
+    def __init__(self):
+        self.SIZE = (1280, 724)
+        self.FORMAT = 'JPEG'
+        self.QUALITY = 90
+
+
+class _Streams:
+    __slots__ = ('SERVICE_TYPE',) + _STREAMS_ARGS
+
+    def __init__(self):
+        self.SERVICE_TYPE = 'stream'
+        for arg in _STREAMS_ARGS:
+            setattr(self, arg, arg.lower())
+
+
+class _Encoders:
+    __slots__ = ('X264', 'VP9', 'DIRECT')
+
+    def __init__(self):
+        for arg in self.__slots__:
+            setattr(self, arg, arg.lower())
+
+
+HTTPMETHODS = _HTTPMethods()
+ALARMS = _Alarms()
+DETECTIONS = _Detections()
+IMG = _Image()
+STREAMS = _Streams()
+VIDEO_ENCODERS = _Encoders()
 
 # Livestream constants
-_ENC_ARGS = ('X264', 'VP9', 'DIRECT')
-VIDEO_ENCODERS = namedtuple('ENCODERS', _ENC_ARGS)(*map(lambda x: x.lower(), _ENC_ARGS))
 FFMPEG_CMD = 'ffmpeg -loglevel {loglevel} ' \
              '{filter} ' \
              '-rtsp_transport {rtsp_transport_type} ' \
@@ -50,8 +96,6 @@ FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                          'bitrate': '-b:a 5k'}
 
 # Alert (alarm) constants
-DETECTIONS = namedtuple('DETECTIONS', ('MOTION', 'LINE'))('motion_detection',
-                                                          'line_crossing_detection')
 ALARM_TRIGGERS = (DETECTIONS.MOTION, DETECTIONS.LINE)
 DETECTION_REGEX = r'(<\/?eventType>(VMD|linedetection)?){2}'
 

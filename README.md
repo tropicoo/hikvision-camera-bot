@@ -180,10 +180,10 @@ To send resized picture change `fullpic` to `false`.
     (not very funny name but anyway) which should be copied or renamed to 
     `livestream_templates.json`.
     
-    Same for `encoding_templates_template.json` -> `encoding_templates.json`
+    Same for `encoding_templates-template.json` -> `encoding_templates.json`
     
     <details>
-      <summary>livestream_templates_template.json</summary>
+      <summary>livestream_templates-template.json</summary>
       
       ```json
       {
@@ -234,7 +234,7 @@ To send resized picture change `fullpic` to `false`.
     ```
     
     <details>
-      <summary>encoding_templates_template.json</summary>
+      <summary>encoding_templates-template.json</summary>
       
       ```json
       {
