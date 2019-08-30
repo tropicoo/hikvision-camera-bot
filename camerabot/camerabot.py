@@ -142,9 +142,11 @@ class CameraBot(Bot):
                 '{0}\nTry later or /list other cameras'.format(err))
             return
 
-        caption = 'Snapshot taken on {0:%a %b %-d %H:%M:%S %Y} ' \
+        caption = 'Snapshot taken on {0:%a %b %d %H:%M:%S %Y} ' \
                   '(snapshot #{1})'.format(
-            datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
+            datetime.fromtimestamp(snapshot_timestamp),
+            cam.snapshots_taken)
+
         caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)
 
         reply_html = 'Sending snapshot from {0}'.format(cam.description)
@@ -168,9 +170,9 @@ class CameraBot(Bot):
                 '{0}\nTry later or /list other cameras'.format(err))
             return
 
-        fullpic_name = 'Full_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
+        fullpic_name = 'Full_snapshot_{:%a_%b_%d_%H.%M.%S_%Y}.jpg'.format(
             datetime.fromtimestamp(snapshot_timestamp))
-        caption = 'Full snapshot taken on {0:%a %b %-d %H:%M:%S %Y} ' \
+        caption = 'Full snapshot taken on {0:%a %b %d %H:%M:%S %Y} ' \
                   '(snapshot #{1})'.format(
             datetime.fromtimestamp(snapshot_timestamp), cam.snapshots_taken)
         caption = '{0}\n/cmds_{1}, /list'.format(caption, cam_id)

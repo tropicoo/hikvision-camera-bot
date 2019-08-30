@@ -79,8 +79,8 @@ class ServiceController:
                     if service.is_enabled_in_conf():
                         service.start()
                     else:
-                        self._log.info('Cannot start service "%s" - disabled by '
-                                       'default', service)
+                        self._log.info('Do not starting service "%s" - '
+                                       'disabled by default', service)
                 else:
                     service.start()
 
@@ -190,7 +190,7 @@ class ServiceAlarmPusherThread(ServiceThread):
         return None
 
     def _send_alert(self, photo, ts, detection_key):
-        caption = 'Alert snapshot taken on {0:%a %b %-d %H:%M:%S %Y} (alert ' \
+        caption = 'Alert snapshot taken on {0:%a %b %d %H:%M:%S %Y} (alert ' \
                   '#{1})\n/list cameras'.format(datetime.fromtimestamp(ts),
                                                 self._service.alert_count)
         reply_html = '<b>{0} Alert</b>\nSending snapshot ' \
@@ -201,7 +201,7 @@ class ServiceAlarmPusherThread(ServiceThread):
             self._bot.send_message(chat_id=uid, text=reply_html,
                                    parse_mode=ParseMode.HTML)
             if self._cam.conf.alert[detection_key].fullpic:
-                name = 'Full_alert_snapshot_{:%a_%b_%-d_%H.%M.%S_%Y}.jpg'.format(
+                name = 'Full_alert_snapshot_{:%a_%b_%d_%H.%M.%S_%Y}.jpg'.format(
                     datetime.fromtimestamp(ts))
                 self._bot.send_document(chat_id=uid, document=photo,
                                         caption=caption,
