@@ -22,7 +22,7 @@ def authorization_check(func):
     """Decorator which checks that user is authorized to interact with bot."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        bot, update = args
+        bot, update, context = args
         try:
             if update.message.chat.id not in bot.user_ids:
                 raise UserAuthError
@@ -38,7 +38,8 @@ def camera_selection(func):
     """Decorator which checks which camera instance to use."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        cambot, update = args
+        cambot, update, context = args
+
         cam_id = re.split(r'^.*(?=cam_)', update.message.text)[-1]
         cam = cambot._pool.get_instance(cam_id)
         args = args + (cam, cam_id)
@@ -49,26 +50,27 @@ def camera_selection(func):
 class CameraBot(Bot):
     """CameraBot class where main bot things are done."""
 
-    def __init__(self, pool, stop_polling):
+    def __init__(self, stop_polling):
         conf = get_main_config()
         super(CameraBot, self).__init__(conf.telegram.token,
                                         request=(Request(con_pool_size=10)))
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.info('Initializing %s bot', self.first_name)
-        self._pool = pool
+        self._pool = None
         self._stop_polling = stop_polling
         self.user_ids = conf.telegram.allowed_user_ids
         self._service_threads = {
             ServiceStreamerThread.type: ServiceStreamerThread,
             ServiceAlarmPusherThread.type: ServiceAlarmPusherThread}
 
-        self._start_enabled_services()
-
     def _start_thread(self, thread, cam_id, cam, service=None, service_name=None,
                       update=None):
         thread(self, cam_id, cam, update, self._log, service, service_name).start()
 
-    def _start_enabled_services(self):
+    def add_camera_pool(self, pool):
+        self._pool = pool
+
+    def start_enabled_services(self):
         """Start services enabled in conf."""
         for cam_id, cam_data in self._pool.get_all().items():
             cam = cam_data['instance']
@@ -123,13 +125,13 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmds(self, update, cam, cam_id):
+    def cmds(self, update, context, cam, cam_id):
         """Print camera commands."""
-        self._print_helper(update, cam_id)
+        self._print_helper(update, context, cam_id)
 
     @authorization_check
     @camera_selection
-    def cmd_getpic(self, update, cam, cam_id):
+    def cmd_getpic(self, update, context, cam, cam_id):
         """Get and send resized snapshot from the camera."""
         self._log.info('Resized cam snapshot from %s requested',
                        cam.description)
@@ -158,7 +160,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_getfullpic(self, update, cam, cam_id):
+    def cmd_getfullpic(self, update, context, cam, cam_id):
         """Get and send full snapshot from the camera."""
         self._log.info('Full cam snapshot requested')
         self._log.debug(self._get_user_info(update))
@@ -196,7 +198,7 @@ class CameraBot(Bot):
         thread.start()
 
     @authorization_check
-    def cmd_list_cams(self, update):
+    def cmd_list_cams(self, update, context):
         """List user's cameras."""
         self._log.info('Camera list has been requested')
 
@@ -241,7 +243,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_stream_yt_on(self, update, cam, cam_id):
+    def cmd_stream_yt_on(self, update, context, cam, cam_id):
         """Start YouTube stream."""
         self._log.info('Starting YouTube stream')
         self._log.debug(self._get_user_info(update))
@@ -260,7 +262,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_stream_yt_off(self, update, cam, cam_id):
+    def cmd_stream_yt_off(self, update, context, cam, cam_id):
         """Stop YouTube stream."""
         self._log.info('Stopping YouTube stream')
         self._log.debug(self._get_user_info(update))
@@ -273,7 +275,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_stream_icecast_on(self, update, cam, cam_id):
+    def cmd_stream_icecast_on(self, update, context, cam, cam_id):
         """Start Icecast stream."""
         self._log.info('Starting Icecast stream')
         self._log.debug(self._get_user_info(update))
@@ -292,7 +294,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_stream_icecast_off(self, update, cam, cam_id):
+    def cmd_stream_icecast_off(self, update, context, cam, cam_id):
         """Stop Icecast stream."""
         self._log.info('Stopping Icecast stream')
         self._log.debug(self._get_user_info(update))
@@ -305,7 +307,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_alert_on(self, update, cam, cam_id):
+    def cmd_alert_on(self, update, context, cam, cam_id):
         """Enable camera's Alert Mode."""
         self._log.info('Enabling camera\'s alert mode requested')
         self._log.debug(self._get_user_info(update))
@@ -324,7 +326,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
-    def cmd_alert_off(self, update, cam, cam_id):
+    def cmd_alert_off(self, update, context, cam, cam_id):
         """Disable camera's Alert Mode."""
         self._log.info('Disabling camera\'s alert mode requested')
         try:
@@ -335,7 +337,7 @@ class CameraBot(Bot):
             update.message.reply_html(make_html_bold(err))
 
     @authorization_check
-    def cmd_help(self, update, append=False, requested=True, cam_id=None):
+    def cmd_help(self, update, context, append=False, requested=True, cam_id=None):
         """Send help message to telegram chat."""
         if requested:
             self._log.info('Help message has been requested')
@@ -351,13 +353,14 @@ class CameraBot(Bot):
 
         self._log.info('Help message has been sent')
 
-    def error_handler(self, update, error):
+    def error_handler(self, update, context):
         """Handle known Telegram bot api errors."""
-        self._log.exception('Got error: %s', error)
+        self._log.exception('Got error: %s', context.error)
 
-    def _print_helper(self, update, cam_id):
+    def _print_helper(self, update, context, cam_id):
         """Send help message to telegram chat after sending picture."""
-        self.cmd_help(update, append=True, requested=False, cam_id=cam_id)
+        self.cmd_help(update, context, append=True, requested=False,
+                      cam_id=cam_id)
 
     def _print_access_error(self, update):
         """Send authorization error to telegram chat."""
@@ -365,7 +368,7 @@ class CameraBot(Bot):
 
     def _trigger_switch(self, enable, _type, args):
         name = SWITCH_MAP[_type]['name']
-        update, cam, cam_id = args
+        update, context, cam, cam_id = args
         self._log.info('%s camera\'s %s has been requested',
                        'Enabling' if enable else 'Disabling', name)
         self._log.debug(self._get_user_info(update))

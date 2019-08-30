@@ -16,7 +16,7 @@ from camerabot.constants import (STREAMS,
                                  FFMPEG_CMD_TRANSCODE_GENERAL,
                                  FFMPEG_CMD_TRANSCODE,
                                  FFMPEG_CMD_TRANSCODE_ICECAST)
-from camerabot.exceptions import HomeCamError
+from camerabot.exceptions import HikvisionCamError
 from camerabot.service import BaseService
 from camerabot.utils import kill_proc_tree
 
@@ -59,7 +59,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         if not skip_check and self.is_started():
             msg = '{0} stream already started'.format(self._cls_name)
             self._log.info(msg)
-            raise HomeCamError(msg)
+            raise HikvisionCamError(msg)
         try:
             self._log.debug('%s ffmpeg command: %s', self._cls_name, self._cmd)
             self._proc = subprocess.Popen(self._cmd,
@@ -72,7 +72,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         except Exception:
             err_msg = '{0} failed to start'.format(self._cls_name)
             self._log.exception(err_msg)
-            raise HomeCamError(err_msg)
+            raise HikvisionCamError(err_msg)
 
     def stop(self, disable=True):
         """Stop the stream."""
@@ -83,7 +83,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         if not self.is_started():
             msg = '{0} already stopped'.format(self._cls_name)
             self._log.info(msg)
-            raise HomeCamError(msg)
+            raise HikvisionCamError(msg)
         try:
             kill_proc_tree(self._proc.pid)
             clear_status()
@@ -93,7 +93,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         except Exception:
             err_msg = 'Failed to kill/disable YouTube stream'
             self._log.exception(err_msg)
-            raise HomeCamError(err_msg)
+            raise HikvisionCamError(err_msg)
 
     def need_restart(self):
         """Check if the stream needs to be restarted."""
@@ -133,7 +133,7 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         except ValueError:
             err_msg = 'Failed to load {0} templates'.format(self._cls_name)
             self._log.error(err_msg)
-            raise HomeCamError(err_msg)
+            raise HikvisionCamError(err_msg)
 
         self._stream_conf = get_livestream_tpl_config()[self.name][tpl_name_ls]
         self._enc_conf = get_encoding_tpl_config()[enc_codec_name][tpl_name_enc]
@@ -225,7 +225,7 @@ class IcecastStreamService(FFMPEGBaseStreamService):
         try:
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()
         except KeyError:
-            raise HomeCamError('{0} does not support {1} streaming, change'
+            raise HikvisionCamError('{0} does not support {1} streaming, change'
                                'template type'.format(self._cls_name,
                                                       enc_codec_name))
         icecast_args = FFMPEG_CMD_TRANSCODE_ICECAST.format(

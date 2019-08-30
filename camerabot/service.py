@@ -13,7 +13,7 @@ from telegram import ParseMode
 
 from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTION_REGEX,
                                  STREAMS, ALARMS)
-from camerabot.exceptions import HomeCamError, CameraBotError
+from camerabot.exceptions import HikvisionCamError, CameraBotError
 
 
 class BaseService(metaclass=abc.ABCMeta):
@@ -89,7 +89,7 @@ class ServiceController:
             for service in service_type_dict.values():
                 try:
                     service.stop()
-                except HomeCamError as err:
+                except HikvisionCamError as err:
                     self._log.warning('Warning while stopping service "%s": '
                                       '%s', service.name, err)
 
@@ -129,7 +129,7 @@ class ServiceThread(Thread, metaclass=abc.ABCMeta):
         self._update = update
 
         if self._service and self._service_name:
-            raise HomeCamError('Provide service instance or service name, '
+            raise HikvisionCamError('Provide service instance or service name, '
                                'not both')
         if self._service_name:
             self._service = self._cam.service_controller.get_service(self.type,
@@ -226,7 +226,7 @@ class ServiceStreamerThread(ServiceThread):
         self._log.debug('Starting %s streamer thread for "%s"',
                         self._service.name, self._cam.description)
         if not self._service:
-            raise HomeCamError(
+            raise HikvisionCamError(
                 'No such self._service: {0}'.format(self._service_name))
 
         def should_exit():
@@ -247,7 +247,7 @@ class ServiceStreamerThread(ServiceThread):
                         break
                     self._log.info('Restarting %s stream', self._service.name)
                     self._service.restart()
-        except HomeCamError as err:
+        except HikvisionCamError as err:
             if self._update:
                 self._update.message.reply_text(err)
             else:

@@ -13,7 +13,7 @@ class UserAuthError(Exception):
     pass
 
 
-class HomeCamError(Exception):
+class HikvisionCamError(Exception):
     pass
 
 

@@ -1,4 +1,4 @@
-"""Home Camera Module."""
+"""Hikvision Camera Module."""
 
 import logging
 from datetime import datetime
@@ -9,7 +9,7 @@ from PIL import Image
 from camerabot.alarm import AlarmService
 from camerabot.api import HikvisionAPI
 from camerabot.constants import IMG
-from camerabot.exceptions import HomeCamError, APIError
+from camerabot.exceptions import HikvisionCamError, APIError
 from camerabot.livestream import YouTubeStreamService, IcecastStreamService
 from camerabot.service import ServiceController
 
@@ -44,8 +44,8 @@ class CameraPoolController:
         return len(self._instances)
 
 
-class HomeCam:
-    """Camera class."""
+class HikvisionCam:
+    """Hikvision Camera class."""
 
     def __init__(self, conf):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -84,7 +84,7 @@ class HomeCam:
         except APIError:
             err_msg = 'Failed to take snapshot from {0}'.format(self.description)
             self._log.error(err_msg)
-            raise HomeCamError(err_msg)
+            raise HikvisionCamError(err_msg)
 
         try:
             snapshot = self._resize_snapshot(res.raw) if resize else res.raw
@@ -92,7 +92,7 @@ class HomeCam:
             err_msg = 'Failed to resize snapshot taken from {0}'.format(
                 self.description)
             self._log.exception(err_msg)
-            raise HomeCamError(err_msg)
+            raise HikvisionCamError(err_msg)
         return snapshot, snapshot_timestamp
 
     def _resize_snapshot(self, raw_snapshot):
