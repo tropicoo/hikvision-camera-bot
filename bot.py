@@ -108,8 +108,13 @@ class CameraBotLauncher:
 
 
 if __name__ == '__main__':
-    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(format=LOG_FORMAT)
+    if sys.version_info[:2] < (3, 6):
+        sys.exit('Python version needs to be at least 3.6.\n'
+                 'Current version: {0}\n'
+                 'Please update and try again.'.format(sys.version))
 
-    BOT = CameraBotLauncher()
-    BOT.run()
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(format=log_format)
+
+    bot = CameraBotLauncher()
+    bot.run()
