@@ -63,8 +63,7 @@ class CameraBotLauncher:
         self._updater.start_polling()
         self._updater.bot.start_enabled_services()
 
-        # Blocks code execution until signal is received, therefore
-        # 'self._directory_watcher.run' won't execute.
+        # Blocking
         # self._updater.idle()
 
         try:
@@ -113,7 +112,7 @@ if __name__ == '__main__':
                  'Current version: {0}\n'
                  'Please update and try again.'.format(sys.version))
 
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    log_format = '%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s'
     logging.basicConfig(format=log_format)
 
     bot = CameraBotLauncher()

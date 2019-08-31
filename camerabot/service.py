@@ -130,7 +130,7 @@ class ServiceThread(Thread, metaclass=abc.ABCMeta):
 
         if self._service and self._service_name:
             raise HikvisionCamError('Provide service instance or service name, '
-                               'not both')
+                                    'not both')
         if self._service_name:
             self._service = self._cam.service_controller.get_service(self.type,
                                                                      self._service_name)
@@ -223,7 +223,7 @@ class ServiceStreamerThread(ServiceThread):
                     self._service.name, self._cam.description)
 
     def run(self):
-        self._log.debug('Starting %s streamer thread for "%s"',
+        self._log.debug('Starting %s stream thread for "%s"',
                         self._service.name, self._cam.description)
         if not self._service:
             raise HikvisionCamError(

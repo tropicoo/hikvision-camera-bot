@@ -141,10 +141,6 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
         null_audio = FFMPEG_CMD_NULL_AUDIO if self._enc_conf.null_audio else \
             {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
 
-        self._log.debug(self._conf)
-        self._log.debug(self._stream_conf)
-        self._log.debug(self._enc_conf)
-
         cmd_tpl = FFMPEG_CMD.format(abitrate=null_audio['bitrate'],
                                     acodec=self._enc_conf.acodec,
                                     channel=self._stream_conf.channel,

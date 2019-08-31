@@ -8,6 +8,7 @@ from pathlib import PurePath
 from threading import Thread
 
 from telegram import Bot
+from telegram.ext import run_async
 from telegram.utils.request import Request
 
 from camerabot.config import get_main_config
@@ -90,10 +91,8 @@ class CameraBot(Bot):
     def send_startup_message(self):
         """Send welcome message after bot launch."""
         self._log.info('Sending welcome message')
-
-        msg = '{0} bot started, see /help for ' \
-              'available commands'.format(self.first_name)
-        self.send_message_all(msg)
+        self.send_message_all('{0} bot started, see /help for '
+                              'available commands'.format(self.first_name))
 
     def send_message_all(self, msg):
         """Send message to all defined user IDs in config.json."""
@@ -125,12 +124,14 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmds(self, update, context, cam, cam_id):
         """Print camera commands."""
         self._print_helper(update, context, cam_id)
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_getpic(self, update, context, cam, cam_id):
         """Get and send resized snapshot from the camera."""
         self._log.info('Resized cam snapshot from %s requested',
@@ -160,6 +161,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_getfullpic(self, update, context, cam, cam_id):
         """Get and send full snapshot from the camera."""
         self._log.info('Full cam snapshot requested')
@@ -187,6 +189,7 @@ class CameraBot(Bot):
         self._log.info('Full cam snapshot %s sent', fullpic_name)
 
     @authorization_check
+    @run_async
     def cmd_stop(self, update):
         """Terminate bot."""
         msg = 'Stopping {0} bot'.format(self.first_name)
@@ -198,6 +201,7 @@ class CameraBot(Bot):
         thread.start()
 
     @authorization_check
+    @run_async
     def cmd_list_cams(self, update, context):
         """List user's cameras."""
         self._log.info('Camera list has been requested')
@@ -219,30 +223,35 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_motion_detection_off(self, *args):
         """Disable camera's Motion Detection."""
         self._trigger_switch(enable=False, _type=DETECTIONS.MOTION, args=args)
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_motion_detection_on(self, *args):
         """Enable camera's Motion Detection."""
         self._trigger_switch(enable=True, _type=DETECTIONS.MOTION, args=args)
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_line_detection_off(self, *args):
         """Disable camera's Line Crossing Detection."""
         self._trigger_switch(enable=False, _type=DETECTIONS.LINE, args=args)
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_line_detection_on(self, *args):
         """Enable camera's Line Crossing Detection."""
         self._trigger_switch(enable=True, _type=DETECTIONS.LINE, args=args)
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_stream_yt_on(self, update, context, cam, cam_id):
         """Start YouTube stream."""
         self._log.info('Starting YouTube stream')
@@ -262,6 +271,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_stream_yt_off(self, update, context, cam, cam_id):
         """Stop YouTube stream."""
         self._log.info('Stopping YouTube stream')
@@ -275,6 +285,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_stream_icecast_on(self, update, context, cam, cam_id):
         """Start Icecast stream."""
         self._log.info('Starting Icecast stream')
@@ -294,6 +305,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_stream_icecast_off(self, update, context, cam, cam_id):
         """Stop Icecast stream."""
         self._log.info('Stopping Icecast stream')
@@ -307,6 +319,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_alert_on(self, update, context, cam, cam_id):
         """Enable camera's Alert Mode."""
         self._log.info('Enabling camera\'s alert mode requested')
@@ -326,6 +339,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @camera_selection
+    @run_async
     def cmd_alert_off(self, update, context, cam, cam_id):
         """Disable camera's Alert Mode."""
         self._log.info('Disabling camera\'s alert mode requested')
@@ -337,6 +351,7 @@ class CameraBot(Bot):
             update.message.reply_html(make_html_bold(err))
 
     @authorization_check
+    @run_async
     def cmd_help(self, update, context, append=False, requested=True, cam_id=None):
         """Send help message to telegram chat."""
         if requested:
