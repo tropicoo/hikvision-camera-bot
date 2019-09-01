@@ -3,6 +3,7 @@
 
 import logging
 import itertools
+import re
 import sys
 from collections import defaultdict
 
@@ -11,8 +12,9 @@ from telegram.ext import CommandHandler, Updater
 from camerabot.camera import HikvisionCam, CameraPoolController
 from camerabot.camerabot import CameraBot
 from camerabot.config import get_main_config
+from camerabot.constants import CONF_CAM_ID_REGEX
 from camerabot.directorywatcher import DirectoryWatcher
-from camerabot.exceptions import DirectoryWatcherError
+from camerabot.exceptions import DirectoryWatcherError, ConfigError
 
 
 class CameraBotLauncher:
@@ -78,6 +80,12 @@ class CameraBotLauncher:
         cmd_cam_map = defaultdict(list)
         cam_pool = CameraPoolController()
         for cam_id, cam_conf in self._conf.camera_list.items():
+            if not re.match(CONF_CAM_ID_REGEX, cam_id):
+                msg = 'Wrong camera name "{0}". Follow "cam_1, cam_2, ..., ' \
+                      'cam_<number>" naming pattern.'.format(cam_id)
+                self._log.error(msg)
+                raise ConfigError(msg)
+
             cam_cmds = []
             for handler_func, cmd_tpl in self._commands_tpl.items():
                 cmd = cmd_tpl.format(cam_id)

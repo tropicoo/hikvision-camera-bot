@@ -13,7 +13,7 @@ from telegram.utils.request import Request
 
 from camerabot.config import get_main_config
 from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTIONS,
-                                 STREAMS, ALARMS)
+                                 STREAMS, ALARMS, CMD_CAM_ID_REGEX)
 from camerabot.exceptions import UserAuthError
 from camerabot.service import ServiceStreamerThread, ServiceAlarmPusherThread
 from camerabot.utils import make_html_bold
@@ -41,10 +41,9 @@ def camera_selection(func):
     def wrapper(*args, **kwargs):
         cambot, update, context = args
 
-        cam_id = re.split(r'^.*(?=cam_)', update.message.text)[-1]
+        cam_id = re.split(CMD_CAM_ID_REGEX, update.message.text)[-1]
         cam = cambot._pool.get_instance(cam_id)
-        args = args + (cam, cam_id)
-        return func(*args, **kwargs)
+        return func(*args, cam=cam, cam_id=cam_id, **kwargs)
     return wrapper
 
 
@@ -368,9 +367,10 @@ class CameraBot(Bot):
 
         self._log.info('Help message has been sent')
 
-    def error_handler(self, update, context):
+    @staticmethod
+    def error_handler(update, context):
         """Handle known Telegram bot api errors."""
-        self._log.exception('Got error: %s', context.error)
+        context.bot._log.exception('Got error: %s', context.error)
 
     def _print_helper(self, update, context, cam_id):
         """Send help message to telegram chat after sending picture."""

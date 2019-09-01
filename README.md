@@ -19,7 +19,7 @@ python3 -V
 Python 3.7.3
 
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
-pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
+sudo pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
 
 # To be able to use YouTube/Icecast Livestream install ffmpeg
 sudo apt-get install ffmpeg
@@ -147,8 +147,10 @@ For example configure your camera to take and put snapshot on move detection
 through FTP to watched folder. Watchdog looks for `on_create` events, sends
 created file and deletes it.
 4. Hikvision camera settings are placed inside the `camera_list` section. Template
-comes with two cameras. Preferable names of cameras are `cam_1`,
-`cam_2`, `cam_3` and so on with any description.
+comes with two cameras.
+
+    **Names of cameras should start with `cam_` and end with 
+any number like:** `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
 5. Write authentication credentials in appropriate keys: `user` and `password`
 for every camera you want to use.
 6. Same for `host`, which should include protocol e.g. `http://192.168.10.10`
