@@ -4,7 +4,7 @@ import json
 import logging
 from pathlib import Path
 
-from camerabot.exceptions import ConfigError
+from hikcamerabot.exceptions import ConfigError
 
 _CONFIG_FILE_MAIN = 'config.json'
 _CONFIG_FILE_LIVESTREAM = 'livestream_templates.json'

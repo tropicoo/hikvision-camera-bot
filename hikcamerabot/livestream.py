@@ -8,17 +8,17 @@ from urllib.parse import urlsplit
 
 from psutil import NoSuchProcess
 
-from camerabot.config import get_livestream_tpl_config, get_encoding_tpl_config
-from camerabot.constants import (STREAMS,
-                                 VIDEO_ENCODERS,
-                                 FFMPEG_CMD, FFMPEG_CMD_NULL_AUDIO,
-                                 FFMPEG_CMD_SCALE_FILTER,
-                                 FFMPEG_CMD_TRANSCODE_GENERAL,
-                                 FFMPEG_CMD_TRANSCODE,
-                                 FFMPEG_CMD_TRANSCODE_ICECAST)
-from camerabot.exceptions import HikvisionCamError
-from camerabot.service import BaseService
-from camerabot.utils import kill_proc_tree
+from hikcamerabot.config import get_livestream_tpl_config, get_encoding_tpl_config
+from hikcamerabot.constants import (STREAMS,
+                                    VIDEO_ENCODERS,
+                                    FFMPEG_CMD, FFMPEG_CMD_NULL_AUDIO,
+                                    FFMPEG_CMD_SCALE_FILTER,
+                                    FFMPEG_CMD_TRANSCODE_GENERAL,
+                                    FFMPEG_CMD_TRANSCODE,
+                                    FFMPEG_CMD_TRANSCODE_ICECAST)
+from hikcamerabot.exceptions import HikvisionCamError
+from hikcamerabot.service import BaseService
+from hikcamerabot.utils import kill_proc_tree
 
 
 class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):

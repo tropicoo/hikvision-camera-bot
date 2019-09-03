@@ -60,7 +60,7 @@ class _Encoders:
             setattr(self, arg, arg.lower())
 
 
-HTTPMETHODS = _HTTPMethods()
+HTTP = _HTTPMethods()
 ALARMS = _Alarms()
 DETECTIONS = _Detections()
 IMG = _Image()

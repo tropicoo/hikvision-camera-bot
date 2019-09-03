@@ -11,9 +11,9 @@ from threading import Thread
 
 from telegram import ParseMode
 
-from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTION_REGEX,
-                                 STREAMS, ALARMS)
-from camerabot.exceptions import HikvisionCamError, CameraBotError
+from hikcamerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTION_REGEX,
+                                    STREAMS, ALARMS)
+from hikcamerabot.exceptions import HikvisionCamError, CameraBotError
 
 
 class BaseService(metaclass=abc.ABCMeta):

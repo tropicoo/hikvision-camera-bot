@@ -6,12 +6,12 @@ from io import BytesIO
 
 from PIL import Image
 
-from camerabot.alarm import AlarmService
-from camerabot.api import HikvisionAPI
-from camerabot.constants import IMG
-from camerabot.exceptions import HikvisionCamError, APIError
-from camerabot.livestream import YouTubeStreamService, IcecastStreamService
-from camerabot.service import ServiceController
+from hikcamerabot.alarm import AlarmService
+from hikcamerabot.api import HikvisionAPI
+from hikcamerabot.constants import IMG
+from hikcamerabot.exceptions import HikvisionCamError, APIError
+from hikcamerabot.livestream import YouTubeStreamService, IcecastStreamService
+from hikcamerabot.service import ServiceController
 
 
 class CameraPoolController:

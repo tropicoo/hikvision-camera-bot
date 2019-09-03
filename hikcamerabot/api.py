@@ -9,11 +9,12 @@ from functools import wraps
 import requests
 import xmltodict
 
-from camerabot.constants import (BAD_RESPONSE_CODES, CONN_TIMEOUT, SWITCH_MAP,
-                                 XML_HEADERS, SWITCH_ENABLED_XML, HTTPMETHODS)
-from camerabot.exceptions import (APIError,
-                                  APIRequestError,
-                                  APIBadResponseCodeError)
+from hikcamerabot.constants import (BAD_RESPONSE_CODES, CONN_TIMEOUT, HTTP,
+                                    SWITCH_MAP, XML_HEADERS,
+                                    SWITCH_ENABLED_XML)
+from hikcamerabot.exceptions import (APIError,
+                                     APIRequestError,
+                                     APIBadResponseCodeError)
 
 
 def retry(delay=5, retries=3):
@@ -100,7 +101,7 @@ class HikvisionAPI:
 
         try:
             response_xml = self._get(endpoint, headers=self._xml_headers,
-                                     data=xml, method=HTTPMETHODS.PUT).text
+                                     data=xml, method=HTTP.PUT).text
         except APIRequestError:
             err_msg = 'Failed to {0} {1}.'.format(
                 'enable' if enable else 'disable', name)
@@ -121,13 +122,13 @@ class HikvisionAPI:
         return None
 
     def _get_switch_state(self, _type, endpoint):
-        xml = self._get(endpoint, method=HTTPMETHODS.GET).text
+        xml = self._get(endpoint, method=HTTP.GET).text
         state = xmltodict.parse(xml)[SWITCH_MAP[_type]['method']]['enabled']
         return state == 'true', xml
 
     @retry()
     def _get(self, endpoint, data=None, headers=None, stream=False,
-             method=HTTPMETHODS.GET, timeout=CONN_TIMEOUT):
+             method=HTTP.GET, timeout=CONN_TIMEOUT):
         url = urllib.parse.urljoin(self._host, endpoint)
         self._log.debug('%s %s', method, url)
         try:

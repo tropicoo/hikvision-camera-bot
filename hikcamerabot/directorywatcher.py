@@ -9,8 +9,8 @@ from subprocess import call
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from camerabot.config import get_main_config
-from camerabot.exceptions import DirectoryWatcherError
+from hikcamerabot.config import get_main_config
+from hikcamerabot.exceptions import DirectoryWatcherError
 
 
 class DirectoryWatcher:

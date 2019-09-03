@@ -3,9 +3,9 @@
 from queue import Queue
 from threading import Event
 
-from camerabot.constants import SWITCH_MAP, ALARM_TRIGGERS, ALARMS
-from camerabot.exceptions import HikvisionCamError, APIError
-from camerabot.service import BaseService
+from hikcamerabot.constants import SWITCH_MAP, ALARM_TRIGGERS, ALARMS
+from hikcamerabot.exceptions import HikvisionCamError, APIError
+from hikcamerabot.service import BaseService
 
 
 class AlarmService(BaseService):

@@ -11,12 +11,12 @@ from telegram import Bot
 from telegram.ext import run_async
 from telegram.utils.request import Request
 
-from camerabot.config import get_main_config
-from camerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTIONS,
-                                 STREAMS, ALARMS, CMD_CAM_ID_REGEX)
-from camerabot.exceptions import UserAuthError
-from camerabot.service import ServiceStreamerThread, ServiceAlarmPusherThread
-from camerabot.utils import make_html_bold
+from hikcamerabot.config import get_main_config
+from hikcamerabot.constants import (SEND_TIMEOUT, SWITCH_MAP, DETECTIONS,
+                                    STREAMS, ALARMS, CMD_CAM_ID_REGEX)
+from hikcamerabot.exceptions import UserAuthError
+from hikcamerabot.service import ServiceStreamerThread, ServiceAlarmPusherThread
+from hikcamerabot.utils import make_html_bold
 
 
 def authorization_check(func):
@@ -210,11 +210,11 @@ class CameraBot(Bot):
             cam_count, '' if cam_count == 1 else 's'))]
 
         for cam_id, cam_data in self._pool.get_all().items():
+            presentation = self._build_commands_presentation(cam_id)
             msg.append(
                 '<b>Camera:</b> {0}\n<b>Description:</b> '
                 '{1}\n<b>Commands</b>\n{2}'.format(
-                    cam_id, cam_data['instance'].description,
-                    '\n'.join('/{0}'.format(cmds) for cmds in cam_data['commands'])))
+                    cam_id, cam_data['instance'].description, presentation))
 
         update.message.reply_html('\n\n'.join(msg))
 
@@ -223,30 +223,50 @@ class CameraBot(Bot):
     @authorization_check
     @camera_selection
     @run_async
-    def cmd_motion_detection_off(self, *args):
+    def cmd_motion_detection_off(self, update, context, cam, cam_id):
         """Disable camera's Motion Detection."""
-        self._trigger_switch(enable=False, _type=DETECTIONS.MOTION, args=args)
+        self._trigger_switch(enable=False,
+                             _type=DETECTIONS.MOTION,
+                             update=update,
+                             context=context,
+                             cam=cam,
+                             cam_id=cam_id)
 
     @authorization_check
     @camera_selection
     @run_async
-    def cmd_motion_detection_on(self, *args):
+    def cmd_motion_detection_on(self, update, context, cam, cam_id):
         """Enable camera's Motion Detection."""
-        self._trigger_switch(enable=True, _type=DETECTIONS.MOTION, args=args)
+        self._trigger_switch(enable=True,
+                             _type=DETECTIONS.MOTION,
+                             update=update,
+                             context=context,
+                             cam=cam,
+                             cam_id=cam_id)
 
     @authorization_check
     @camera_selection
     @run_async
-    def cmd_line_detection_off(self, *args):
+    def cmd_line_detection_off(self, update, context, cam, cam_id):
         """Disable camera's Line Crossing Detection."""
-        self._trigger_switch(enable=False, _type=DETECTIONS.LINE, args=args)
+        self._trigger_switch(enable=False,
+                             _type=DETECTIONS.LINE,
+                             update=update,
+                             context=context,
+                             cam=cam,
+                             cam_id=cam_id)
 
     @authorization_check
     @camera_selection
     @run_async
-    def cmd_line_detection_on(self, *args):
+    def cmd_line_detection_on(self, update, context, cam, cam_id):
         """Enable camera's Line Crossing Detection."""
-        self._trigger_switch(enable=True, _type=DETECTIONS.LINE, args=args)
+        self._trigger_switch(enable=True,
+                             _type=DETECTIONS.LINE,
+                             update=update,
+                             context=context,
+                             cam=cam,
+                             cam_id=cam_id)
 
     @authorization_check
     @camera_selection
@@ -360,12 +380,18 @@ class CameraBot(Bot):
                 'Use /list command to list available cameras and commands\n'
                 'Use /stop command to fully stop the bot')
         elif append:
+            presentation = self._build_commands_presentation(cam_id)
             update.message.reply_html(
                 '<b>Available commands</b>\n\n{0}\n\n/list '
-                'cameras'.format('\n'.join('/{0}'.format(x) for x in
-                                 self._pool.get_commands(cam_id))))
+                'cameras'.format(presentation))
 
         self._log.info('Help message has been sent')
+
+    def _build_commands_presentation(self, cam_id):
+        groups = []
+        for desc, cmds in self._pool.get_commands(cam_id).items():
+            groups.append('{0}\n{1}'.format(desc, '\n'.join(['/' + c for c in cmds])))
+        return '\n\n'.join(groups)
 
     @staticmethod
     def error_handler(update, context):
@@ -381,9 +407,8 @@ class CameraBot(Bot):
         """Send authorization error to telegram chat."""
         update.message.reply_text('Not authorized')
 
-    def _trigger_switch(self, enable, _type, args):
+    def _trigger_switch(self, enable, _type, update, context, cam, cam_id):
         name = SWITCH_MAP[_type]['name']
-        update, context, cam, cam_id = args
         self._log.info('%s camera\'s %s has been requested',
                        'Enabling' if enable else 'Disabling', name)
         self._log.debug(self._get_user_info(update))

@@ -2,19 +2,18 @@
 """Bot Launcher Module."""
 
 import logging
-import itertools
 import re
 import sys
 from collections import defaultdict
 
 from telegram.ext import CommandHandler, Updater
 
-from camerabot.camera import HikvisionCam, CameraPoolController
-from camerabot.camerabot import CameraBot
-from camerabot.config import get_main_config
-from camerabot.constants import CONF_CAM_ID_REGEX
-from camerabot.directorywatcher import DirectoryWatcher
-from camerabot.exceptions import DirectoryWatcherError, ConfigError
+from hikcamerabot.camera import HikvisionCam, CameraPoolController
+from hikcamerabot.camerabot import CameraBot
+from hikcamerabot.config import get_main_config
+from hikcamerabot.constants import CONF_CAM_ID_REGEX
+from hikcamerabot.directorywatcher import DirectoryWatcher
+from hikcamerabot.exceptions import DirectoryWatcherError, ConfigError
 
 
 class CameraBotLauncher:
@@ -28,28 +27,43 @@ class CameraBotLauncher:
         logging.getLogger().setLevel(self._conf.log_level)
 
         cambot = CameraBot(stop_polling=self._stop_polling)
-        self._commands_tpl = {cambot.cmds: 'cmds_{0}',
-                              cambot.cmd_getpic: 'getpic_{0}',
-                              cambot.cmd_getfullpic: 'getfullpic_{0}',
-                              cambot.cmd_motion_detection_on: 'md_on_{0}',
-                              cambot.cmd_motion_detection_off: 'md_off_{0}',
-                              cambot.cmd_line_detection_on: 'ld_on_{0}',
-                              cambot.cmd_line_detection_off: 'ld_off_{0}',
-                              cambot.cmd_alert_on: 'alert_on_{0}',
-                              cambot.cmd_alert_off: 'alert_off_{0}',
-                              cambot.cmd_stream_yt_on: 'yt_on_{0}',
-                              cambot.cmd_stream_yt_off: 'yt_off_{0}',
-                              cambot.cmd_stream_icecast_on: 'icecast_on_{0}',
-                              cambot.cmd_stream_icecast_off: 'icecast_off_{0}'}
-        self._commands = {cambot.cmd_help: ('start', 'help'),
-                          cambot.cmd_stop: 'stop',
-                          cambot.cmd_list_cams: 'list'}
 
-        cam_pool, cmds = self._create_cameras()
-        cambot.add_camera_pool(cam_pool)
+        # Not the prettiest way in v.12 of the telegram-bot framework.
+        # TODO: Create pure callback functions and call hikbot's public methods?
+        # TODO: Extend mapping for dot notation object.
+        self._tpl_commands = {
+            'General Commands': {
+                'commands': {
+                    'cmds_{0}': cambot.cmds,
+                    'getpic_{0}': cambot.cmd_getpic,
+                    'getfullpic_{0}': cambot.cmd_getfullpic}},
+            'Motion Detection Commands': {
+                'commands': {
+                    'md_on_{0}': cambot.cmd_motion_detection_on,
+                    'md_off_{0}': cambot.cmd_motion_detection_off}},
+            'Line Crossing Detection Commands': {
+                'commands': {
+                    'ld_on_{0}': cambot.cmd_line_detection_on,
+                    'ld_off_{0}': cambot.cmd_line_detection_off}},
+            'Alert Commands': {
+                'commands': {
+                    'alert_on_{0}': cambot.cmd_alert_on,
+                    'alert_off_{0}': cambot.cmd_alert_off}},
+            'YouTube Stream Commands': {
+                'commands': {
+                    'yt_on_{0}': cambot.cmd_stream_yt_on,
+                    'yt_off_{0}': cambot.cmd_stream_yt_off}},
+            'Icecast Stream Commands': {
+                'commands': {
+                    'icecast_on_{0}': cambot.cmd_stream_icecast_on,
+                    'icecast_off_{0}': cambot.cmd_stream_icecast_off}}}
+        self._commands = {('start', 'help'): cambot.cmd_help,
+                          'stop': cambot.cmd_stop,
+                          'list': cambot.cmd_list_cams}
 
         self._updater = Updater(bot=cambot, use_context=True)
-        self._setup_commands(cmds)
+        cam_pool = self._create_and_setup_cameras()
+        self._updater.bot.add_camera_pool(cam_pool)
 
         self._directory_watcher = DirectoryWatcher(bot=self._updater)
         self._welcome_sent = False
@@ -75,10 +89,14 @@ class CameraBotLauncher:
             self._stop_polling()
             sys.exit(err)
 
-    def _create_cameras(self):
-        """Create dict with camera IDs, instances and commands."""
-        cmd_cam_map = defaultdict(list)
+    def _create_and_setup_cameras(self):
+        """Create cameras, camera pool and setup for Dispatcher."""
         cam_pool = CameraPoolController()
+        setup_dispatcher = lambda command, handler: \
+            self._updater.dispatcher.add_handler(
+                CommandHandler(command, handler_func))
+
+        # Iterate trough config, setup Dispatcher commands and create cameras
         for cam_id, cam_conf in self._conf.camera_list.items():
             if not re.match(CONF_CAM_ID_REGEX, cam_id):
                 msg = 'Wrong camera name "{0}". Follow "cam_1, cam_2, ..., ' \
@@ -86,32 +104,29 @@ class CameraBotLauncher:
                 self._log.error(msg)
                 raise ConfigError(msg)
 
-            cam_cmds = []
-            for handler_func, cmd_tpl in self._commands_tpl.items():
-                cmd = cmd_tpl.format(cam_id)
-                cam_cmds.append(cmd)
-                cmd_cam_map[handler_func].append(cmd)
+            # Format command templates and setup for Dispatcher
+            cam_commands = defaultdict(list)
+            for desc, group in self._tpl_commands.items():
+                for command, handler_func in group['commands'].items():
+                    command = command.format(cam_id)
+                    cam_commands[desc].append(command)
+                    setup_dispatcher(command, handler_func)
 
             self._log.info(cam_pool)
-            cam_pool.add(cam_id, cam_cmds, HikvisionCam(conf=cam_conf))
+            cam_pool.add(cam_id, cam_commands, HikvisionCam(conf=cam_conf))
+
+        # Setup bot-wide commands
+        for command, handler_func in self._commands.items():
+            setup_dispatcher(command, handler_func)
+        self._updater.dispatcher.add_error_handler(CameraBot.error_handler)
 
         self._log.debug('Created Camera Pool: %s', cam_pool)
-        return cam_pool, cmd_cam_map
+        return cam_pool
 
     def _stop_polling(self):
         """Stop bot and exits application."""
         self._updater.stop()
         self._updater.is_idle = False
-
-    def _setup_commands(self, cmds):
-        """Setup for Dispatcher with bot commands and error handler."""
-        dispatcher = self._updater.dispatcher
-
-        for handler_func, event_funcs \
-                in itertools.chain(cmds.items(), self._commands.items()):
-            dispatcher.add_handler(CommandHandler(event_funcs, handler_func))
-
-        dispatcher.add_error_handler(CameraBot.error_handler)
 
 
 if __name__ == '__main__':

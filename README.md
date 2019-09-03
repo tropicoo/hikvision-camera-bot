@@ -43,7 +43,7 @@ Configuration is simply stored in JSON format.
     comes with two cameras.
 
         **Names of cameras should start with `cam_` and end with 
-        any number like:** `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
+        any number** like `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
 
     - Write authentication credentials in appropriate keys: `user` and `password`
     for every camera you want to use.
@@ -122,10 +122,6 @@ Simply run and wait for welcome message in your Telegram client.
 the terminal will shutdown the bot.
 ```bash
 python3 bot.py
-
-# Or make the script executable by adding 'x' flag (it should be already with it)
-chmod +x bot.py
-./bot.py
 ```
 
 If you want to run the bot in the background use the following commands
@@ -157,6 +153,7 @@ nohup python3 bot.py &>- &
 | `/yt_off_cam_*` | Disable YouTube stream |
 | `/icecast_on_cam_*` | Enable Icecast stream |
 | `/icecast_off_cam_*` | Disable Icecast stream |
+
 `*` - camera id (number) e.g. `cam_1`.
 
 #  Advanced Configuration
@@ -418,8 +415,10 @@ nohup python3 bot.py &>- &
     | `format` | `"yuv420p"` | pixel format |
     
     > YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
+
     > To enable stream in Telegram, simply use available commands 
     `/yt_on_<cam_id>, /yt_off_<cam_id>`
+
     > To kill the bot from the terminal with enabled YouTube Live Stream 
     instead of invoking the `/stop` command from the Telegram, kill
     it with its process group `kill -TERM -<PID>` else ffmpeg process
