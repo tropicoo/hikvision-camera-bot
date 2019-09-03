@@ -1,5 +1,4 @@
-Hikvision Telegram Camera Bot
-=============================
+# Hikvision Telegram Camera Bot
 Bot which sends snapshots from your Hikvision camera(s).
 
 Features:
@@ -7,14 +6,12 @@ Features:
 2. Send resized/full snapshots on request
 3. YouTube and Icecast direct or re-encoded stream
 
-Installation
-------------
-
+# Installation
 To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
 
 ```
-# Make sure you have at least Python 3.6 version
+# Make sure you have at least Python 3.6 version installed
 python3 -V
 Python 3.7.3
 
@@ -25,78 +22,61 @@ sudo pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
 sudo apt-get install ffmpeg
 ```
 
-Configuration
--------------
-First of all you need to [create Telegram Bot](https://core.telegram.org/bots#6-botfather)
- and obtain its token.
-
-Before starting Hikvision Telegram Camera Bot needs to be configured.
+# Configuration
 Configuration is simply stored in JSON format.
+## Quick Setup
+1. [Create Telegram Bot](https://core.telegram.org/bots#6-botfather)
+ and get its token.
+2. Copy 3 default configuration files with predefined templates:
+    
+    ```bash
+    cp config-template.json config.json
+    cp encoding_templates-template.json encoding_templates.json
+    cp livestream_templates-template.json livestream_templates.json
+    ```
+3. Edit **config.json**:
+    - Put the obtained bot token to `token` key as string.
+    - [Find](https://stackoverflow.com/a/32777943) your Telegram user id
+    and put it to `allowed_user_ids` list as integer value. Multiple ids can
+    be used, just separate them with a comma.
+    - Hikvision camera settings are placed inside the `camera_list` section. Template
+    comes with two cameras.
 
-Copy default configuration file with predefined template `config-template.json`
- to `config.json` and edit it:
+        **Names of cameras should start with `cam_` and end with 
+        any number like:** `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
+
+    - Write authentication credentials in appropriate keys: `user` and `password`
+    for every camera you want to use.
+    - Same for `host`, which should include protocol e.g. `http://192.168.10.10`
+    - In `alert` section you can enable sending picture on alert (Motion Detection 
+    and/or Line Crossing Detection). Configure `delay` setting in seconds between pushing alert   pictures. To send resized picture change `fullpic` to `false`.
+
+### config.json example
 <details>
-  <summary>config-template.json</summary>
+  <summary>Expand</summary>
   
   ```json
   {
     "telegram": {
-      "token": "",
-      "allowed_user_ids": []
+      "token": "23546745:VjFIo2q34fjkKdasfds0kgSLnh",
+      "allowed_user_ids": [
+        1011111,
+        5462243
+      ]
     },
     "watchdog": {
-      "enabled": false,
-      "directory": ""
+      "enabled": true,
+      "directory": "/tmp/watchdir"
     },
     "log_level": "INFO",
     "camera_list": {
       "cam_1": {
         "description": "Kitchen Camera",
         "api": {
-          "host": "http://192.168.0.1",
+          "host": "http://192.168.10.10",
           "auth": {
-            "user": "",
-            "password": ""
-          },
-          "endpoints": {
-            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-            "alert_stream": "/ISAPI/Event/notification/alertStream"
-          },
-          "stream_timeout": 300
-        },
-        "alert": {
-          "delay": 20,
-          "motion_detection": {
-            "enabled": false,
-            "fullpic": false
-          },
-          "line_crossing_detection": {
-            "enabled": true,
-            "fullpic": true
-          }
-        },
-        "livestream": {
-          "youtube": {
-            "enabled": false,
-            "livestream_template": "tpl_kitchen",
-            "encoding_template": "x264.kitchen"
-          },
-          "icecast": {
-            "enabled": false,
-            "livestream_template": "tpl_kitchen",
-            "encoding_template": "vp9.kitchen"
-          }
-        }
-      },
-      "cam_2": {
-        "description": "Basement Camera",
-        "api": {
-          "host": "http://192.168.0.2",
-          "auth": {
-            "user": "",
-            "password": ""
+            "user": "admin",
+            "password": "kjjhthOogv"
           },
           "endpoints": {
             "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
@@ -120,13 +100,13 @@ Copy default configuration file with predefined template `config-template.json`
         "livestream": {
           "youtube": {
             "enabled": false,
-            "livestream_template": "tpl_basement",
-            "encoding_template": "x264.basement"
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "x264.kitchen",
           },
           "icecast": {
             "enabled": false,
-            "livestream_template": "tpl_basement",
-            "encoding_template": "vp9.basement"
+            "livestream_template": "tpl_kitchen",
+            "encoding_template": "vp9.kitchen"
           }
         }
       }
@@ -135,30 +115,52 @@ Copy default configuration file with predefined template `config-template.json`
   ```
 </details>
 
-To get things done follow the next steps:
-1. Put the obtained bot token to `token` key as string.
-2. [Find](https://stackoverflow.com/a/32777943) your Telegram user id
-and put it to `allowed_user_ids` list as integer value. Multiple ids can
-be used, just separate them with a comma.
-3. If you wish to monitor directory and send files to yourself when created,
-enable `watchdog` by setting `enabled` to `true` and specify `directory`
-path to be monitored e.g. `/tmp/watchdir`. Make sure that directory exists.
-For example configure your camera to take and put snapshot on move detection
-through FTP to watched folder. Watchdog looks for `on_create` events, sends
-created file and deletes it.
-4. Hikvision camera settings are placed inside the `camera_list` section. Template
-comes with two cameras.
+Usage
+=====
+Simply run and wait for welcome message in your Telegram client.
+> Note: This will log the output to the stdout/stderr (your terminal). Closing
+the terminal will shutdown the bot.
+```bash
+python3 bot.py
 
-    **Names of cameras should start with `cam_` and end with 
-any number like:** `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
-5. Write authentication credentials in appropriate keys: `user` and `password`
-for every camera you want to use.
-6. Same for `host`, which should include protocol e.g. `http://192.168.10.10`
-7. In `alert` section you can enable sending picture on alert (Motion Detection 
-and/or Line Crossing Detection).
-Configure `delay` setting in seconds between pushing alert pictures.
-To send resized picture change `fullpic` to `false`.
-8. To enable YouTube Live Stream (experimental), enable it in the `youtube` key.
+# Or make the script executable by adding 'x' flag (it should be already with it)
+chmod +x bot.py
+./bot.py
+```
+
+If you want to run the bot in the background use the following commands
+```bash
+# With writing to the log file
+nohup python3 bot.py &>/tmp/camerabot.log &
+
+# Without writing to the log file
+nohup python3 bot.py &>- &
+```
+
+# Commands
+| Command | Description |
+|---|---|
+| `/start` | Start the bot (one-time action during first start) and show help |
+| `/stop` | Stop the bot (terminate all processes) |
+| `/help` | Show help message |
+| `/list` | List all your cameras with commands |
+| `/cmds_cam_*` | List commands for particular camera |
+| `/getpic_cam_*` | Get resized picture from your Hikvision camera  |
+| `/getfullpic_cam_*` | Get full-sized picture from your Hikvision camera |
+| `/md_on_cam_*` | Enable Motion Detection |
+| `/md_off_cam_*` | Disable Motion Detection |
+| `/ld_on_cam_*` | Enable Line Crossing Detection |
+| `/ld_off_cam_*` | Disable Line Crossing Detection |
+| `/alert_on_cam_*` | Enable Alert (Alarm) mode. It means it will send respective alert to your account in Telegram |
+| `/alert_off_cam_*` | Disable Alert (Alarm) mode, no alerts will be sent when something detected |
+| `/yt_on_cam_*` | Enable YouTube stream |
+| `/yt_off_cam_*` | Disable YouTube stream |
+| `/icecast_on_cam_*` | Enable Icecast stream |
+| `/icecast_off_cam_*` | Disable Icecast stream |
+`*` - camera id (number) e.g. `cam_1`.
+
+#  Advanced Configuration
+1. To enable YouTube Live Stream (experimental), enable it in the `youtube` key.
 
     | Parameter | Value | Description |
     |---|---|---|
@@ -190,11 +192,18 @@ To send resized picture change `fullpic` to `false`.
     
     <details>
       <summary>livestream_templates-template.json</summary>
-      
+
       ```json
       {
         "youtube": {
           "tpl_kitchen": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "url": "rtmp://a.rtmp.youtube.com/live2",
+            "key": "xxxx-xxxx-xxxx-xxxx"
+          },
+          "tpl_basement": {
             "channel": 101,
             "restart_period": 39600,
             "restart_pause": 10,
@@ -208,14 +217,44 @@ To send resized picture change `fullpic` to `false`.
             "restart_period": 39600,
             "restart_pause": 10,
             "ice_stream": {
-              "ice_genre": "Default",
-              "ice_name": "Default",
-              "ice_description": "Default",
+              "ice_genre": "333Default",
+              "ice_name": "222Default",
+              "ice_description": "111Default",
               "ice_public": 0,
-              "url": "icecast://source@x.x.x.x:8000/video.webm",
-              "password": "xxxx",
+              "url": "icecast://source@192.168.10.1:8000/video.webm",
+              "password": "hackme",
               "content_type": "video/webm"
             }
+          },
+          "tpl_basement": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "ice_stream": {
+              "ice_genre": "333Default",
+              "ice_name": "222Default",
+              "ice_description": "111Default",
+              "ice_public": 0,
+              "url": "icecast://source@192.168.10.2:8000/video.webm",
+              "password": "hackme",
+              "content_type": "video/webm"
+            }
+          }
+        },
+        "twitch": {
+          "tpl_kitchen": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "url": "rtmp://live-waw.twitch.tv/app",
+            "key": ""
+          },
+          "tpl_basement": {
+            "channel": 101,
+            "restart_period": 39600,
+            "restart_pause": 10,
+            "url": "rtmp://live-waw.twitch.tv/app",
+            "key": ""
           }
         }
       }
@@ -241,7 +280,7 @@ To send resized picture change `fullpic` to `false`.
     
     <details>
       <summary>encoding_templates-template.json</summary>
-      
+
       ```json
       {
         "x264": {
@@ -377,128 +416,23 @@ To send resized picture change `fullpic` to `false`.
     | `width` | `640` | width |
     | `height` | `-1` | height, -1 means will be automatically determined |
     | `format` | `"yuv420p"` | pixel format |
-
     
     > YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
-
     > To enable stream in Telegram, simply use available commands 
     `/yt_on_<cam_id>, /yt_off_<cam_id>`
-    
     > To kill the bot from the terminal with enabled YouTube Live Stream 
     instead of invoking the `/stop` command from the Telegram, kill
     it with its process group `kill -TERM -<PID>` else ffmpeg process
     will be still alive.
+   
+2. If you wish to monitor directory and send files to yourself when created,
+enable `watchdog` by setting `enabled` to `true` and specify `directory`
+path to be monitored e.g. `/tmp/watchdir`. Make sure that directory exists.
+For example configure your camera to take and put snapshot on move detection
+through FTP to watched folder. Watchdog looks for `on_create` events, sends
+created file and deletes it.
 
-**Example configuration**
-<details>
-  <summary>Expand</summary>
-  
-  ```json
-  {
-    "telegram": {
-      "token": "23546745:VjFIo2q34fjkKdasfds0kgSLnh",
-      "allowed_user_ids": [
-        1011111,
-        5462243
-      ]
-    },
-    "watchdog": {
-      "enabled": true,
-      "directory": "/tmp/watchdir"
-    },
-    "log_level": "INFO",
-    "camera_list": {
-      "cam_1": {
-        "description": "Kitchen Camera",
-        "api": {
-          "host": "http://192.168.10.10",
-          "auth": {
-            "user": "admin",
-            "password": "kjjhthOogv"
-          },
-          "endpoints": {
-            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-            "alert_stream": "/ISAPI/Event/notification/alertStream"
-          },
-          "stream_timeout": 300
-        },
-        "alert": {
-          "delay": 10,
-          "motion_detection": {
-            "enabled": false,
-            "fullpic": true
-          },
-          "line_crossing_detection": {
-            "enabled": false,
-            "fullpic": true
-          }
-        },
-        "livestream": {
-          "youtube": {
-            "enabled": false,
-            "livestream_template": "tpl_kitchen",
-            "encoding_template": "x264.kitchen",
-          },
-          "icecast": {
-            "enabled": false,
-            "livestream_template": "tpl_kitchen",
-            "encoding_template": "vp9.kitchen"
-          }
-        }
-      }
-    }
-  }
-  ```
-</details>
-  
-Usage
-=====
-Simply run and wait for welcome message in your Telegram client.
-> Note: This will log the output to the stdout/stderr (your terminal). Closing
-the terminal will shutdown the bot.
-```bash
-python3 bot.py
-
-# Or make the script executable by adding 'x' flag (it should be already with it)
-chmod +x bot.py
-./bot.py
-```
-
-If you want to run the bot in the background use the following commands
-```bash
-# With writing to the log file
-nohup python3 bot.py &>/tmp/camerabot.log &
-
-# Without writing to the log file
-nohup python3 bot.py &>- &
-```
-
-Commands
-========
-| Command | Description |
-|---|---|
-| `/start` | Start the bot (one-time action during first start) and show help |
-| `/stop` | Stop the bot (terminate all processes) |
-| `/help` | Show help message |
-| `/list` | List all your cameras with commands |
-| `/cmds_cam_1` | List commands for particular camera |
-| `/getpic_cam_1` | Get resized picture from your Hikvision camera  |
-| `/getfullpic_cam_1` | Get full-sized picture from your Hikvision camera |
-| `/md_on_cam_1` | Enable Motion Detection |
-| `/md_off_cam_1` | Disable Motion Detection |
-| `/ld_on_cam_1` | Enable Line Crossing Detection |
-| `/ld_off_cam_1` | Disable Line Crossing Detection |
-| `/alert_on_cam_1` | Enable Alert (Alarm) mode. It means it will send respective alert to your account in Telegram |
-| `/alert_off_cam_1` | Disable Alert (Alarm) mode, no alerts will be sent when something detected |
-| `/yt_on_cam_1` | Enable YouTube stream |
-| `/yt_off_cam_1` | Disable YouTube stream |
-| `/icecast_on_cam_1` | Enable Icecast stream |
-| `/icecast_off_cam_1` | Disable Icecast stream |
-
-Misc
-=====
+# Misc
 If you're on the Raspberry Pi, you can easily add bot execution to the startup.
 
 Simply edit the `/etc/rc.local` add the following line before the last one
