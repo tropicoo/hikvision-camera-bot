@@ -203,12 +203,11 @@ class YouTubeStreamService(FFMPEGBaseStreamService):
         except KeyError:
             inner_args = ''
         self._cmd = cmd_tpl.format(output=self._generate_output(),
-                                   inner_args=inner_args)
+                                   inner_args=cmd_transcode.format(inner_args=inner_args))
 
     def _generate_output(self):
         # urljoin does not support rtmp protocol
-        return '{0}/{1}'.format(self._stream_conf.url,
-                                self._stream_conf.key)
+        return '{0}/{1}'.format(self._stream_conf.url, self._stream_conf.key)
 
 
 class IcecastStreamService(FFMPEGBaseStreamService):
@@ -232,7 +231,8 @@ class IcecastStreamService(FFMPEGBaseStreamService):
             content_type=self._stream_conf.ice_stream.content_type,
             password=self._stream_conf.ice_stream.password)
         self._cmd = cmd_tpl.format(output=self._stream_conf.ice_stream.url,
-                                   inner_args=' '.join([inner_args, icecast_args]))
+                                   inner_args=' '.join([cmd_transcode.format(inner_args=inner_args),
+                                                        icecast_args]))
 
 
 class TwitchStreamService(FFMPEGBaseStreamService):
