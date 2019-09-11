@@ -189,7 +189,7 @@ class CameraBot(Bot):
 
     @authorization_check
     @run_async
-    def cmd_stop(self, update):
+    def cmd_stop(self, update, context):
         """Terminate bot."""
         msg = 'Stopping {0} bot'.format(self.first_name)
         self._log.info(msg)

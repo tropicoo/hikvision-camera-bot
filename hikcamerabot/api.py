@@ -58,7 +58,6 @@ class HikvisionAPI:
         self._host = conf.host
         self._endpoints = conf.endpoints
         self._stream_timeout = conf.stream_timeout
-        self._xml_headers = XML_HEADERS
 
         self._sess = requests.Session()
         self._sess.auth = requests.auth.HTTPDigestAuth(conf.auth.user,
@@ -100,7 +99,7 @@ class HikvisionAPI:
         xml = re.sub(regex, replace_with, xml)
 
         try:
-            response_xml = self._get(endpoint, headers=self._xml_headers,
+            response_xml = self._get(endpoint, headers=XML_HEADERS,
                                      data=xml, method=HTTP.PUT).text
         except APIRequestError:
             err_msg = 'Failed to {0} {1}.'.format(

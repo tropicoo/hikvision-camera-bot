@@ -124,7 +124,7 @@ class CameraBotLauncher:
         return cam_pool
 
     def _stop_polling(self):
-        """Stop bot and exits application."""
+        """Stop bot and exit application."""
         self._updater.stop()
         self._updater.is_idle = False
 

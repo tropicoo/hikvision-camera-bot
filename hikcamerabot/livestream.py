@@ -221,8 +221,8 @@ class IcecastStreamService(FFMPEGBaseStreamService):
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()
         except KeyError:
             raise HikvisionCamError('{0} does not support {1} streaming, change'
-                               'template type'.format(self._cls_name,
-                                                      enc_codec_name))
+                                    'template type'.format(self._cls_name,
+                                                           enc_codec_name))
         icecast_args = FFMPEG_CMD_TRANSCODE_ICECAST.format(
             ice_genre=self._stream_conf.ice_stream.ice_genre,
             ice_name=self._stream_conf.ice_stream.ice_name,
