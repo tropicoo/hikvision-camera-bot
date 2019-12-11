@@ -7,6 +7,7 @@ Features:
 3. YouTube and Icecast direct or re-encoded stream
 
 # Installation
+## Manual installation without Docker
 To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
 
@@ -16,10 +17,14 @@ python3 -V
 Python 3.7.3
 
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
-sudo pip3 install Pillow python-telegram-bot requests watchdog xmltodict psutil
+sudo pip3 install -r requirements.txt
 
 # To be able to use YouTube/Icecast Livestream install ffmpeg
 sudo apt-get install ffmpeg
+```
+## Installation/execution using Docker Compose
+```bash
+sudo docker-compose build && sudo docker-compose up
 ```
 
 # Configuration

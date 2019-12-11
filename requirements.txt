@@ -1,0 +1,6 @@
+Pillow
+psutil
+python-telegram-bot
+requests
+watchdog
+xmltodict
