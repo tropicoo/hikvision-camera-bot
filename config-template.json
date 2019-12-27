@@ -35,6 +35,10 @@
         "line_crossing_detection": {
           "enabled": false,
           "fullpic": false
+        },
+        "intrusion_detection": {
+          "enabled": false,
+          "fullpic": false
         }
       },
       "livestream": {
