@@ -1,11 +1,14 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision camera(s).
 
-Features:
+## Features
 1. Sending snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
 2. Sending resized/full snapshots on request
 3. Sending so-called Telegram video-gifs on alert events from paragraph #1
 4. YouTube and Icecast direct or re-encoded streaming
+
+
+![frames](img/screenshot-1.png)
 
 # Installation
 ## Manual installation without Docker
