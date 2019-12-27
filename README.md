@@ -1,27 +1,29 @@
 # Hikvision Telegram Camera Bot
-Bot which sends snapshots from your Hikvision camera(s).
+Telegram Bot which sends snapshots from your Hikvision camera(s).
 
 Features:
-1. Send snapshots on **Motion** and **Line Crossing Detection**
-2. Send resized/full snapshots on request
-3. YouTube and Icecast direct or re-encoded stream
+1. Sending snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
+2. Sending resized/full snapshots on request
+3. Sending so-called Telegram video-gifs on alert events from paragraph #1
+4. YouTube and Icecast direct or re-encoded streaming
 
 # Installation
 ## Manual installation without Docker
 To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
 
-```
-# Make sure you have at least Python 3.6 version installed
-python3 -V
-Python 3.7.3
-
-git clone https://github.com/tropicoo/hikvision-camera-bot.git
-sudo pip3 install -r requirements.txt
-
-# To be able to use YouTube/Icecast Livestream install ffmpeg
-sudo apt-get install ffmpeg
-```
+1. Make sure you have at least **Python 3.6** version installed
+    ```shell script
+    python3 -V
+    Python 3.7.3
+    ```
+2. Install
+    ```shell script
+    git clone https://github.com/tropicoo/hikvision-camera-bot.git
+    cd hikvision-camera-bot
+    sudo pip3 install -r requirements.txt
+    sudo apt update && sudo apt install ffmpeg
+    ```
 ## Installation/execution using Docker Compose
 ```bash
 sudo docker-compose build && sudo docker-compose up
@@ -83,16 +85,17 @@ Configuration is simply stored in JSON format.
             "user": "admin",
             "password": "kjjhthOogv"
           },
-          "endpoints": {
-            "picture": "/Streaming/channels/102/picture?snapShotImageType=JPEG",
-            "motion_detection": "ISAPI/System/Video/inputs/channels/1/motionDetection",
-            "line_crossing_detection": "ISAPI/Smart/LineDetection/1",
-            "alert_stream": "/ISAPI/Event/notification/alertStream"
-          },
           "stream_timeout": 300
         },
         "alert": {
           "delay": 10,
+          "video_gif": {
+            "enabled": true,
+            "channel": 102,
+            "record_time": 5,
+            "tmp_storage": "/tmp",
+            "loglevel": "quiet"
+          },
           "motion_detection": {
             "enabled": false,
             "fullpic": true
@@ -162,7 +165,7 @@ nohup python3 bot.py &>- &
 `*` - camera id (number) e.g. `cam_1`.
 
 #  Advanced Configuration
-1. To enable YouTube Live Stream (experimental), enable it in the `youtube` key.
+1. To enable YouTube Live Streams (experimental), enable it in the `youtube` key.
 
     | Parameter | Value | Description |
     |---|---|---|
@@ -271,7 +274,7 @@ nohup python3 bot.py &>- &
     | `restart_period` | `39600` | stream restart period in seconds |
     | `restart_pause` | `10` | stream pause before starting on restart |
     | `url` | `"rtmp://a.rtmp.youtube.com/live2"` | YouTube rtmp server |
-    | `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Stream key. |
+    | `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Streams key. |
     | `ice_genre` | `"Default"` | Icecast stream genre |
     | `ice_name` | `"Default"` | Icecast stream name |
     | `ice_description` | `"Default"` | Icecast stream description |
@@ -405,7 +408,7 @@ nohup python3 bot.py &>- &
     |---|---|---|
     | `null_audio` | `false` | enable fake silent audio (for cameras without mics) |
     | `url` | `"rtmp://a.rtmp.youtube.com/live2"` | YouTube rtmp server |
-    | `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Stream key |
+    | `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Streams key |
     | `loglevel` | `"quiet"` | ffmpeg log levels, default "quiet" |
     | `pix_fmt` | `"yuv420p"` | pixel format, Hikvision streams in yuvj420p |
     | `framerate` | `25` | encode framerate, YouTube will re-encode any to 30 anyway |
@@ -419,12 +422,12 @@ nohup python3 bot.py &>- &
     | `height` | `-1` | height, -1 means will be automatically determined |
     | `format` | `"yuv420p"` | pixel format |
     
-    > YouTube Live Stream server/key is availabe at https://www.youtube.com/live_dashboard.
+    > YouTube Live Streams server/key is availabe at https://www.youtube.com/live_dashboard.
 
     > To enable stream in Telegram, simply use available commands 
     `/yt_on_<cam_id>, /yt_off_<cam_id>`
 
-    > To kill the bot from the terminal with enabled YouTube Live Stream 
+    > To kill the bot from the terminal with enabled YouTube Live Streams 
     instead of invoking the `/stop` command from the Telegram, kill
     it with its process group `kill -TERM -<PID>` else ffmpeg process
     will be still alive.
