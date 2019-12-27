@@ -103,6 +103,10 @@ Configuration is simply stored in JSON format.
           "line_crossing_detection": {
             "enabled": false,
             "fullpic": true
+          },
+          "intrusion_detection": {
+            "enabled": false,
+            "fullpic": false
           }
         },
         "livestream": {
