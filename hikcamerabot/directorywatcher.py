@@ -2,19 +2,19 @@
 
 import datetime
 import logging
-import time
-
 from pathlib import Path, PurePath
 from subprocess import call
+
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from hikcamerabot.config import get_main_config
 from hikcamerabot.exceptions import DirectoryWatcherError
+from hikcamerabot.utils import shallow_sleep
 
 
 class DirectoryWatcher:
-    """Watchdog class.
+    """Watchdog Class.
     TODO: Make as service
     """
 
@@ -30,8 +30,7 @@ class DirectoryWatcher:
         """Watches directory for new files."""
         path = Path(self.directory)
         if not path.exists() and not path.is_dir():
-            err_msg = 'Watchdog directory "{0}" ' \
-                      'doesn\'t exist.'.format(self.directory)
+            err_msg = f'Watchdog directory "{self.directory}" does not exist'
             self._log.error(err_msg)
             raise DirectoryWatcherError(err_msg)
 
@@ -40,7 +39,7 @@ class DirectoryWatcher:
         self._observer.start()
         try:
             while True:
-                time.sleep(1)
+                shallow_sleep(1)
         except Exception as err:
             self._log.error('Watchdog encountered an error: %s', err)
             self._observer.stop()
@@ -48,7 +47,7 @@ class DirectoryWatcher:
 
 
 class DirectoryWatcherEventHandler(FileSystemEventHandler):
-    """EventHandler class."""
+    """EventHandler Class."""
 
     def __init__(self, bot):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -57,8 +56,7 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
     def on_created(self, event):
         """Handles Watchdog's 'on_create' event."""
         file_path = event.src_path
-        cmd = "lsof|awk 'match($9,/{0}/){{print $9}}'".format(
-            PurePath(file_path).name)
+        cmd = "lsof|awk 'match($9,/{0}/){{print $9}}'".format(PurePath(file_path).name)
         while True:
             try:
                 if not call(cmd, shell=True):
@@ -68,12 +66,12 @@ class DirectoryWatcherEventHandler(FileSystemEventHandler):
                 raise DirectoryWatcherError(err)
         try:
             self._log.info('Sending %s to %s', file_path,
-                           self._bot.bot.first_name)
+                           self._bot.first_name)
             now = datetime.datetime.now()
             caption = 'Directory Watcher Alert at {0}'.format(
                 now.strftime('%Y-%m-%d %H:%M:%S'))
             with open(file_path, 'rb') as fd:
-                self._bot.bot.reply_cam_photo(photo=fd, caption=caption,
+                self._bot.reply_cam_photo(photo=fd, caption=caption,
                                               from_watchdog=True)
         except Exception as err:
             self._log.error('Can\'t open %s for sending: %s',

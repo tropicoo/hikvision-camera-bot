@@ -4,56 +4,29 @@ import logging
 from datetime import datetime
 from io import BytesIO
 
-from PIL import Image
-
-from hikcamerabot.alarm import AlarmService
-from hikcamerabot.api import HikvisionAPI
-from hikcamerabot.constants import IMG
+from hikcamerabot.core.api import HikvisionAPI
 from hikcamerabot.exceptions import HikvisionCamError, APIError
-from hikcamerabot.livestream import YouTubeStreamService, IcecastStreamService
-from hikcamerabot.service import ServiceController
-
-
-class CameraPoolController:
-    """Pool class for containing all camera instances."""
-
-    def __init__(self):
-        self._instances = {}
-
-    def __repr__(self):
-        return '<{0} id={1}>: {2}'.format(self.__class__.__name__, id(self),
-                                          repr(self._instances))
-
-    def __str__(self):
-        return str(self._instances)
-
-    def add(self, cam_id, commands, instance):
-        self._instances[cam_id] = {'instance': instance,
-                                   'commands': commands}
-
-    def get_instance(self, cam_id):
-        return self._instances[cam_id]['instance']
-
-    def get_commands(self, cam_id):
-        return self._instances[cam_id]['commands']
-
-    def get_all(self):
-        return self._instances
-
-    def get_count(self):
-        return len(self._instances)
+from hikcamerabot.managers.service import ServiceManager
+from hikcamerabot.managers.video import VideoGifManager
+from hikcamerabot.processors.img import ImageProcessor
+from hikcamerabot.services.alarm import AlarmService
+from hikcamerabot.services.livestream import (YouTubeStreamService,
+                                              IcecastStreamService)
 
 
 class HikvisionCam:
-    """Hikvision Camera class."""
+    """Hikvision Camera Class."""
 
-    def __init__(self, conf):
+    def __init__(self, _id, conf):
         self._log = logging.getLogger(self.__class__.__name__)
+        self.id = _id
         self.conf = conf
         self.description = conf.description
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(conf=conf.api)
-        self.snapshots_taken = 0
+
+        self._img = ImageProcessor()
+        self.video_manager = VideoGifManager(conf)
 
         self.alarm = AlarmService(conf=conf.alert, api=self._api)
         self.stream_yt = YouTubeStreamService(
@@ -66,13 +39,13 @@ class HikvisionCam:
             hik_user=conf.api.auth.user,
             hik_password=conf.api.auth.password,
             hik_host=conf.api.host)
-        self.service_controller = ServiceController()
-        self.service_controller.register_services((self.alarm, self.stream_yt,
-                                                   self.stream_icecast))
-        self._log.debug(self.service_controller)
+        self.service_manager = ServiceManager()
+        self.service_manager.register_services((self.alarm, self.stream_yt,
+                                                self.stream_icecast))
+        self.snapshots_taken = 0
 
     def __repr__(self):
-        return '<HomeCam desc="{0}">'.format(self.description)
+        return f'<HikvisionCam desc="{self.description}">'
 
     def take_snapshot(self, resize=False):
         """Take and return full or resized snapshot from the camera."""
@@ -82,30 +55,15 @@ class HikvisionCam:
             snapshot_timestamp = int(datetime.now().timestamp())
             self.snapshots_taken += 1
         except APIError:
-            err_msg = 'Failed to take snapshot from {0}'.format(self.description)
+            err_msg = f'Failed to take snapshot from {self.description}'
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg)
 
         try:
-            snapshot = self._resize_snapshot(res.raw) if resize else res.raw
+            snapshot = self._img.resize(res.raw) if resize else BytesIO(
+                res.raw.data)
         except Exception:
-            err_msg = 'Failed to resize snapshot taken from {0}'.format(
-                self.description)
+            err_msg = f'Failed to resize snapshot taken from {self.description}'
             self._log.exception(err_msg)
             raise HikvisionCamError(err_msg)
         return snapshot, snapshot_timestamp
-
-    def _resize_snapshot(self, raw_snapshot):
-        """Return resized JPEG snapshot."""
-        snapshot = Image.open(raw_snapshot)
-        resized_snapshot = BytesIO()
-
-        snapshot.resize(IMG.SIZE, Image.ANTIALIAS)
-        snapshot.save(resized_snapshot, IMG.FORMAT, quality=IMG.QUALITY)
-        resized_snapshot.seek(0)
-
-        self._log.debug('Raw snapshot: %s, %s, %s', snapshot.format,
-                        snapshot.mode,
-                        snapshot.size)
-        self._log.debug('Resized snapshot: %s', IMG.SIZE)
-        return resized_snapshot

@@ -2,6 +2,7 @@
 
 import json
 import logging
+from multiprocessing import Queue
 from pathlib import Path
 
 from hikcamerabot.exceptions import ConfigError
@@ -54,8 +55,7 @@ class Config:
         conf_dict = {}
         for key, value in conf_data:
             if key in conf_dict:
-                err_msg = 'Malformed configuration file, ' \
-                          'duplicate key: {0}'.format(key)
+                err_msg = f'Malformed configuration file, duplicate key: {key}'
                 raise ConfigError(err_msg)
             else:
                 conf_dict[key] = value
@@ -71,7 +71,7 @@ def _load_configs():
     for conf_file in _CONFIG_FILES:
         conf_file = path / conf_file
         if not conf_file.is_file():
-            err_msg = 'Can\'t find {0} configuration file'.format(conf_file)
+            err_msg = f'Cannot find {conf_file} configuration file'
             _LOG.error(err_msg)
             raise ConfigError(err_msg)
 
@@ -81,12 +81,18 @@ def _load_configs():
         try:
             config = json.loads(config, object_pairs_hook=Config.from_dict)
         except json.decoder.JSONDecodeError:
-            err_msg = 'Malformed JSON in {0} ' \
-                      'configuration file'.format(conf_file)
+            err_msg = f'Malformed JSON in {conf_file} configuration file'
             raise ConfigError(err_msg)
         config_data.append(config)
 
     return config_data
+
+
+_RESULT_QUEUE = Queue()
+
+
+def get_result_queue():
+    return _RESULT_QUEUE
 
 
 _CONF_MAIN, _CONF_LIVESTREAM_TPL, _CONF_ENCODING_TPL = _load_configs()

@@ -8,7 +8,19 @@ CMD_CAM_ID_REGEX = r'^.*(?=cam_)'
 CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
-_STREAMS_ARGS = ('YOUTUBE', 'ICECAST', 'TWITCH')
+VIDEO_GIF_FILENAME = 'alert--{0}.mp4'
+
+
+class Events:
+    STOP = 'stop'
+    TAKE_SNAPSHOT = 'take_snapshot'
+    CONFIGURE_DETECTION = 'detection_conf'
+    CONFIGURE_ALARM = 'alarm_conf'
+    STREAM = 'stream'
+    STREAM_MSG = 'stream_msg'
+    ALERT_MSG = 'alert_msg'
+    ALERT_SNAPSHOT = 'alert_snapshot'
+    ALERT_VIDEO = 'alert_video'
 
 
 class _HTTPMethods:
@@ -27,11 +39,12 @@ class _Alarms:
 
 
 class _Detections:
-    __slots__ = ('MOTION', 'LINE')
+    __slots__ = ('MOTION', 'LINE', 'INTRUSION')
 
     def __init__(self):
         self.MOTION = 'motion_detection'
         self.LINE = 'line_crossing_detection'
+        self.INTRUSION = 'intrusion_detection'
 
 
 class _Image:
@@ -40,7 +53,10 @@ class _Image:
     def __init__(self):
         self.SIZE = (1280, 724)
         self.FORMAT = 'JPEG'
-        self.QUALITY = 90
+        self.QUALITY = 87
+
+
+_STREAMS_ARGS = ('YOUTUBE', 'ICECAST', 'TWITCH')
 
 
 class _Streams:
@@ -60,18 +76,26 @@ class _Encoders:
             setattr(self, arg, arg.lower())
 
 
-HTTP = _HTTPMethods()
-ALARMS = _Alarms()
-DETECTIONS = _Detections()
-IMG = _Image()
-STREAMS = _Streams()
-VIDEO_ENCODERS = _Encoders()
+Http = _HTTPMethods()
+Alarms = _Alarms()
+Detections = _Detections()
+Img = _Image()
+Streams = _Streams()
+VideoEncoders = _Encoders()
+
+FFMPEG_BIN = 'ffmpeg'
+FFMPEG_VIDEO_SOURCE = '"rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/"'
+FFMPEG_LOG_LEVEL = '-loglevel {loglevel}'
+
+# VIDEO GIF COMMAND
+FFMPEG_VIDEO_GIF_CMD = f'{FFMPEG_BIN} {FFMPEG_LOG_LEVEL} ' \
+                       f'-i {FFMPEG_VIDEO_SOURCE} -t {{rec_time}}'
 
 # Livestream constants
-FFMPEG_CMD = 'ffmpeg -loglevel {loglevel} ' \
+FFMPEG_CMD = f'{FFMPEG_BIN} {FFMPEG_LOG_LEVEL} ' \
              '{filter} ' \
              '-rtsp_transport {rtsp_transport_type} ' \
-             '-i rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/ ' \
+             f'-i {FFMPEG_VIDEO_SOURCE} ' \
              '{map} ' \
              '-c:v {vcodec} ' \
              '{{inner_args}} ' \
@@ -83,8 +107,8 @@ FFMPEG_CMD_TRANSCODE_GENERAL = '-b:v {average_bitrate} -maxrate {maxrate} ' \
                                '-pass {pass_mode} -pix_fmt {pix_fmt} ' \
                                '-r {framerate} {scale} {{inner_args}}'
 
-FFMPEG_CMD_TRANSCODE = {VIDEO_ENCODERS.X264: '-preset {preset} -tune {tune}',
-                        VIDEO_ENCODERS.VP9: '-deadline {deadline} -speed {speed}'}
+FFMPEG_CMD_TRANSCODE = {VideoEncoders.X264: '-preset {preset} -tune {tune}',
+                        VideoEncoders.VP9: '-deadline {deadline} -speed {speed}'}
 
 FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre "{ice_genre}" -ice_name "{ice_name}" ' \
                                '-ice_description "{ice_description}" ' \
@@ -98,16 +122,20 @@ FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
                          'bitrate': '-b:a 5k'}
 
 # Alert (alarm) constants
-ALARM_TRIGGERS = (DETECTIONS.MOTION, DETECTIONS.LINE)
+ALARM_TRIGGERS = (Detections.MOTION, Detections.LINE)
 DETECTION_REGEX = r'(<\/?eventType>(VMD|linedetection)?){2}'
 
-SWITCH_MAP = {DETECTIONS.MOTION: {'method': 'MotionDetection',
-                                  'name': 'Motion Detection',
-                                  'event_name': 'VMD'},
-              DETECTIONS.LINE: {
-                  'method': 'LineDetection',
-                  'name': 'Line Crossing Detection',
-                  'event_name': 'linedetection'}}
+DETECTION_SWITCH_MAP = {Detections.MOTION: {'method': 'MotionDetection',
+                                            'name': 'Motion Detection',
+                                            'event_name': 'VMD'},
+                        Detections.LINE: {
+                            'method': 'LineDetection',
+                            'name': 'Line Crossing Detection',
+                            'event_name': 'linedetection'},
+                        Detections.INTRUSION: {
+                            'method': 'FieldDetection',
+                            'name': 'Intrusion (Field) Detection',
+                            'event_name': 'fielddetection'}}
 
 SWITCH_ENABLED_XML = r'<enabled>{0}</enabled>'
 XML_HEADERS = {'Content-Type': 'application/xml'}

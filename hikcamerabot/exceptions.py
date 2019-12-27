@@ -31,3 +31,15 @@ class APIRequestError(APIError):
 
 class APIBadResponseCodeError(APIRequestError):
     pass
+
+
+class ServiceError(Exception):
+    pass
+
+
+class ServiceRuntimeError(ServiceError):
+    pass
+
+
+class ServiceConfigError(ServiceError):
+    pass
