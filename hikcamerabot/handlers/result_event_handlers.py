@@ -21,6 +21,24 @@ class BaseResultEventHandler:
         raise NotImplementedError
 
 
+class ResultAlertMessageHandler(BaseResultEventHandler):
+
+    def _handle(self, data):
+        msg = data['msg']
+        cam_id = data['cam_id']
+        is_html = data['html']
+        self._bot.send_message_all(msg)
+
+
+class ResultStreamMessageHandler(BaseResultEventHandler):
+
+    def _handle(self, data):
+        msg = data['msg']
+        cam_id = data['cam_id']
+        is_html = data['html']
+        self._bot.send_message_all(msg)
+
+
 class ResultAlertVideoHandler(BaseResultEventHandler):
 
     def _handle(self, data):

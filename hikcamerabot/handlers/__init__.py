@@ -10,7 +10,9 @@ from hikcamerabot.handlers.result_event_handlers import (
     ResultDetectionConfHandler,
     ResultStreamConfHandler,
     ResultTakeSnapshotHandler,
-    ResultAlertVideoHandler)
+    ResultAlertVideoHandler,
+    ResultAlertMessageHandler,
+    ResultStreamMessageHandler)
 from hikcamerabot.handlers.task_event_handlers import (TakeSnapshotHandler,
                                                        AlarmConfHandler,
                                                        DetectionConfHandler,
@@ -27,7 +29,9 @@ RESULT_DISPATCH = {Events.TAKE_SNAPSHOT: ResultTakeSnapshotHandler,
                    Events.STREAM: ResultStreamConfHandler,
                    Events.CONFIGURE_ALARM: ResultAlarmConfHandler,
                    Events.ALERT_SNAPSHOT: ResultAlertSnapshotHandler,
-                   Events.ALERT_VIDEO: ResultAlertVideoHandler}
+                   Events.ALERT_VIDEO: ResultAlertVideoHandler,
+                   Events.ALERT_MSG: ResultAlertMessageHandler,
+                   Events.STREAM_MSG: ResultStreamMessageHandler}
 
 
 class EventDispatcher:
