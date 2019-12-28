@@ -2,4 +2,6 @@ version: '3'
 
 services:
   hikvision-camera-bot:
+    environment:
+      - "TZ=Europe/Kiev"
     build: .

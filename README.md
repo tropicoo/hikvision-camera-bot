@@ -27,16 +27,26 @@ dependencies using `pip3`.
     sudo pip3 install -r requirements.txt
     sudo apt update && sudo apt install ffmpeg
     ```
-## Installation/execution using Docker Compose
-```bash
-sudo docker-compose build && sudo docker-compose up
-```
+## Running by using Docker Compose
+1. Set your timezone by editing `docker-compose.yaml` file.
+Currently there is Ukrainian timezone, because I live there.
+Look for your timezone here http://www.timezoneconverter.com/cgi-bin/zoneinfo.
+If you want to use default UTC time format, just completely remove these 
+two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
+    ```yaml
+    environment:
+      - "TZ=Europe/Kiev"
+    ```
+2. Build image and run container
+    ```bash
+    sudo docker-compose build && sudo docker-compose up
+    ```
 
 # Configuration
 Configuration is simply stored in JSON format.
 ## Quick Setup
 1. [Create Telegram Bot](https://core.telegram.org/bots#6-botfather)
- and get its token.
+ and get its token
 2. Copy 3 default configuration files with predefined templates:
     
     ```bash
@@ -45,21 +55,20 @@ Configuration is simply stored in JSON format.
     cp livestream_templates-template.json livestream_templates.json
     ```
 3. Edit **config.json**:
-    - Put the obtained bot token to `token` key as string.
+    - Put the obtained bot token to `token` key as string
     - [Find](https://stackoverflow.com/a/32777943) your Telegram user id
     and put it to `allowed_user_ids` list as integer value. Multiple ids can
-    be used, just separate them with a comma.
+    be used, just separate them with a comma
     - Hikvision camera settings are placed inside the `camera_list` section. Template
-    comes with two cameras.
+    comes with two cameras
 
         **Names of cameras should start with `cam_` and end with 
         any number** like `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
 
     - Write authentication credentials in appropriate keys: `user` and `password`
-    for every camera you want to use.
+    for every camera you want to use
     - Same for `host`, which should include protocol e.g. `http://192.168.10.10`
-    - In `alert` section you can enable sending picture on alert (Motion Detection 
-    and/or Line Crossing Detection). Configure `delay` setting in seconds between pushing alert   pictures. To send resized picture change `fullpic` to `false`.
+    - In `alert` section you can enable sending picture on alert (Motion, Line Crossing and Intrusion (Field) Detection). Configure `delay` setting in seconds between pushing alertpictures. To send resized picture change `fullpic` to `false`
 
 ### config.json example
 <details>
@@ -162,6 +171,8 @@ nohup python3 bot.py &>- &
 | `/md_off_cam_*` | Disable Motion Detection |
 | `/ld_on_cam_*` | Enable Line Crossing Detection |
 | `/ld_off_cam_*` | Disable Line Crossing Detection |
+| `/intr_on_cam_*` | Enable Intrusion (Field) Detection |
+| `/intr_off_cam_*` | Disable Intrusion (Field) Detection |
 | `/alert_on_cam_*` | Enable Alert (Alarm) mode. It means it will send respective alert to your account in Telegram |
 | `/alert_off_cam_*` | Disable Alert (Alarm) mode, no alerts will be sent when something detected |
 | `/yt_on_cam_*` | Enable YouTube stream |
