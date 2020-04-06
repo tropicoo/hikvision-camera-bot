@@ -35,6 +35,7 @@ class BaseServiceThread(Thread, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def run(self):
+        """Main service thread run."""
         pass
 
 
@@ -49,6 +50,7 @@ class ServiceAlarmPusherThread(BaseServiceThread):
                          name=self.__class__.__name__)
 
     def run(self):
+        """Main service thread run."""
         while self.service.is_started():
             self._log.debug('Starting alert pusher thread for camera: "%s"',
                             self._cam.description)
@@ -56,6 +58,7 @@ class ServiceAlarmPusherThread(BaseServiceThread):
             self._process_chunks()
 
     def _process_chunks(self):
+        """Process chunks received from Hikvision camera alert stream."""
         wait_before = 0
         stream = self.service.get_alert_stream()
 
@@ -83,9 +86,16 @@ class ServiceAlarmPusherThread(BaseServiceThread):
                     wait_before = int(time.time()) + self.service.alert_delay
 
     def _detect_chunk(self, chunk):
-        match = re.match(DETECTION_REGEX, chunk.decode())
+        """Detect chunk in regard of `DETECTION_REGEX` string and return
+        detection key.
+
+        :Parameters:
+            - `chunk`: byte string, one line from alert stream.
+        """
+        match = re.match(DETECTION_REGEX, chunk.decode(errors='ignore'))
         if not match:
             return None
+
         event_name = match.group(2)
         for key, inner_map in DETECTION_SWITCH_MAP.items():
             if inner_map['event_name'] == event_name:
@@ -94,6 +104,7 @@ class ServiceAlarmPusherThread(BaseServiceThread):
             raise CameraBotError(f'Unknown alert stream event {event_name}')
 
     def _send_alert(self, detection_key):
+        """Send alert to the user."""
         resize = not self._cam.conf.alert[detection_key].fullpic
         photo, ts = self._cam.take_snapshot(resize=resize)
         self._event_manager.send_alert_snapshot(
@@ -147,6 +158,5 @@ class ServiceStreamerThread(BaseServiceThread):
         except Exception as err:
             err_msg = f'Unknown error in {self.service.name} stream thread'
             self._log.exception(err_msg)
-            err_msg = f'{err_msg}: {err}'
-            self._send_event_msg(err_msg)
+            self._send_event_msg(f'{err_msg}: {err}')
         self._log.debug(self._exit_msg)

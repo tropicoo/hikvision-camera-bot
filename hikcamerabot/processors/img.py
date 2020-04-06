@@ -23,7 +23,6 @@ class ImageProcessor:
         resized_snapshot.seek(0)
 
         self._log.debug('Raw snapshot: %s, %s, %s', snapshot.format,
-                        snapshot.mode,
-                        snapshot.size)
+                        snapshot.mode, snapshot.size)
         self._log.debug('Resized snapshot: %s', Img.SIZE)
         return resized_snapshot

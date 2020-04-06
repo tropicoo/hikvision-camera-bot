@@ -4,7 +4,7 @@ from hikcamerabot.commons import CommonThread
 from hikcamerabot.config import get_result_queue
 from hikcamerabot.constants import Events
 from hikcamerabot.decorators import event_error_handler, result_error_handler
-from hikcamerabot.handlers.result_event_handlers import (
+from hikcamerabot.handlers.event_result import (
     ResultAlarmConfHandler,
     ResultAlertSnapshotHandler,
     ResultDetectionConfHandler,
@@ -13,10 +13,10 @@ from hikcamerabot.handlers.result_event_handlers import (
     ResultAlertVideoHandler,
     ResultAlertMessageHandler,
     ResultStreamMessageHandler)
-from hikcamerabot.handlers.task_event_handlers import (TakeSnapshotHandler,
-                                                       AlarmConfHandler,
-                                                       DetectionConfHandler,
-                                                       StreamConfHandler)
+from hikcamerabot.handlers.event_task import (TakeSnapshotHandler,
+                                              AlarmConfHandler,
+                                              DetectionConfHandler,
+                                              StreamConfHandler)
 from hikcamerabot.utils import shallow_sleep
 
 EVENT_DISPATCH = {Events.TAKE_SNAPSHOT: TakeSnapshotHandler,

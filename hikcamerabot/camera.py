@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from io import BytesIO
 
-from hikcamerabot.core.api import HikvisionAPI
+from hikcamerabot.core.clients.hikvision import HikvisionAPI
 from hikcamerabot.exceptions import HikvisionCamError, APIError
 from hikcamerabot.managers.service import ServiceManager
 from hikcamerabot.managers.video import VideoGifManager
@@ -52,12 +52,13 @@ class HikvisionCam:
         self._log.debug('Taking snapshot from %s', self.description)
         try:
             res = self._api.take_snapshot()
-            snapshot_timestamp = int(datetime.now().timestamp())
-            self.snapshots_taken += 1
         except APIError:
             err_msg = f'Failed to take snapshot from {self.description}'
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg)
+
+        snapshot_timestamp = int(datetime.now().timestamp())
+        self.snapshots_taken += 1
 
         try:
             snapshot = self._img.resize(res.raw) if resize else BytesIO(
