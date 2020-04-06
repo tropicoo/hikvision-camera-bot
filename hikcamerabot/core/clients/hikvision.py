@@ -18,13 +18,11 @@ from hikcamerabot.exceptions import (APIError,
 
 
 class Endpoints(Enum):
-    _ISAPI_PREFIX = 'ISAPI'
-
-    PICTURE = "Streaming/channels/102/picture?snapShotImageType=JPEG"
-    MOTION_DETECTION = f"{_ISAPI_PREFIX}/System/Video/inputs/channels/1/motionDetection"
-    LINE_CROSSING_DETECTION = f"{_ISAPI_PREFIX}/Smart/LineDetection/1"
-    INTRUSION_DETECTION = f"{_ISAPI_PREFIX}/Smart/FieldDetection/1"
-    ALERT_STREAM = f"{_ISAPI_PREFIX}/Event/notification/alertStream"
+    PICTURE = 'ISAPI/Streaming/channels/102/picture?snapShotImageType=JPEG'
+    MOTION_DETECTION = 'ISAPI/System/Video/inputs/channels/1/motionDetection'
+    LINE_CROSSING_DETECTION = 'ISAPI/Smart/LineDetection/1'
+    INTRUSION_DETECTION = 'ISAPI/Smart/FieldDetection/1'
+    ALERT_STREAM = 'ISAPI/Event/notification/alertStream'
 
 
 class HeaderParsingErrorFilter:
@@ -134,9 +132,9 @@ class HikvisionAPI:
 
     def _verify_status_code(self, response):
         if not response:
-            code = response.status_code
-            unhandled_code = f'Unhandled response code: {code}'
-            err_msg = 'Failed to query API: {0}'.format(
-                BAD_RESPONSE_CODES.get(code, unhandled_code).format(response.url))
+            unhandled_code = f'Unhandled response code: {response.status_code}'
+            code_error = BAD_RESPONSE_CODES.get(
+                response.status_code, unhandled_code).format(response.url)
+            err_msg = f'Failed to query API: {code_error}'
             self._log.error(err_msg)
             raise APIBadResponseCodeError(err_msg)
