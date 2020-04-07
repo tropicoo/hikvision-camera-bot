@@ -1,6 +1,5 @@
 """Alarm module."""
 
-from queue import Queue
 from threading import Event
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP, ALARM_TRIGGERS, Alarms

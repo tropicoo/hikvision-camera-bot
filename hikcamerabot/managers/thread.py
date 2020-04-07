@@ -1,7 +1,14 @@
+"""Thread managers module."""
+
 from threading import Event
 
 
 class ThreadManager:
+    """Thread manager.
+
+    Manage passed threads.
+    """
+
     def __init__(self, threads):
         self._threads = threads
         self._running_threads = []

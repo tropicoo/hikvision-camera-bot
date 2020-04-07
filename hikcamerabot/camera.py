@@ -1,10 +1,10 @@
-"""Hikvision Camera Module."""
+"""Hikvision camera module."""
 
 import logging
 from datetime import datetime
 from io import BytesIO
 
-from hikcamerabot.core.clients.hikvision import HikvisionAPI
+from hikcamerabot.clients.hikvision import HikvisionAPI
 from hikcamerabot.exceptions import HikvisionCamError, APIError
 from hikcamerabot.managers.service import ServiceManager
 from hikcamerabot.managers.video import VideoGifManager
@@ -17,9 +17,9 @@ from hikcamerabot.services.livestream import (YouTubeStreamService,
 class HikvisionCam:
     """Hikvision Camera Class."""
 
-    def __init__(self, _id, conf):
+    def __init__(self, id, conf):
         self._log = logging.getLogger(self.__class__.__name__)
-        self.id = _id
+        self.id = id
         self.conf = conf
         self.description = conf.description
         self._log.debug('Initializing %s', self.description)
@@ -51,20 +51,20 @@ class HikvisionCam:
         """Take and return full or resized snapshot from the camera."""
         self._log.debug('Taking snapshot from %s', self.description)
         try:
-            res = self._api.take_snapshot()
+            res = self._api.take_snapshot(stream=True)
         except APIError:
             err_msg = f'Failed to take snapshot from {self.description}'
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg)
 
-        snapshot_timestamp = int(datetime.now().timestamp())
+        taken_at = int(datetime.now().timestamp())
         self.snapshots_taken += 1
 
         try:
-            snapshot = self._img.resize(res.raw) if resize else BytesIO(
-                res.raw.data)
+            snapshot = self._img.resize(res.raw) if resize \
+                else BytesIO(res.raw.data)
         except Exception:
             err_msg = f'Failed to resize snapshot taken from {self.description}'
             self._log.exception(err_msg)
             raise HikvisionCamError(err_msg)
-        return snapshot, snapshot_timestamp
+        return snapshot, taken_at

@@ -3,13 +3,15 @@ import multiprocessing
 
 from hikcamerabot.config import get_result_queue
 from hikcamerabot.constants import Alarms
-from hikcamerabot.handlers import EventDispatcher
+from hikcamerabot.dispatchers.event import EventDispatcher
 from hikcamerabot.services.threads import (ServiceAlarmPusherThread,
                                            ServiceStreamerThread)
 from hikcamerabot.utils import shallow_sleep
 
 
 class CameraSupervisorProc(multiprocessing.Process):
+    """Supervisor process per camera instance."""
+
     SERVICE_THREADS = {
         ServiceStreamerThread.type: ServiceStreamerThread,
         ServiceAlarmPusherThread.type: ServiceAlarmPusherThread}
@@ -32,7 +34,7 @@ class CameraSupervisorProc(multiprocessing.Process):
             self._alert_pusher_thread = thread
 
     def _start_enabled_services(self):
-        """Start services enabled in conf."""
+        """Start camera services enabled in conf."""
         self._cam.service_manager.start_services(enabled_in_conf=True)
 
         # TODO: Rethink this old logic
@@ -41,19 +43,21 @@ class CameraSupervisorProc(multiprocessing.Process):
                                service=svc)
 
     def stop(self):
+        # TODO: Is this needed?
         self._cam.service_manager.stop_services()
 
     def _check_videos(self):
         """Very kostyl because `ServiceAlarmPusherThread._process_chunks`
-        is blocking.
+        method is blocking.
         """
-        recorded_vids = self._cam.video_manager.get_videos()
-        if recorded_vids:
+        recorded_videos = self._cam.video_manager.get_videos()
+        if recorded_videos:
             self._alert_pusher_thread._event_manager.send_alert_videos(
-                videos=recorded_vids,
+                videos=recorded_videos,
                 cam_id=self._cam.id)
 
     def run(self):
+        """Run supervisor process."""
         self._start_enabled_services()
         # `proc.terminate()` will terminate this loop
         while True:

@@ -14,7 +14,7 @@ _CONFIG_FILES = (_CONFIG_FILE_MAIN,
                  _CONFIG_FILE_LIVESTREAM,
                  _CONFIG_FILE_ENCODING)
 
-_LOG = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Config:
@@ -72,10 +72,10 @@ def _load_configs():
         conf_file = path / conf_file
         if not conf_file.is_file():
             err_msg = f'Cannot find {conf_file} configuration file'
-            _LOG.error(err_msg)
+            log.error(err_msg)
             raise ConfigError(err_msg)
 
-        _LOG.info('Reading config file %s', conf_file)
+        log.info('Reading config file %s', conf_file)
         with open(conf_file, 'r') as fd:
             config = fd.read()
         try:

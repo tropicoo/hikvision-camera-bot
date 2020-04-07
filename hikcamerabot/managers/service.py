@@ -1,9 +1,7 @@
-"""Service Manager Module."""
+"""Service managers module."""
 
 import logging
 from collections import defaultdict
-
-from hikcamerabot.exceptions import HikvisionCamError
 
 
 class ServiceManager:

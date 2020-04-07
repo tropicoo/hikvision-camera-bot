@@ -1,3 +1,5 @@
+"""Event managers module."""
+
 from hikcamerabot.config import get_result_queue
 from hikcamerabot.constants import Events
 

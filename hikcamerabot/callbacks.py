@@ -1,15 +1,14 @@
-"""Camera Callbacks Module."""
+"""Camera callbacks module."""
 
 import logging
 from threading import Thread
 
 from telegram.ext import run_async
 
-from hikcamerabot.callbacks.helpers import (build_commands_presentation,
-                                            get_user_info)
 from hikcamerabot.constants import Detections, Streams, Alarms, Events
 from hikcamerabot.decorators import authorization_check, camera_selection
-from hikcamerabot.utils import make_bold
+from hikcamerabot.utils import (build_commands_presentation, make_bold,
+                                get_user_info)
 
 log = logging.getLogger(__name__)
 
@@ -80,9 +79,10 @@ def cmd_list_cams(update, ctx):
     for cam_id, meta in ctx.bot.cam_registry.get_all().items():
         presentation = build_commands_presentation(ctx.bot, cam_id)
         msg.append(
-            '<b>Camera:</b> {0}\n<b>Description:</b> '
-            '{1}\n<b>Commands</b>\n{2}'.format(
-                cam_id, meta['conf'].description, presentation))
+            '<b>Camera:</b> {0}\n'
+            '<b>Description:</b> {1}\n'
+            '<b>Commands</b>\n'
+            '{2}'.format(cam_id, meta['conf'].description, presentation))
 
     update.message.reply_html('\n\n'.join(msg))
     log.info('Camera list has been sent')
@@ -249,7 +249,6 @@ def cmd_help(update, ctx, append=False, requested=True, cam_id=None):
     elif append:
         presentation = build_commands_presentation(ctx.bot, cam_id)
         update.message.reply_html(
-            f'<b>Available commands</b>\n\n{presentation}\n\n/list '
-            'cameras')
+            f'<b>Available commands</b>\n\n{presentation}\n\n/list cameras')
 
     log.info('Help message has been sent')

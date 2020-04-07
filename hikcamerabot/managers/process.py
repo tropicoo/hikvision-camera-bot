@@ -1,3 +1,5 @@
+"""Processes managers module."""
+
 import logging
 
 from hikcamerabot.camera import HikvisionCam
@@ -21,7 +23,7 @@ class CameraProcessManager:
     def start_processes(self):
         """Start Updater Processes."""
         for cam_id, meta in self.cam_registry.get_all().items():
-            cam = HikvisionCam(_id=cam_id, conf=meta['conf'])
+            cam = HikvisionCam(id=cam_id, conf=meta['conf'])
             proc = CameraSupervisorProc(camera=cam,
                                         queue_in=self._event_queues[cam_id])
             self._log.debug('Starting %s', proc)

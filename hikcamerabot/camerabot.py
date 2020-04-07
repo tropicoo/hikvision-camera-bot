@@ -6,9 +6,10 @@ from pathlib import PurePath
 from telegram import Bot
 from telegram.utils.request import Request
 
+from hikcamerabot.commons import ResultHandlerThread
 from hikcamerabot.config import get_main_config
-from hikcamerabot.constants import (SEND_TIMEOUT)
-from hikcamerabot.handlers import ResultDispatcher, ResultHandlerThread
+from hikcamerabot.constants import SEND_TIMEOUT
+from hikcamerabot.dispatchers.event import ResultDispatcher
 from hikcamerabot.managers.event import TaskEventManager
 from hikcamerabot.managers.process import CameraProcessManager
 from hikcamerabot.managers.thread import ThreadManager
@@ -32,7 +33,7 @@ class CameraBot(Bot):
 
         self.event_manager = TaskEventManager(event_queues)
         self.proc_manager = CameraProcessManager(cam_registry, event_queues)
-        self.thread_manager = ThreadManager([ResultHandlerThread(dispatcher=dispatcher)])
+        self.thread_manager = ThreadManager([ResultHandlerThread(dispatcher)])
 
     def start_processes(self):
         self.thread_manager.start_threads()
@@ -49,11 +50,16 @@ class CameraBot(Bot):
         for user_id in self.user_ids:
             self.send_message(user_id, msg)
 
-    def reply_cam_photo(self, photo, update=None, caption=None,
+    def reply_cam_photo(self,
+                        photo,
+                        caption=None,
+                        from_watchdog=False,
+                        fullpic=False,
+                        fullpic_name=None,
+                        reply_html=None,
                         reply_text=None,
-                        fullpic_name=None, fullpic=False, reply_html=None,
-                        from_watchdog=False):
-        """Send received photo."""
+                        update=None):
+        """Send received photo to the user(s)."""
         if from_watchdog:
             for uid in self.user_ids:
                 self.send_document(chat_id=uid,

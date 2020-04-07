@@ -1,3 +1,6 @@
+"""Result event handlers module."""
+
+import abc
 import logging
 import os
 
@@ -7,7 +10,7 @@ from hikcamerabot.constants import DETECTION_SWITCH_MAP, SEND_TIMEOUT
 from hikcamerabot.utils import make_bold, format_ts
 
 
-class BaseResultEventHandler:
+class BaseResultEventHandler(metaclass=abc.ABCMeta):
 
     def __init__(self, bot, cam_registry):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -17,8 +20,9 @@ class BaseResultEventHandler:
     def __call__(self, data):
         self._handle(data)
 
+    @abc.abstractmethod
     def _handle(self, data):
-        raise NotImplementedError
+        pass
 
 
 class ResultAlertMessageHandler(BaseResultEventHandler):

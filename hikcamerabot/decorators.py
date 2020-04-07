@@ -5,10 +5,9 @@ import traceback
 import uuid
 from functools import wraps
 
-from hikcamerabot.callbacks.helpers import get_user_info, print_access_error
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
 from hikcamerabot.exceptions import UserAuthError
-from hikcamerabot.utils import shallow_sleep
+from hikcamerabot.utils import shallow_sleep, get_user_info, print_access_error
 
 
 def retry(delay=5, retries=3):
@@ -61,7 +60,7 @@ def result_error_handler(func):
 
 
 def authorization_check(func):
-    """Decorator which checks that user is authorized to interact with bot."""
+    """User authorization check."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -79,7 +78,7 @@ def authorization_check(func):
 
 
 def camera_selection(func):
-    """Decorator which checks which camera id to use."""
+    """Select camera ID to use."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
