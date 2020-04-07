@@ -1,4 +1,6 @@
-import hikcamerabot.callbacks.callbacks as cb
+"""Telegram bot commands module."""
+
+import hikcamerabot.callbacks as cb
 
 
 def setup_commands():

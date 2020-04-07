@@ -1,13 +1,19 @@
+"""Image processing module."""
+
 import logging
 from io import BytesIO
 
 from PIL import Image
 
 from hikcamerabot.constants import Img
+from hikcamerabot.utils import Singleton
 
 
-class ImageProcessor:
-    """Image processor Class."""
+class ImageProcessor(metaclass=Singleton):
+    """Image Processor Class.
+
+    Process raw images taken from Hikvision camera.
+    """
 
     def __init__(self):
         """Constructor."""

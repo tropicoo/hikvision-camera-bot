@@ -1,3 +1,6 @@
+"""Task event handlers module."""
+
+import abc
 import logging
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP, Events
@@ -6,7 +9,7 @@ from hikcamerabot.services.threads import (ServiceStreamerThread,
                                            ServiceAlarmPusherThread)
 
 
-class BaseEventHandler:
+class BaseTaskEventHandler(metaclass=abc.ABCMeta):
 
     def __init__(self, camera):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -15,11 +18,12 @@ class BaseEventHandler:
     def __call__(self, data):
         return self._handle(data)
 
+    @abc.abstractmethod
     def _handle(self, data):
-        raise NotImplementedError
+        pass
 
 
-class TakeSnapshotHandler(BaseEventHandler):
+class TakeSnapshotHandler(BaseTaskEventHandler):
 
     def _handle(self, data):
         img, create_ts = self._cam.take_snapshot(
@@ -31,7 +35,7 @@ class TakeSnapshotHandler(BaseEventHandler):
         return data
 
 
-class DetectionConfHandler(BaseEventHandler):
+class DetectionConfHandler(BaseTaskEventHandler):
 
     def _handle(self, data):
         key_name = data['name']
@@ -45,7 +49,7 @@ class DetectionConfHandler(BaseEventHandler):
         return data
 
 
-class AlarmConfHandler(BaseEventHandler):
+class AlarmConfHandler(BaseTaskEventHandler):
 
     def _handle(self, data):
         service_type = service_name = data['name']
@@ -65,7 +69,7 @@ class AlarmConfHandler(BaseEventHandler):
         return data
 
 
-class StreamConfHandler(BaseEventHandler):
+class StreamConfHandler(BaseTaskEventHandler):
 
     def _handle(self, data):
         self._log.info('Starting YouTube stream')

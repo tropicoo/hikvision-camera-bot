@@ -1,4 +1,4 @@
-"""Bot Errors Module."""
+"""Bot exceptions module."""
 
 
 class CameraBotError(Exception):

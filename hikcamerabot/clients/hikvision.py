@@ -1,4 +1,4 @@
-"""Hikvision camera API module."""
+"""Hikvision camera API client module."""
 
 import logging
 import re
@@ -47,9 +47,9 @@ class HikvisionAPI:
         self._sess.auth = requests.auth.HTTPDigestAuth(conf.auth.user,
                                                        conf.auth.password)
 
-    def take_snapshot(self):
+    def take_snapshot(self, stream=False):
         """Take snapshot."""
-        return self._request(Endpoints.PICTURE.value, stream=True)
+        return self._request(Endpoints.PICTURE.value, stream=stream)
 
     def get_alert_stream(self):
         """Get Alert Streams."""
@@ -76,11 +76,7 @@ class HikvisionAPI:
         if not is_enabled and not enable:
             return f'{full_name} already disabled'
 
-        regex = SWITCH_ENABLED_XML.format(r'[a-z]+')
-        replace_with = SWITCH_ENABLED_XML.format(
-            'true' if enable else 'false')
-        xml = re.sub(regex, replace_with, xml)
-
+        xml = self._prepare_xml(xml, enable)
         try:
             response_xml = self._request(endpoint, headers=XML_HEADERS,
                                          data=xml, method=Http.PUT).text
@@ -92,6 +88,12 @@ class HikvisionAPI:
 
         self._parse_response_xml(response_xml)
         return None
+
+    def _prepare_xml(self, xml, enable):
+        regex = SWITCH_ENABLED_XML.format(r'[a-z]+')
+        replace_with = SWITCH_ENABLED_XML.format(
+            'true' if enable else 'false')
+        return re.sub(regex, replace_with, xml)
 
     def _parse_response_xml(self, response_xml):
         try:

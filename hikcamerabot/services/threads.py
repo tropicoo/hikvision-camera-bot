@@ -68,22 +68,25 @@ class ServiceAlarmPusherThread(BaseServiceThread):
                                self._cam.description)
                 break
 
-            if int(time.time()) < wait_before:
+            if int(time.time()) < wait_before or not chunk:
                 continue
 
-            if chunk:
+            try:
+                detection_key = self._detect_chunk(chunk)
+            except CameraBotError as err:
+                self._event_manager.send_alert_msg(msg=str(err),
+                                                   cam_id=self._cam.id)
+                continue
+            if detection_key:
+                self.service.alert_count += 1
+                self._log.debug('Detected chunk: %s', chunk)
+                self._cam.video_manager.start_rec()
                 try:
-                    detection_key = self._detect_chunk(chunk)
-                except CameraBotError as err:
-                    self._event_manager.send_alert_msg(msg=str(err),
-                                                       cam_id=self._cam.id)
-                    continue
-                if detection_key:
-                    self.service.alert_count += 1
-                    self._log.debug('Detected chunk: %s', chunk)
-                    self._cam.video_manager.start_rec()
                     self._send_alert(detection_key)
-                    wait_before = int(time.time()) + self.service.alert_delay
+                except Exception as err:
+                    self._log.exception('Exception in thread %s: %s',
+                                        self.__class__.__name__, err)
+                wait_before = int(time.time()) + self.service.alert_delay
 
     def _detect_chunk(self, chunk):
         """Detect chunk in regard of `DETECTION_REGEX` string and return
