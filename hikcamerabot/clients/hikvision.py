@@ -137,6 +137,6 @@ class HikvisionAPI:
             unhandled_code = f'Unhandled response code: {response.status_code}'
             code_error = BAD_RESPONSE_CODES.get(
                 response.status_code, unhandled_code).format(response.url)
-            err_msg = f'Failed to query API: {code_error}'
+            err_msg = f'Error during API call: {code_error}'
             self._log.error(err_msg)
             raise APIBadResponseCodeError(err_msg)

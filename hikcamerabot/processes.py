@@ -59,7 +59,7 @@ class CameraSupervisorProc(multiprocessing.Process):
     def run(self):
         """Run supervisor process."""
         self._start_enabled_services()
-        # `proc.terminate()` will terminate this loop
+        # proc.terminate() will terminate this loop
         while True:
             self._check_videos()
             while not self._queue_in.empty():
