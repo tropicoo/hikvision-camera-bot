@@ -7,10 +7,10 @@ import time
 from urllib.parse import urlsplit
 
 from hikcamerabot.constants import VIDEO_GIF_FILENAME, FFMPEG_VIDEO_GIF_CMD
-from hikcamerabot.utils import format_ts, Singleton
+from hikcamerabot.utils import format_ts
 
 
-class VideoGifManager(metaclass=Singleton):
+class VideoGifManager:
     """Video Gif Manager Class."""
 
     def __init__(self, conf):
