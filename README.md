@@ -27,7 +27,7 @@ dependencies using `pip3`.
     sudo pip3 install -r requirements.txt
     sudo apt update && sudo apt install ffmpeg
     ```
-## Running by using Docker Compose
+## Running by using Docker and Docker Compose
 1. Set your timezone by editing `docker-compose.yaml` file.
 Currently there is Ukrainian timezone, because I live there.
 Look for your timezone here http://www.timezoneconverter.com/cgi-bin/zoneinfo.
@@ -39,13 +39,13 @@ two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
     ```
 2. Build image and run container
     ```bash
-    sudo docker-compose build && sudo docker-compose up
+    sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
     ```
 
 # Configuration
 Configuration is simply stored in JSON format.
 ## Quick Setup
-1. [Create Telegram Bot](https://core.telegram.org/bots#6-botfather)
+1. [Create and start Telegram Bot](https://core.telegram.org/bots#6-botfather)
  and get its token
 2. Copy 3 default configuration files with predefined templates:
     

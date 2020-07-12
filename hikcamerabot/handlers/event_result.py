@@ -53,15 +53,18 @@ class ResultAlertVideoHandler(BaseResultEventHandler):
         for vid in videos:
             try:
                 with open(vid, 'rb') as fd_in:
-                    self._send_video(fd_in, caption)
+                    for uid in self._bot.user_ids:
+                        fd_in.seek(0)
+                        self._send_video(uid, fd_in, caption)
             finally:
                 os.remove(vid)
 
-    def _send_video(self, video_fh, caption):
-        for uid in self._bot.user_ids:
+    def _send_video(self, uid, video_fh, caption):
+        try:
             self._bot.send_document(chat_id=uid, document=video_fh,
-                                    caption=caption,
-                                    timeout=SEND_TIMEOUT)
+                                    caption=caption, timeout=SEND_TIMEOUT)
+        except Exception:
+            self._log.exception('Failed to send video to user ID %s', uid)
 
 
 class ResultAlertSnapshotHandler(BaseResultEventHandler):
@@ -84,18 +87,22 @@ class ResultAlertSnapshotHandler(BaseResultEventHandler):
             DETECTION_SWITCH_MAP[detection_key]['name'])
 
         for uid in self._bot.user_ids:
-            self._bot.send_message(chat_id=uid, text=reply_html,
-                                   parse_mode=ParseMode.HTML)
-            if resized:
-                name = f'Full_alert_snapshot_{_date}.jpg'
-                self._bot.send_document(chat_id=uid, document=photo,
-                                        caption=caption,
-                                        filename=name,
-                                        timeout=SEND_TIMEOUT)
-            else:
-                self._bot.send_photo(chat_id=uid, photo=photo,
-                                     caption=caption,
-                                     timeout=SEND_TIMEOUT)
+            try:
+                photo.seek(0)
+                self._bot.send_message(chat_id=uid, text=reply_html,
+                                       parse_mode=ParseMode.HTML)
+                if resized:
+                    name = f'Full_alert_snapshot_{_date}.jpg'
+                    self._bot.send_document(chat_id=uid, document=photo,
+                                            caption=caption,
+                                            filename=name,
+                                            timeout=SEND_TIMEOUT)
+                else:
+                    self._bot.send_photo(chat_id=uid, photo=photo,
+                                         caption=caption,
+                                         timeout=SEND_TIMEOUT)
+            except Exception:
+                self._log.exception('Failed to send message to user ID %s', uid)
 
 
 class ResultStreamConfHandler(BaseResultEventHandler):
