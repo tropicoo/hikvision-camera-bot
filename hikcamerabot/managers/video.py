@@ -53,7 +53,10 @@ class VideoGifManager:
             format_ts(time.time(), time_format='%Y-%b-%d--%H-%M-%S'))
         filename = os.path.join(tmp_storage, filename)
 
-        proc = subprocess.Popen(f'{self._cmd} {filename}', shell=True)
+        cmd = f'{self._cmd} {filename}'
+        self._log.debug('Recording video gif for %s: %s',
+                        self.__conf.description, cmd)
+        proc = subprocess.Popen(cmd, shell=True)
         self._procs[filename] = proc
 
     def get_videos(self):
