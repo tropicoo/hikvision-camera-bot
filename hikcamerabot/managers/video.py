@@ -64,9 +64,8 @@ class VideoGifManager:
         videos = []
         if self._procs:
             # deepcopy throws `_thread.lock` pickling exception
-            procs_copy = self._procs.copy()
-            for filename, proc in procs_copy.items():
+            for filename, proc in self._procs.copy().items():
                 if proc.poll() is not None:
                     videos.append(filename)
-                    self._procs.pop(filename, None)
+                    del self._procs[filename]
         return videos
