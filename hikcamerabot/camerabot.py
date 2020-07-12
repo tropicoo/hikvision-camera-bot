@@ -48,7 +48,11 @@ class CameraBot(Bot):
     def send_message_all(self, msg):
         """Send message to all defined user IDs in config.json."""
         for user_id in self.user_ids:
-            self.send_message(user_id, msg)
+            try:
+                self.send_message(user_id, msg)
+            except Exception:
+                self._log.exception('Failed to send message "%s" to user ID '
+                                    '%s', msg, user_id)
 
     def reply_cam_photo(self,
                         photo,

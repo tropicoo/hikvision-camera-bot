@@ -27,8 +27,10 @@ class ResultHandlerThread(CommonThread):
 
     def run(self):
         """Run thread."""
+        self._log.debug('Starting')
         while self._run_trigger.is_set():
             while not self._queue_res.empty():
                 data = self._queue_res.get()
                 self._dispatcher.handle(data)
             shallow_sleep()
+        self._log.debug('Exiting')
