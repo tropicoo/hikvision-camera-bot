@@ -31,16 +31,19 @@ class VideoGifManager:
         password = self.__conf.api.auth.password
         host = self.__conf.api.host
 
-        rec_time = self.__conf.alert.video_gif.record_time
-        loglevel = self.__conf.alert.video_gif.loglevel
-        channel = self.__conf.alert.video_gif.channel
+        gif_conf = self.__conf.alert.video_gif
+        rec_time = gif_conf.record_time
+        loglevel = gif_conf.loglevel
+        channel = gif_conf.channel
+        rtsp_type = gif_conf.get('rtsp_transport_type', 'tcp')
 
         return FFMPEG_VIDEO_GIF_CMD.format(host=urlsplit(host).netloc,
                                            user=user,
                                            pw=password,
                                            channel=channel,
                                            rec_time=rec_time,
-                                           loglevel=loglevel)
+                                           loglevel=loglevel,
+                                           rtsp_transport_type=rtsp_type)
 
     def start_rec(self):
         """Start recording to temporary file."""

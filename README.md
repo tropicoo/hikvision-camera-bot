@@ -2,8 +2,8 @@
 Telegram Bot which sends snapshots from your Hikvision camera(s).
 
 ## Features
-1. Sending snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
-2. Sending resized/full snapshots on request
+1. Auto-sending snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
+2. Sending full/resized snapshots on request
 3. Sending so-called Telegram video-gifs on alert events from paragraph #1
 4. YouTube and Icecast direct or re-encoded streaming
 
@@ -11,7 +11,7 @@ Telegram Bot which sends snapshots from your Hikvision camera(s).
 ![frames](img/screenshot-1.png)
 
 # Installation
-## Manual installation without Docker
+
 To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
 dependencies using `pip3`.
 
@@ -27,26 +27,13 @@ dependencies using `pip3`.
     sudo pip3 install -r requirements.txt
     sudo apt update && sudo apt install ffmpeg
     ```
-## Running by using Docker and Docker Compose
-1. Set your timezone by editing `docker-compose.yaml` file.
-Currently there is Ukrainian timezone, because I live there.
-Look for your timezone here http://www.timezoneconverter.com/cgi-bin/zoneinfo.
-If you want to use default UTC time format, just completely remove these 
-two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
-    ```yaml
-    environment:
-      - "TZ=Europe/Kiev"
-    ```
-2. Build image and run container
-    ```bash
-    sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
-    ```
 
 # Configuration
 Configuration is simply stored in JSON format.
+
 ## Quick Setup
 1. [Create and start Telegram Bot](https://core.telegram.org/bots#6-botfather)
- and get its token
+ and get its API token
 2. Copy 3 default configuration files with predefined templates:
     
     ```bash
@@ -55,20 +42,23 @@ Configuration is simply stored in JSON format.
     cp livestream_templates-template.json livestream_templates.json
     ```
 3. Edit **config.json**:
-    - Put the obtained bot token to `token` key as string
+    - Put the obtained bot API token to `token` key as string
     - [Find](https://stackoverflow.com/a/32777943) your Telegram user id
     and put it to `allowed_user_ids` list as integer value. Multiple ids can
     be used, just separate them with a comma
     - Hikvision camera settings are placed inside the `camera_list` section. Template
     comes with two cameras
 
-        **Names of cameras should start with `cam_` and end with 
-        any number** like `cam_1`, `cam_2`, `cam_<number>` and so on with any description.
+        **Camera names should start with `cam_` prefix and end with 
+        digit suffix**: `cam_1`, `cam_2`, `cam_<digit>` and so on with any description.
 
     - Write authentication credentials in appropriate keys: `user` and `password`
     for every camera you want to use
     - Same for `host`, which should include protocol e.g. `http://192.168.10.10`
-    - In `alert` section you can enable sending picture on alert (Motion, Line Crossing and Intrusion (Field) Detection). Configure `delay` setting in seconds between pushing alertpictures. To send resized picture change `fullpic` to `false`
+    - In `alert` section you can enable sending picture on alert (Motion, 
+    Line Crossing and Intrusion (Field) Detection). Configure `delay` setting 
+    in seconds between pushing alert pictures. To send resized picture change 
+    `fullpic` to `false`
 
 ### config.json example
 <details>
@@ -106,7 +96,8 @@ Configuration is simply stored in JSON format.
             "channel": 102,
             "record_time": 5,
             "tmp_storage": "/tmp",
-            "loglevel": "quiet"
+            "loglevel": "quiet",
+            "rtsp_transport_type": "tcp"
           },
           "motion_detection": {
             "enabled": false,
@@ -139,8 +130,23 @@ Configuration is simply stored in JSON format.
   ```
 </details>
 
-Usage
-=====
+# Usage
+## Launch by using Docker and Docker Compose (preferable)
+1. Set your timezone by editing `docker-compose.yaml` file.
+Currently there is Ukrainian timezone because I live there.
+Look for your timezone here http://www.timezoneconverter.com/cgi-bin/zoneinfo.
+If you want to use default UTC time format, just completely remove these 
+two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
+    ```yaml
+    environment:
+      - "TZ=Europe/Kiev"
+    ```
+2. Build image and run container in detached mode
+    ```bash
+    sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
+    ```
+
+## Direct launch from terminal 
 Simply run and wait for welcome message in your Telegram client.
 > Note: This will log the output to the stdout/stderr (your terminal). Closing
 the terminal will shutdown the bot.
@@ -180,7 +186,7 @@ nohup python3 bot.py &>- &
 | `/icecast_on_cam_*` | Enable Icecast stream |
 | `/icecast_off_cam_*` | Disable Icecast stream |
 
-`*` - camera id (number) e.g. `cam_1`.
+`*` - camera id (digit) e.g. `cam_1`.
 
 #  Advanced Configuration
 1. To enable YouTube Live Streams (experimental), enable it in the `youtube` key.
@@ -450,18 +456,9 @@ nohup python3 bot.py &>- &
     it with its process group `kill -TERM -<PID>` else ffmpeg process
     will be still alive.
    
-2. If you wish to monitor directory and send files to yourself when created,
+2. (Deprecated) If you wish to monitor directory and send files to yourself when created,
 enable `watchdog` by setting `enabled` to `true` and specify `directory`
 path to be monitored e.g. `/tmp/watchdir`. Make sure that directory exists.
 For example configure your camera to take and put snapshot on move detection
 through FTP to watched folder. Watchdog looks for `on_create` events, sends
 created file and deletes it.
-
-# Misc
-If you're on the Raspberry Pi, you can easily add bot execution to the startup.
-
-Simply edit the `/etc/rc.local` add the following line before the last one
-(which is `exit 0`):
-```bash
-nohup python3 /home/pi/hikvision-camera-bot/bot.py &>- &
-```
