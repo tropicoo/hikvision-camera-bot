@@ -89,6 +89,7 @@ FFMPEG_LOG_LEVEL = '-loglevel {loglevel}'
 
 # VIDEO GIF COMMAND
 FFMPEG_VIDEO_GIF_CMD = f'{FFMPEG_BIN} {FFMPEG_LOG_LEVEL} ' \
+                       f'-rtsp_transport {{rtsp_transport_type}} ' \
                        f'-i {FFMPEG_VIDEO_SOURCE} -t {{rec_time}}'
 
 # Livestream constants

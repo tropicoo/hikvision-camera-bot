@@ -26,7 +26,8 @@
           "channel": 102,
           "record_time": 5,
           "tmp_storage": "/tmp",
-          "loglevel": "quiet"
+          "loglevel": "quiet",
+          "rtsp_transport_type": "tcp"
         },
         "motion_detection": {
           "enabled": false,
@@ -71,7 +72,8 @@
           "channel": 102,
           "record_time": 5,
           "tmp_storage": "/tmp",
-          "loglevel": "quiet"
+          "loglevel": "quiet",
+          "rtsp_transport_type": "tcp"
         },
         "motion_detection": {
           "enabled": false,
