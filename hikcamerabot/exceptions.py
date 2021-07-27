@@ -21,11 +21,11 @@ class DirectoryWatcherError(Exception):
     pass
 
 
-class APIError(Exception):
+class HikvisionAPIError(Exception):
     pass
 
 
-class APIRequestError(APIError):
+class APIRequestError(HikvisionAPIError):
     pass
 
 
@@ -42,4 +42,8 @@ class ServiceRuntimeError(ServiceError):
 
 
 class ServiceConfigError(ServiceError):
+    pass
+
+
+class ChunkDetectorError(CameraBotError):
     pass

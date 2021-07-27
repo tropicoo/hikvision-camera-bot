@@ -1,85 +1,58 @@
 """Camera Bot Module."""
-
 import logging
-from pathlib import PurePath
+from typing import Optional
 
-from telegram import Bot
-from telegram.utils.request import Request
+from aiogram import Bot
 
-from hikcamerabot.commons import ResultHandlerThread
-from hikcamerabot.config import get_main_config
-from hikcamerabot.constants import SEND_TIMEOUT
-from hikcamerabot.dispatchers.event import ResultDispatcher
-from hikcamerabot.managers.event import TaskEventManager
-from hikcamerabot.managers.process import CameraProcessManager
-from hikcamerabot.managers.thread import ThreadManager
+from hikcamerabot.config.config import get_main_config
+from hikcamerabot.dispatchers.event_result import ResultDispatcher
+from hikcamerabot.dispatchers.event_task import EventDispatcher
+from hikcamerabot.registry import CameraRegistry
+from hikcamerabot.utils.task import create_task
 
 
 class CameraBot(Bot):
-    """CameraBot class where main bot things are done."""
+    """Extended aiogram `Bot` class."""
 
-    def __init__(self, event_queues, cam_registry, stop_polling):
+    def __init__(self):
         conf = get_main_config()
-        super().__init__(conf.telegram.token,
-                         request=(Request(con_pool_size=10)))
+        super().__init__(conf.telegram.token)
         self._log = logging.getLogger(self.__class__.__name__)
-        self._log.info('Initializing %s bot', self.first_name)
-        self.stop_polling = stop_polling
+        self._log.info('Initializing bot')
         self.user_ids = conf.telegram.allowed_user_ids
-        self._updates = {}
+        self.cam_registry: Optional[CameraRegistry] = None
+        self.event_dispatcher = EventDispatcher()
+        self.result_dispatcher = ResultDispatcher()
+
+    def add_cam_registry(self, cam_registry: CameraRegistry):
+        # TODO: Rework.
         self.cam_registry = cam_registry
 
-        dispatcher = ResultDispatcher(bot=self, cam_registry=cam_registry)
+    async def start_tasks(self) -> None:
+        """Start async launch tasks per camera."""
+        # await self.result_work_manager.start_worker_tasks()
+        for cam in self.cam_registry.get_instances():
+            task_name = f'{cam.id} launch task'
+            create_task(
+                cam.service_manager.start_all(only_conf_enabled=True),
+                task_name=task_name,
+                logger=self._log,
+                exception_message='Task %s raised an exception',
+                exception_message_args=(task_name,),
+            )
 
-        self.event_manager = TaskEventManager(event_queues)
-        self.proc_manager = CameraProcessManager(cam_registry, event_queues)
-        self.thread_manager = ThreadManager([ResultHandlerThread(dispatcher)])
-
-    def start_processes(self):
-        self.thread_manager.start_threads()
-        self.proc_manager.start_processes()
-
-    def send_startup_message(self):
+    async def send_startup_message(self) -> None:
         """Send welcome message after bot launch."""
         self._log.info('Sending welcome message')
-        self.send_message_all(f'{self.first_name} bot started, see /help for '
-                              'available commands')
+        await self.send_message_all(
+            f'{(await self.me).first_name} bot started, see /help for '
+            f'available commands')
 
-    def send_message_all(self, msg):
+    async def send_message_all(self, msg: str) -> None:
         """Send message to all defined user IDs in config.json."""
         for user_id in self.user_ids:
             try:
-                self.send_message(user_id, msg)
+                await self.send_message(user_id, msg)
             except Exception:
                 self._log.exception('Failed to send message "%s" to user ID '
                                     '%s', msg, user_id)
-
-    def reply_cam_photo(self,
-                        photo,
-                        caption=None,
-                        from_watchdog=False,
-                        fullpic=False,
-                        fullpic_name=None,
-                        reply_html=None,
-                        reply_text=None,
-                        update=None):
-        """Send received photo to the user(s)."""
-        if from_watchdog:
-            for uid in self.user_ids:
-                self.send_document(chat_id=uid,
-                                   document=photo,
-                                   caption=caption,
-                                   filename=PurePath(photo.name).name,
-                                   timeout=SEND_TIMEOUT)
-        else:
-            if reply_text:
-                update.message.reply_text(reply_text)
-            elif reply_html:
-                update.message.reply_html(reply_html)
-            if fullpic:
-                update.message.reply_document(document=photo,
-                                              filename=fullpic_name,
-                                              caption=caption)
-            else:
-                update.message.reply_photo(photo=photo, caption=caption)
-

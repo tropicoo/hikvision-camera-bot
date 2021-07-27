@@ -1,17 +1,19 @@
 """Constants module."""
 
-BAD_RESPONSE_CODES = {401: 'Got 401: Unauthorized. Wrong credentials?',
-                      403: 'Got 403: Forbidden. Wrong URL?\n{0}',
-                      404: 'Got 404: URL Not Found\n{0}'}
-CONF_CAM_ID_REGEX = r'^cam_[0-9]+$'
-CMD_CAM_ID_REGEX = r'^.*(?=cam_)'
+import enum
+
+CMD_CAM_ID_REGEX = r'^.*(?=cam_[0-9]+)'
 CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 
-VIDEO_GIF_FILENAME = 'alert--{0}.mp4'
+TG_MAX_MSG_SIZE = 4096
+
+FFMPEG_LOG_LEVELS = {'quiet', 'panic', 'fatal', 'error', 'warning',
+                     'info', 'verbose', 'debug', 'trace'}
+RTSP_TRANSPORT_TYPES = {'tcp', 'udp'}
 
 
-class Events:
+class Event:
     STOP = 'stop'
     TAKE_SNAPSHOT = 'take_snapshot'
     CONFIGURE_DETECTION = 'detection_conf'
@@ -21,9 +23,10 @@ class Events:
     ALERT_MSG = 'alert_msg'
     ALERT_SNAPSHOT = 'alert_snapshot'
     ALERT_VIDEO = 'alert_video'
+    ERROR_MSG = 'error_message'
 
 
-class _HTTPMethods:
+class _HTTPMethod:
     __slots__ = ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')
 
     def __init__(self):
@@ -31,57 +34,36 @@ class _HTTPMethods:
             setattr(self, method, method)
 
 
-class _Alarms:
-    __slots__ = ('SERVICE_TYPE', 'ALARM')
-
-    def __init__(self):
-        self.SERVICE_TYPE = self.ALARM = 'alarm'
+class Alarm:
+    ALARM = 'alarm'
+    SERVICE_TYPE = ALARM
 
 
-class _Detections:
-    __slots__ = ('MOTION', 'LINE', 'INTRUSION')
+@enum.unique
+class Detection(enum.Enum):
+    MOTION = 'motion_detection'
+    LINE = 'line_crossing_detection'
+    INTRUSION = 'intrusion_detection'
 
-    def __init__(self):
-        self.MOTION = 'motion_detection'
-        self.LINE = 'line_crossing_detection'
-        self.INTRUSION = 'intrusion_detection'
-
-
-class _Image:
-    __slots__ = ('SIZE', 'FORMAT', 'QUALITY')
-
-    def __init__(self):
-        self.SIZE = (1280, 724)
-        self.FORMAT = 'JPEG'
-        self.QUALITY = 87
+    @classmethod
+    def choices(cls) -> frozenset[str]:
+        return frozenset(member.value for member in cls)
 
 
-_STREAMS_ARGS = ('YOUTUBE', 'ICECAST', 'TWITCH')
+class Stream:
+    SERVICE_TYPE = 'stream'
+    YOUTUBE = 'youtube'
+    ICECAST = 'icecast'
+    TWITCH = 'twitch'
 
 
-class _Streams:
-    __slots__ = ('SERVICE_TYPE',) + _STREAMS_ARGS
-
-    def __init__(self):
-        self.SERVICE_TYPE = 'stream'
-        for arg in _STREAMS_ARGS:
-            setattr(self, arg, arg.lower())
+class VideoEncoder:
+    X264 = 'x264'
+    VP9 = 'vp9'
+    DIRECT = 'direct'
 
 
-class _Encoders:
-    __slots__ = ('X264', 'VP9', 'DIRECT')
-
-    def __init__(self):
-        for arg in self.__slots__:
-            setattr(self, arg, arg.lower())
-
-
-Http = _HTTPMethods()
-Alarms = _Alarms()
-Detections = _Detections()
-Img = _Image()
-Streams = _Streams()
-VideoEncoders = _Encoders()
+Http = _HTTPMethod()
 
 FFMPEG_BIN = 'ffmpeg'
 FFMPEG_VIDEO_SOURCE = '"rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/"'
@@ -103,13 +85,16 @@ FFMPEG_CMD = f'{FFMPEG_BIN} {FFMPEG_LOG_LEVEL} ' \
              '-c:a {acodec} {abitrate} ' \
              '-f {format} ' \
              '{{output}}'
+
 FFMPEG_CMD_TRANSCODE_GENERAL = '-b:v {average_bitrate} -maxrate {maxrate} ' \
                                '-bufsize {bufsize} ' \
                                '-pass {pass_mode} -pix_fmt {pix_fmt} ' \
                                '-r {framerate} {scale} {{inner_args}}'
 
-FFMPEG_CMD_TRANSCODE = {VideoEncoders.X264: '-preset {preset} -tune {tune}',
-                        VideoEncoders.VP9: '-deadline {deadline} -speed {speed}'}
+FFMPEG_CMD_TRANSCODE = {
+    VideoEncoder.X264: '-preset {preset} -tune {tune}',
+    VideoEncoder.VP9: '-deadline {deadline} -speed {speed}',
+}
 
 FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre "{ice_genre}" -ice_name "{ice_name}" ' \
                                '-ice_description "{ice_description}" ' \
@@ -117,26 +102,27 @@ FFMPEG_CMD_TRANSCODE_ICECAST = '-ice_genre "{ice_genre}" -ice_name "{ice_name}" 
                                '-content_type "{content_type}"'
 
 FFMPEG_CMD_SCALE_FILTER = '-vf scale={width}:{height},format={format}'
-FFMPEG_CMD_NULL_AUDIO = {'filter': '-f lavfi -i anullsrc='
-                                   'channel_layout=mono:sample_rate=8000',
-                         'map': '-map 0:a -map 1:v',
-                         'bitrate': '-b:a 5k'}
+FFMPEG_CMD_NULL_AUDIO = {
+    'filter': '-f lavfi -i anullsrc='
+              'channel_layout=mono:sample_rate=8000',
+    'map': '-map 0:a -map 1:v',
+    'bitrate': '-b:a 10k',
+}
 
-# Alert (alarm) constants
-ALARM_TRIGGERS = (Detections.MOTION, Detections.LINE)
-DETECTION_REGEX = r'(<\/?eventType>(VMD|linedetection)?){2}'
-
-DETECTION_SWITCH_MAP = {Detections.MOTION: {'method': 'MotionDetection',
-                                            'name': 'Motion Detection',
-                                            'event_name': 'VMD'},
-                        Detections.LINE: {
-                            'method': 'LineDetection',
-                            'name': 'Line Crossing Detection',
-                            'event_name': 'linedetection'},
-                        Detections.INTRUSION: {
-                            'method': 'FieldDetection',
-                            'name': 'Intrusion (Field) Detection',
-                            'event_name': 'fielddetection'}}
-
-SWITCH_ENABLED_XML = r'<enabled>{0}</enabled>'
-XML_HEADERS = {'Content-Type': 'application/xml'}
+DETECTION_SWITCH_MAP = {
+    Detection.MOTION.value: {
+        'method': 'MotionDetection',
+        'name': 'Motion Detection',
+        'event_name': 'VMD',
+    },
+    Detection.LINE.value: {
+        'method': 'LineDetection',
+        'name': 'Line Crossing Detection',
+        'event_name': 'linedetection',
+    },
+    Detection.INTRUSION.value: {
+        'method': 'FieldDetection',
+        'name': 'Intrusion (Field) Detection',
+        'event_name': 'fielddetection',
+    },
+}

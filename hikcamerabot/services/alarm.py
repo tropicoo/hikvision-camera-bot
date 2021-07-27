@@ -1,69 +1,99 @@
 """Alarm module."""
 
-from threading import Event
+import asyncio
+from typing import AsyncGenerator, Optional
 
-from hikcamerabot.constants import DETECTION_SWITCH_MAP, ALARM_TRIGGERS, Alarms
-from hikcamerabot.exceptions import APIError
-from hikcamerabot.exceptions import ServiceRuntimeError
-from hikcamerabot.services import BaseService
+from addict import Addict
+
+from hikcamerabot.clients.hikvision import HikvisionAPI
+from hikcamerabot.constants import DETECTION_SWITCH_MAP, Alarm, Detection
+from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
+from hikcamerabot.services.abstract import AbstractService
+from hikcamerabot.services.tasks.alarm import SendRecVideoTask, ServiceAlarmPusherTask
+from hikcamerabot.utils.task import create_task
 
 
-class AlarmService(BaseService):
+class AlarmService(AbstractService):
     """Alarm Service Class."""
 
-    def __init__(self, conf, api):
-        super().__init__()
+    ALARM_TRIGGERS: frozenset[str] = Detection.choices()
+
+    def __init__(self, conf: Addict, api: HikvisionAPI, cam: 'HikvisionCam', bot):
+        super().__init__(cam)
         self._conf = conf
         self._api = api
-        self.alert_delay = conf.delay
+        self.bot = bot
+        self.alert_delay: int = conf.delay
         self.alert_count = 0
-        self._started = Event()
-        self.type = Alarms.SERVICE_TYPE
-        self.name = Alarms.ALARM
 
-    def is_started(self):
+        self._started = asyncio.Event()
+
+        self.type: str = Alarm.SERVICE_TYPE
+        self.name: str = Alarm.ALARM
+
+    @property
+    def started(self) -> bool:
         """Check if alarm is enabled."""
         return self._started.is_set()
 
-    def is_enabled_in_conf(self):
+    @property
+    def enabled_in_conf(self) -> bool:
         """Check if any alarm trigger is enabled in conf."""
-        for trigger in ALARM_TRIGGERS:
+        for trigger in self.ALARM_TRIGGERS:
             if self._conf[trigger].enabled:
                 return True
         return False
 
-    def start(self):
-        """Enable alarm."""
-        if self.is_started():
-            raise ServiceRuntimeError('Alarm alert mode already started')
-        for _type in ALARM_TRIGGERS:
-            if self._conf[_type].enabled:
-                self.trigger_switch(enable=True, key=_type)
+    async def start(self) -> None:
+        """Enable alarm service and enable triggers on physical camera."""
+        if self.started:
+            raise ServiceRuntimeError('Alarm (alert) mode already started')
+        await self._enable_triggers_on_camera()
+        self._start_service_tasks()
+
+    def _start_service_tasks(self) -> None:
+        task_name = f'{ServiceAlarmPusherTask.__name__}_{self.cam.id}'
+        create_task(
+            ServiceAlarmPusherTask(service=self).run(),
+            task_name=task_name,
+            logger=self._log,
+            exception_message='Task %s raised an exception',
+            exception_message_args=(task_name,),
+        )
+
+        task_name = f'{SendRecVideoTask.__name__}_{self.cam.id}'
+        create_task(
+            SendRecVideoTask(cam=self.cam).run(),
+            task_name=task_name,
+            logger=self._log,
+            exception_message='Task %s raised an exception',
+            exception_message_args=(task_name,),
+        )
+
+    async def _enable_triggers_on_camera(self) -> None:
+        for trigger in self.ALARM_TRIGGERS:
+            if self._conf[trigger].enabled:
+                await self.trigger_switch(enable=True, trigger=trigger)
         self._started.set()
 
-    def stop(self):
+    async def stop(self) -> None:
         """Disable alarm."""
-        if not self.is_started():
+        if not self.started:
             raise ServiceRuntimeError('Alarm alert mode already stopped')
         self._started.clear()
 
-    def get_alert_stream(self):
+    async def alert_stream(self) -> AsyncGenerator:
         """Get Alarm stream from Hikvision Camera."""
-        try:
-            return self._api.get_alert_stream()
-        except APIError:
-            err_msg = 'Failed to get Alert Streams'
-            self._log.error(err_msg)
-            raise ServiceRuntimeError(err_msg)
+        async for chunk in self._api.alert_stream():
+            yield chunk
 
-    def trigger_switch(self, enable, key):
+    async def trigger_switch(self, enable: bool, trigger: str) -> Optional[str]:
         """Trigger switch."""
-        full_name = DETECTION_SWITCH_MAP[key]['name']
+        full_name = DETECTION_SWITCH_MAP[trigger]['name']
         self._log.debug('%s %s', 'Enabling' if enable else 'Disabling', full_name)
         try:
-            msg = self._api.switch(enable=enable, key=key)
-        except APIError:
-            err_msg = f'{full_name} Switch encountered an error'
+            return await self._api.switch(enable=enable, trigger=trigger)
+        except HikvisionAPIError as err:
+            err_msg = f'{full_name} Switch encountered an error: {err}'
             self._log.error(err_msg)
             raise ServiceRuntimeError(err_msg)
-        return msg
