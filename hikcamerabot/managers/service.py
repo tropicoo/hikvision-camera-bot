@@ -2,64 +2,70 @@
 
 import logging
 from collections import defaultdict
+from typing import Iterable
+
+from hikcamerabot.services.abstract import AbstractService
 
 
 class ServiceManager:
-    """Service Manager Class."""
+    """Service Manager Class.
+
+    Manages camera abstracted services.
+    """
 
     def __init__(self):
         # service type as key e.g. {'stream': {'youtube': <instance>}}
         self._log = logging.getLogger(self.__class__.__name__)
         self._services = defaultdict(dict)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Registered services: {self._services}>'
 
-    def register_services(self, service_instances):
+    def register(self, service_instances: Iterable[AbstractService]) -> None:
         """Register service instances."""
         for svc in service_instances:
             self._services[svc.type][svc.name] = svc
 
-    def unregister_service(self, service_instance):
+    def unregister(self, service_instance: AbstractService) -> None:
         self._services[service_instance.type].pop(service_instance.name, None)
 
-    def start_services(self, enabled_in_conf=False):
+    async def start_all(self, only_conf_enabled: bool = False) -> None:
         for service_type_dict in self._services.values():
             for service in service_type_dict.values():
-                if enabled_in_conf:
-                    if service.is_enabled_in_conf():
-                        service.start()
+                if only_conf_enabled:
+                    if service.enabled_in_conf:
+                        await service.start()
                     else:
-                        self._log.info('Do not starting service "%s" - '
+                        self._log.info('Do not start service "%s" - '
                                        'disabled by default', service)
                 else:
-                    service.start()
+                    await service.start()
 
-    def stop_services(self):
+    async def stop_all(self) -> None:
         for service_type_dict in self._services.values():
             for service in service_type_dict.values():
                 try:
-                    service.stop()
+                    await service.stop()
                 except Exception as err:
                     self._log.warning('Warning while stopping service "%s": '
                                       '%s', service.name, err)
 
-    def stop_service(self, service_type, service_name):
-        self._services[service_type][service_name].stop()
+    async def stop(self, service_type: str, service_name: str) -> None:
+        await self._services[service_type][service_name].stop()
 
-    def start_service(self, service_type, service_name):
-        self._services[service_type][service_name].start()
+    async def start(self, service_type: str, service_name: str) -> None:
+        await self._services[service_type][service_name].start()
 
-    def get_service(self, service_type, service_name):
+    def get(self, service_type: str, service_name: str) -> AbstractService:
         return self._services[service_type][service_name]
 
-    def get_services(self):
-        services = []
+    def get_all(self) -> list[AbstractService]:
+        services: list[AbstractService] = []
         for service_type_dict in self._services.values():
             services.extend(service_type_dict.values())
         return services
 
-    def get_count(self, stream_type=None):
+    def get_count(self, stream_type: str = None) -> int:
         try:
             return len(self._services[stream_type])
         except KeyError:
@@ -68,5 +74,5 @@ class ServiceManager:
                 count += len(service_names_dict)
             return count
 
-    def get_count_per_type(self):
+    def get_count_per_type(self) -> dict:
         return {name: len(val) for name, val in self._services.items()}

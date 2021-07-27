@@ -1,6 +1,10 @@
-Pillow
-psutil
-python-telegram-bot
-requests
-watchdog
-xmltodict
+Pillow==8.3.1
+addict==2.4.0
+aiofiles==0.7.0
+aiogram==2.14.3
+httpx==0.18.2
+marshmallow==3.13.0
+tenacity==8.0.1
+ujson==4.0.2
+uvloop==0.15.3
+xmltodict==0.12.0

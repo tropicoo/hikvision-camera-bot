@@ -1,91 +1,79 @@
-"""Task event handlers module."""
+"""Task event s module."""
 
 import abc
 import logging
 
-from hikcamerabot.constants import DETECTION_SWITCH_MAP, Events
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.exceptions import ServiceRuntimeError
-from hikcamerabot.services.threads import (ServiceStreamerThread,
-                                           ServiceAlarmPusherThread)
 
 
-class BaseTaskEventHandler(metaclass=abc.ABCMeta):
+class AbstractTaskEvent(metaclass=abc.ABCMeta):
 
-    def __init__(self, camera):
+    def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
-        self._cam = camera
 
-    def __call__(self, data):
-        return self._handle(data)
+    async def handle(self, data: dict) -> None:
+        return await self._handle(data)
 
     @abc.abstractmethod
-    def _handle(self, data):
+    async def _handle(self, data: dict) -> None:
         pass
 
 
-class TakeSnapshotHandler(BaseTaskEventHandler):
+class TaskTakeSnapshot(AbstractTaskEvent):
 
-    def _handle(self, data):
-        img, create_ts = self._cam.take_snapshot(
-            resize=data['event'] == Events.TAKE_SNAPSHOT)
-
+    async def _handle(self, data: dict) -> None:
+        cam = data['cam']
+        img, create_ts = await cam.take_snapshot(resize=data['params']['resize'])
         data.update({'img': img,
-                     'taken_count': self._cam.snapshots_taken,
+                     'taken_count': cam.snapshots_taken,
                      'create_ts': create_ts})
-        return data
+        await cam.bot.result_dispatcher.dispatch(data)
 
 
-class DetectionConfHandler(BaseTaskEventHandler):
+class TaskDetectionConf(AbstractTaskEvent):
 
-    def _handle(self, data):
-        key_name = data['name']
-        name = DETECTION_SWITCH_MAP[key_name]['name']
-        switch = data['params']['switch']
+    async def _handle(self, data: dict) -> None:
+        cam = data['cam']
+        trigger = data['name']
+        name = DETECTION_SWITCH_MAP[trigger]['name']
+        enable = data['params']['switch']
 
         self._log.info('%s camera\'s %s has been requested',
-                       'Enabling' if switch else 'Disabling', name)
-        data['msg'] = self._cam.alarm.trigger_switch(enable=switch,
-                                                     key=key_name)
-        return data
+                       'Enabling' if enable else 'Disabling', name)
+        data['msg'] = await cam.alarm.trigger_switch(enable, trigger)
+        await cam.bot.result_dispatcher.dispatch(data)
 
 
-class AlarmConfHandler(BaseTaskEventHandler):
+class TaskAlarmConf(AbstractTaskEvent):
 
-    def _handle(self, data):
+    async def _handle(self, data: dict) -> None:
+        cam = data['cam']
         service_type = service_name = data['name']
-        switch = data['params']['switch']
-        # TODO: Code dup.
+        enable = data['params']['switch']
         try:
-            if switch:
-                self._cam.service_manager.start_service(service_type,
-                                                        service_name)
-                ServiceAlarmPusherThread(cam=self._cam,
-                                         service_name=service_name).start()
+            if enable:
+                await cam.service_manager.start(service_type, service_name)
             else:
-                self._cam.service_manager.stop_service(service_type,
-                                                       service_name)
+                await cam.service_manager.stop(service_type, service_name)
         except ServiceRuntimeError as err:
             data['msg'] = str(err)
-        return data
+        await cam.bot.result_dispatcher.dispatch(data)
 
 
-class StreamConfHandler(BaseTaskEventHandler):
+class TaskStreamConf(AbstractTaskEvent):
 
-    def _handle(self, data):
+    async def _handle(self, data: dict) -> None:
         self._log.info('Starting YouTube stream')
+        cam = data['cam']
         service_type = data['event']
         service_name = data['name']
-        switch = data['params']['switch']
-        # TODO: Code dup.
+        enable = data['params']['switch']
         try:
-            if switch:
-                self._cam.service_manager.start_service(service_type,
-                                                        service_name)
-                ServiceStreamerThread(cam=self._cam,
-                                      service_name=service_name).start()
+            if enable:
+                await cam.service_manager.start(service_type, service_name)
             else:
-                self._cam.service_manager.stop_service(service_type,
-                                                       service_name)
+                await cam.service_manager.stop(service_type, service_name)
         except ServiceRuntimeError as err:
             data['msg'] = str(err)
-        return data
+        await cam.bot.result_dispatcher.dispatch(data)

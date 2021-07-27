@@ -4,5 +4,6 @@
   "1.0.2": "Added Line Crossing Detection Alert. Bug fixes. Updated config template with new 'line_crossing_detection' config option. Changed 'endpoints -> motion_detection' config option value.",
   "1.0.3": "Introduced Livestream templates (currently for youtube)",
   "1.0.4": "Added Icecast stream support with template",
-  "1.1": "Added Intrusion (Field) Detection; Added video-gifs on Alarm trigger"
+  "1.1": "Added Intrusion (Field) Detection; Added video-gifs on Alarm trigger",
+  "1.2": "Move to async"
 }

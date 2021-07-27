@@ -1,32 +1,27 @@
 # Hikvision Telegram Camera Bot
-Telegram Bot which sends snapshots from your Hikvision camera(s).
+Telegram Bot which sends snapshots from your Hikvision cameras.
+
+Version: 1.2
 
 ## Features
-1. Auto-sending snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
-2. Sending full/resized snapshots on request
-3. Sending so-called Telegram video-gifs on alert events from paragraph #1
-4. YouTube and Icecast direct or re-encoded streaming
+1. Auto-send snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
+2. Send full/resized snapshots on request
+3. Send so-called Telegram video-gifs on alert events from paragraph #1
+4. YouTube and Icecast direct or re-encoded livestream
 
 
 ![frames](img/screenshot-1.png)
 
 # Installation
 
-To install Hikvision Telegram Camera Bot, simply `clone` repo and install 
-dependencies using `pip3`.
+To install Hikvision Telegram Camera Bot, simply `clone` repo.
 
-1. Make sure you have at least **Python 3.6** version installed
-    ```shell script
-    python3 -V
-    Python 3.7.3
-    ```
-2. Install
-    ```shell script
-    git clone https://github.com/tropicoo/hikvision-camera-bot.git
-    cd hikvision-camera-bot
-    sudo pip3 install -r requirements.txt
-    sudo apt update && sudo apt install ffmpeg
-    ```
+
+
+```shell script
+git clone https://github.com/tropicoo/hikvision-camera-bot.git
+cd hikvision-camera-bot
+```
 
 # Configuration
 Configuration is simply stored in JSON format.
@@ -116,7 +111,7 @@ Configuration is simply stored in JSON format.
           "youtube": {
             "enabled": false,
             "livestream_template": "tpl_kitchen",
-            "encoding_template": "x264.kitchen",
+            "encoding_template": "x264.kitchen"
           },
           "icecast": {
             "enabled": false,
@@ -131,9 +126,9 @@ Configuration is simply stored in JSON format.
 </details>
 
 # Usage
-## Launch by using Docker and Docker Compose (preferable)
+## Launch by using Docker and Docker Compose
 1. Set your timezone by editing `docker-compose.yaml` file.
-Currently there is Ukrainian timezone because I live there.
+Currently, there is Ukrainian timezone because I live there.
 Look for your timezone here http://www.timezoneconverter.com/cgi-bin/zoneinfo.
 If you want to use default UTC time format, just completely remove these 
 two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
@@ -146,28 +141,10 @@ two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
     sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
     ```
 
-## Direct launch from terminal 
-Simply run and wait for welcome message in your Telegram client.
-> Note: This will log the output to the stdout/stderr (your terminal). Closing
-the terminal will shutdown the bot.
-```bash
-python3 bot.py
-```
-
-If you want to run the bot in the background use the following commands
-```bash
-# With writing to the log file
-nohup python3 bot.py &>/tmp/camerabot.log &
-
-# Without writing to the log file
-nohup python3 bot.py &>- &
-```
-
 # Commands
 | Command | Description |
 |---|---|
 | `/start` | Start the bot (one-time action during first start) and show help |
-| `/stop` | Stop the bot (terminate all processes) |
 | `/help` | Show help message |
 | `/list` | List all your cameras with commands |
 | `/cmds_cam_*` | List commands for particular camera |

@@ -1,78 +1,62 @@
 """Decorators module."""
 
 import re
-import traceback
-import uuid
 from functools import wraps
 
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
-from hikcamerabot.exceptions import UserAuthError
-from hikcamerabot.utils import shallow_sleep, get_user_info, print_access_error
+from hikcamerabot.utils.utils import get_user_info
 
 
-def retry(delay=5, retries=3):
-    """Retry decorator."""
-    retries = retries if retries > 0 else 1
-
-    def decorator(func):
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            _err = None
-            for ret in range(retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as err:
-                    shallow_sleep(delay)
-                    _err = err
-            else:
-                raise _err
-
-        return wrapper
-
-    return decorator
+# def event_error_handler(func):
+#     @wraps(func)
+#     async def wrapper(*args, **kwargs):
+#         handler, data = args
+#         try:
+#             return await func(*args, **kwargs)
+#         except Exception as err:
+#             return {'error_full': traceback.format_exc(), 'error': str(err),
+#                     **data}
+#
+#     return wrapper
 
 
-def event_error_handler(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        handler, data = args
-        try:
-            return func(*args, **kwargs)
-        except Exception:
-            return {'error': traceback.format_exc(), **data}
-
-    return wrapper
-
-
-def result_error_handler(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        handler, data = args
-        if 'error' in data:
-            cam_id, update = handler._bot._updates.pop(data['event_id'])
-            update.message.reply_text(
-                f'{data["error"]}\nTry later or /list other cameras')
-            return
-        return func(*args, **kwargs)
-
-    return wrapper
+# def result_error_handler(func):
+#     @wraps(func)
+#     async def wrapper(*args, **kwargs):
+#         handler, data = args
+#
+#         if 'error' not in data:
+#             return await func(*args, **kwargs)
+#
+#         message: Message
+#         cam_id, message = handler._bot._updates.pop(data['event_id'])
+#
+#         err_text = data['error']
+#
+#         # TODO: Move to util module.
+#         if len(err_text) > TG_MAX_MSG_SIZE:
+#             for x in range(0, len(err_text), TG_MAX_MSG_SIZE):
+#                 await message.answer(err_text[x:x + TG_MAX_MSG_SIZE])
+#         else:
+#             await message.answer(err_text)
+#
+#     return wrapper
 
 
 def authorization_check(func):
     """User authorization check."""
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        update, ctx = args
-        try:
-            if update.message.chat.id not in ctx.bot.user_ids:
-                raise UserAuthError
-            return func(*args, **kwargs)
-        except UserAuthError:
-            ctx.bot._log.error('User authorization error')
-            ctx.bot._log.error(get_user_info(update))
-            print_access_error(update)
+    async def wrapper(*args, **kwargs):
+        message = args[0]
+        bot = message.bot
+        bot._log.debug(get_user_info(message))  # noqa
+
+        if message.chat.id in bot.user_ids:
+            return await func(*args, **kwargs)
+
+        bot._log.error('User authorization error: %s', message.chat.id)  # noqa
+        await message.answer('Not authorized')
 
     return wrapper
 
@@ -81,20 +65,14 @@ def camera_selection(func):
     """Select camera ID to use."""
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        update, ctx = args
-        cam_id = re.split(CMD_CAM_ID_REGEX, update.message.text)[-1]
-        cam_meta = ctx.bot.cam_registry.get_conf(cam_id)
-
-        # Generate unique event id and remember update object
-        event_id = uuid.uuid4().hex
-        ctx.bot._updates[event_id] = (cam_id, update)
+    async def wrapper(*args, **kwargs):
+        message = args[0]
+        bot = message.bot
+        cam_id = re.split(CMD_CAM_ID_REGEX, message.text)[-1]
+        cam = bot.cam_registry.get_instance(cam_id)
         try:
-            return func(*args, cam_id=cam_id, cam_meta=cam_meta,
-                        event_id=event_id, **kwargs)
+            return await func(*args, bot=bot, cam=cam, **kwargs)
         except Exception:
-            # Remove update object from dict in case of any failure
-            ctx.bot._log.exception('Failed to process event')
-            ctx.bot._updates.pop(event_id, None)
+            bot._log.exception('Failed to process event for %s', cam_id)
 
     return wrapper

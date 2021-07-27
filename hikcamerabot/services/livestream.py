@@ -1,146 +1,163 @@
 """Livestream module."""
 
 import abc
-import subprocess
+import asyncio
+import os
+import signal
 import time
-from threading import Event
 from urllib.parse import urlsplit
 
-from psutil import NoSuchProcess
+from hikcamerabot.config.config import get_encoding_tpl_config, get_livestream_tpl_config
+from hikcamerabot.constants import (
+    FFMPEG_CMD,
+    FFMPEG_CMD_NULL_AUDIO,
+    FFMPEG_CMD_SCALE_FILTER,
+    FFMPEG_CMD_TRANSCODE,
+    FFMPEG_CMD_TRANSCODE_GENERAL,
+    FFMPEG_CMD_TRANSCODE_ICECAST,
+    Stream,
+    VideoEncoder,
+)
+from hikcamerabot.exceptions import ServiceConfigError, ServiceRuntimeError
+from hikcamerabot.services.abstract import AbstractService
+from hikcamerabot.services.tasks.livestream import FfmpegStdoutReaderTask, ServiceStreamerTask
+from hikcamerabot.utils.task import create_task, wrap
+from hikcamerabot.utils.utils import shallow_sleep_async
 
-from hikcamerabot.config import (get_livestream_tpl_config,
-                                 get_encoding_tpl_config)
-from hikcamerabot.constants import (Streams,
-                                    VideoEncoders,
-                                    FFMPEG_CMD, FFMPEG_CMD_NULL_AUDIO,
-                                    FFMPEG_CMD_SCALE_FILTER,
-                                    FFMPEG_CMD_TRANSCODE_GENERAL,
-                                    FFMPEG_CMD_TRANSCODE,
-                                    FFMPEG_CMD_TRANSCODE_ICECAST)
-from hikcamerabot.exceptions import ServiceRuntimeError, ServiceConfigError
-from hikcamerabot.services import BaseService
-from hikcamerabot.utils import kill_proc_tree, shallow_sleep
 
-
-class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
+class AbstractFfmpegStreamService(AbstractService, metaclass=abc.ABCMeta):
     """livestream Service Base Class."""
 
-    # Not needed since abc.abstractmethods are defined
-    # def __new__(cls, *args, **kwargs):
-    #     if cls is FFMPEGBaseStreamService:
-    #         raise TypeError('{0} class may not be instantiated'.format(
-    #             cls.__name__))
-    #     return super().__new__(cls)
-
-    def __init__(self, stream_name, conf, hik_user, hik_password, hik_host):
-        super().__init__()
+    def __init__(self, conf, hik_user, hik_password, hik_host, cam):
+        super().__init__(cam)
 
         self._cmd_gen_dispatcher = {
-            VideoEncoders.X264: self._generate_x264_cmd,
-            VideoEncoders.VP9: self._generate_vp9_cmd}
+            VideoEncoder.X264: self._generate_x264_cmd,
+            VideoEncoder.VP9: self._generate_vp9_cmd,
+        }
 
-        self.name = stream_name
-        self.type = Streams.SERVICE_TYPE
+        self.type = Stream.SERVICE_TYPE
         self._conf = conf
         self._hik_user = hik_user
         self._hik_password = hik_password
         self._hik_host = hik_host
 
         self._proc = None
-        self._start_ts = None
+        self._start_ts: int = None
         self._stream_conf = None
         self._enc_conf = None
         self._cmd = None
         self._generate_cmd()
 
-        self._started = Event()
+        self._started = asyncio.Event()
+        self._killpg = wrap(os.killpg)
 
-    def start(self, skip_check=False):
+    async def start(self, skip_check: bool = False) -> None:
         """Start the stream."""
-        if not skip_check and self.is_started():
+        if not skip_check and self.started:
             msg = f'{self._cls_name} stream already started'
             self._log.info(msg)
             raise ServiceRuntimeError(msg)
+
+        await self._start_ffmpeg_process()
+        self._start_reader_task()
+        if not skip_check:
+            self._start_stream_task()
+
+    def _start_reader_task(self):
+        create_task(
+            FfmpegStdoutReaderTask(self._proc).run(),
+            task_name=FfmpegStdoutReaderTask.__name__,
+            logger=self._log,
+            exception_message='Task %s raised an exception',
+            exception_message_args=(FfmpegStdoutReaderTask.__name__,),
+        )
+
+    def _start_stream_task(self):
+        create_task(
+            ServiceStreamerTask(service=self).run(),
+            task_name=ServiceStreamerTask.__name__,
+            logger=self._log,
+            exception_message='Task %s raised an exception',
+            exception_message_args=(ServiceStreamerTask.__name__,),
+        )
+
+    async def _start_ffmpeg_process(self) -> None:
+        self._log.debug('%s ffmpeg command: %s', self._cls_name, self._cmd)
         try:
-            self._log.debug('%s ffmpeg command: %s', self._cls_name, self._cmd)
-            self._proc = subprocess.Popen(self._cmd,
-                                          shell=True,
-                                          stderr=subprocess.STDOUT,
-                                          stdout=subprocess.PIPE,
-                                          universal_newlines=True)
-            self._start_ts = int(time.time())
-            self._started.set()
-        except Exception:
+            self._proc = await asyncio.create_subprocess_shell(
+                self._cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                preexec_fn=os.setsid,
+            )
+        except Exception as err:
             err_msg = f'{self._cls_name} failed to start'
             self._log.exception(err_msg)
-            raise ServiceRuntimeError(err_msg)
+            raise ServiceRuntimeError(err_msg) from err
+        self._start_ts = int(time.time())
+        self._started.set()
 
-    def stop(self, disable=True):
+    async def stop(self, disable: bool = True) -> None:
         """Stop the stream."""
-
-        def clear_status():
-            if disable:
-                self._started.clear()
-
-        if not self.is_started():
-            msg = f'{self._cls_name} already stopped'
-            self._log.info(msg)
-            raise ServiceRuntimeError(msg)
+        if not self.started:
+            warn_msg = f'{self._cls_name} already stopped'
+            self._log.warning(warn_msg)
+            raise ServiceRuntimeError(warn_msg)
         try:
-            kill_proc_tree(self._proc.pid)
-            clear_status()
-        except NoSuchProcess as err:
-            self._log.warning('PID %s is not running: %s', self._proc.pid, err)
-            clear_status()
+            self._log.info('Killing proc')
+            await self._killpg(os.getpgid(self._proc.pid), signal.SIGINT)
         except Exception:
             err_msg = 'Failed to kill/disable YouTube stream'
             self._log.exception(err_msg)
             raise ServiceRuntimeError(err_msg)
 
-    def need_restart(self):
+        if disable:
+            self._started.clear()
+
+    @property
+    def need_restart(self) -> bool:
         """Check if the stream needs to be restarted."""
         return int(time.time()) > \
                self._start_ts + self._stream_conf.restart_period
 
-    def restart(self):
+    async def restart(self) -> None:
         """Restart the stream."""
-        if self.is_started():
-            self.stop(disable=False)
+        if self.started:
+            await self.stop(disable=False)
         self._log.debug('Sleeping for %ss', self._stream_conf.restart_pause)
-        shallow_sleep(self._stream_conf.restart_pause)
-        self.start(skip_check=True)
+        await shallow_sleep_async(self._stream_conf.restart_pause)
+        await self.start(skip_check=True)
 
-    def is_enabled_in_conf(self):
+    @property
+    def enabled_in_conf(self) -> bool:
         """Check if stream is enabled in configuration."""
         return self._conf.enabled
 
-    def is_started(self):
+    @property
+    def started(self) -> bool:
         """Check if stream is started."""
         return self._started.is_set()
 
-    def is_alive(self):
+    @property
+    def alive(self) -> bool:
         """Check whether the stream (ffmpeg process) is still running."""
-        alive_state = self._proc.poll() is None
+        alive_state: bool = self._proc.returncode is None
         if not alive_state:
             self._started.clear()
         return alive_state
 
-    def get_stdout(self):
-        return self._proc.stdout.readline().rstrip()
-
-    def _generate_cmd(self):
+    def _generate_cmd(self) -> None:
         try:
             tpl_name_ls = self._conf.livestream_template
-            enc_codec_name, tpl_name_enc = self._conf.encoding_template.split(
-                '.')
+            enc_codec_name, tpl_name_enc = self._conf.encoding_template.split('.')
         except ValueError:
             err_msg = f'Failed to load {self._cls_name} templates'
             self._log.error(err_msg)
             raise ServiceConfigError(err_msg)
 
         self._stream_conf = get_livestream_tpl_config()[self.name][tpl_name_ls]
-        self._enc_conf = get_encoding_tpl_config()[enc_codec_name][
-            tpl_name_enc]
+        self._enc_conf = get_encoding_tpl_config()[enc_codec_name][tpl_name_enc]
 
         null_audio = FFMPEG_CMD_NULL_AUDIO if self._enc_conf.null_audio else \
             {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
@@ -172,56 +189,53 @@ class FFMPEGBaseStreamService(BaseService, metaclass=abc.ABCMeta):
 
         self._generate_transcode_cmd(cmd_tpl, cmd_transcode, enc_codec_name)
 
-    def _generate_scale_cmd(self):
+    def _generate_scale_cmd(self) -> str:
         return FFMPEG_CMD_SCALE_FILTER.format(
             width=self._enc_conf.scale.width,
             height=self._enc_conf.scale.height,
             format=self._enc_conf.scale.format) \
             if self._enc_conf.scale.enabled else ''
 
-    def _generate_x264_cmd(self):
-        return FFMPEG_CMD_TRANSCODE[VideoEncoders.X264].format(
+    def _generate_x264_cmd(self) -> str:
+        return FFMPEG_CMD_TRANSCODE[VideoEncoder.X264].format(
             preset=self._enc_conf.preset,
             tune=self._enc_conf.tune)
 
-    def _generate_vp9_cmd(self):
-        return FFMPEG_CMD_TRANSCODE[VideoEncoders.VP9].format(
+    def _generate_vp9_cmd(self) -> str:
+        return FFMPEG_CMD_TRANSCODE[VideoEncoder.VP9].format(
             deadline=self._enc_conf.deadline,
             speed=self._enc_conf.speed)
 
     @abc.abstractmethod
-    def _generate_transcode_cmd(self, cmd_tpl, cmd_transcode, enc_codec_name):
+    def _generate_transcode_cmd(self, cmd_tpl, cmd_transcode,
+                                enc_codec_name) -> str:
         # Example: self._cmd = cmd_tpl.format(...)
         pass
 
 
-class YouTubeStreamService(FFMPEGBaseStreamService):
+class YouTubeStreamService(AbstractFfmpegStreamService):
     """YouTube livestream Service Class."""
 
-    def __init__(self, conf, hik_user, hik_password, hik_host):
-        super().__init__(Streams.YOUTUBE, conf, hik_user, hik_password,
-                         hik_host)
+    name = Stream.YOUTUBE
 
     def _generate_transcode_cmd(self, cmd_tpl, cmd_transcode, enc_codec_name):
         try:
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()
         except KeyError:
             inner_args = ''
+        inner_args = cmd_transcode.format(inner_args=inner_args)
         self._cmd = cmd_tpl.format(output=self._generate_output(),
-                                   inner_args=cmd_transcode.format(
-                                       inner_args=inner_args))
+                                   inner_args=inner_args)
 
     def _generate_output(self):
         # urljoin does not support rtmp protocol
         return f'{self._stream_conf.url}/{self._stream_conf.key}'
 
 
-class IcecastStreamService(FFMPEGBaseStreamService):
+class IcecastStreamService(AbstractFfmpegStreamService):
     """Icecast livestream Class."""
 
-    def __init__(self, conf, hik_user, hik_password, hik_host):
-        super().__init__(Streams.ICECAST, conf, hik_user, hik_password,
-                         hik_host)
+    name = Stream.ICECAST
 
     def _generate_transcode_cmd(self, cmd_tpl, cmd_transcode, enc_codec_name):
         try:
@@ -242,12 +256,3 @@ class IcecastStreamService(FFMPEGBaseStreamService):
             inner_args=' '.join([
                 cmd_transcode.format(inner_args=inner_args),
                 icecast_args]))
-
-
-class TwitchStreamService(FFMPEGBaseStreamService):
-    """Twitch livestream Class."""
-
-    def __init__(self, conf, hik_user, hik_password, hik_host):
-        super().__init__(Streams.TWITCH, conf, hik_user, hik_password,
-                         hik_host)
-        raise NotImplementedError
