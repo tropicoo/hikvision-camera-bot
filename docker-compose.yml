@@ -5,3 +5,4 @@ services:
     environment:
       - "TZ=Europe/Kiev"
     build: .
+    restart: unless-stopped

@@ -47,3 +47,7 @@ class ServiceConfigError(ServiceError):
 
 class ChunkDetectorError(CameraBotError):
     pass
+
+
+class ChunkLoopError(ServiceError):
+    pass
