@@ -3,7 +3,10 @@ from marshmallow import (
     validates_schema,
 )
 
-from hikcamerabot.constants import CMD_CAM_ID_REGEX, FFMPEG_LOG_LEVELS
+from hikcamerabot.constants import (
+    CMD_CAM_ID_REGEX, FFMPEG_LOG_LEVELS,
+    RTSP_TRANSPORT_TYPES,
+)
 
 
 class LivestreamConf(Schema):
@@ -15,7 +18,7 @@ class LivestreamConf(Schema):
 class Livestream(Schema):
     youtube = f.Nested(LivestreamConf, required=True)
     icecast = f.Nested(LivestreamConf, required=True)
-    twitch = f.Nested(LivestreamConf, required=True)
+    twitch = f.Nested(LivestreamConf, required=False)
 
 
 class Detection(Schema):
@@ -29,6 +32,7 @@ class VideoGif(Schema):
     record_time = f.Integer(required=True, validate=v.Range(min=1))
     tmp_storage = f.String(required=True, validate=v.Length(min=1))
     loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
+    rtsp_transport_type = f.String(required=False, validate=v.OneOf(RTSP_TRANSPORT_TYPES))
 
 
 class Alert(Schema):
@@ -80,7 +84,7 @@ class CamConfig(Schema):
 
 class Watchdog(Schema):
     enabled = f.Boolean(required=True)
-    directory = f.String(required=True, validate=v.Length(min=1))
+    directory = f.String(required=True, validate=v.Length(min=0))
 
 
 class Telegram(Schema):

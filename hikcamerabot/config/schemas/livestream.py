@@ -68,4 +68,4 @@ class Twitch(BaseTemplate):
 class Livestream(Schema):
     youtube = f.Nested(Youtube, required=True)
     icecast = f.Nested(Icecast, required=True)
-    twitch = f.Nested(Twitch, required=True)
+    twitch = f.Nested(Twitch, required=False)
