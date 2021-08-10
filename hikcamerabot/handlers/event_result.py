@@ -41,8 +41,8 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
 
     async def __handle(self, data: dict) -> None:
         cam = data['cam']
-        caption = f'Alert video from {cam.description}\n/cmds_{cam.id}, ' \
-                  f'/list cameras'
+        caption = f'Alert video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, ' \
+                  f'/list_cams cameras'
         for video_path in data['videos']:
             try:
                 for uid in cam.bot.user_ids:
@@ -88,7 +88,7 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
         trigger_name = DETECTION_SWITCH_MAP[detection_key]['name']
 
         caption = f'[{cam.description}] {trigger_name} at {date_} ' \
-                  f'(alert #{alert_count})\n/cmds_{cam.id}, /list cameras'
+                  f'(alert #{alert_count}) {cam.hashtag}\n/cmds_{cam.id}, /list_cams'
 
         async def send_document(photo: Union[InputFile, str]) -> Message:
             if not isinstance(photo, str):
@@ -172,8 +172,8 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
 
         caption = f'[{cam.conf.description}] ' \
                   f'Snapshot taken on {format_ts(data["create_ts"])} ' \
-                  f'(snapshot #{data["taken_count"]})'
-        caption = f'{caption}\n/cmds_{cam.id}, /list'
+                  f'(snapshot #{data["taken_count"]}) {cam.hashtag}'
+        caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending resized cam snapshot')
         await cam.bot.send_chat_action(chat_id=message.chat.id,
@@ -188,8 +188,8 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         date_ = format_ts(data["create_ts"])
         filename = f'Full snapshot {date_}.jpg'
         caption = f'[{cam.description}] Full snapshot at {date_} ' \
-                  f'(snapshot #{data["taken_count"]})'
-        caption = f'{caption}\n/cmds_{cam.id}, /list'
+                  f'(snapshot #{data["taken_count"]}) {cam.hashtag}'
+        caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending full cam snapshot')
         await cam.bot.send_chat_action(chat_id=message.chat.id,

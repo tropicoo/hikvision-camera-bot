@@ -11,6 +11,18 @@ TG_MAX_MSG_SIZE = 4096
 FFMPEG_LOG_LEVELS = {'quiet', 'panic', 'fatal', 'error', 'warning',
                      'info', 'verbose', 'debug', 'trace'}
 RTSP_TRANSPORT_TYPES = {'tcp', 'udp'}
+RTSP_DEFAULT_PORT: int = 554
+
+
+@enum.unique
+class ConfigFile(enum.Enum):
+    MAIN = 'config.json'
+    LIVESTREAM = 'livestream_templates.json'
+    ENCODING = 'encoding_templates.json'
+
+    @classmethod
+    def choices(cls) -> frozenset[str]:
+        return frozenset(member.value for member in cls)
 
 
 class Event:
@@ -66,7 +78,7 @@ class VideoEncoder:
 Http = _HTTPMethod()
 
 FFMPEG_BIN = 'ffmpeg'
-FFMPEG_VIDEO_SOURCE = '"rtsp://{user}:{pw}@{host}/Streaming/Channels/{channel}/"'
+FFMPEG_VIDEO_SOURCE = '"rtsp://{user}:{pw}@{host}:{rtsp_port}/Streaming/Channels/{channel}/"'
 FFMPEG_LOG_LEVEL = '-loglevel {loglevel}'
 
 # VIDEO GIF COMMAND

@@ -55,7 +55,7 @@ def setup_commands() -> tuple[dict, dict[Union[tuple[str, ...], str], Callable]]
     global_cmds = {
         ('start', 'help'): cb.cmd_help,
         'stop': cb.cmd_stop,
-        'list': cb.cmd_list_cams,
+        'list_cams': cb.cmd_list_cams,
     }
 
     return tpl_cmds, global_cmds

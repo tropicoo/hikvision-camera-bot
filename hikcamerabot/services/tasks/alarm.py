@@ -73,6 +73,8 @@ class ServiceAlarmPusherTask(AbstractServiceTask):
 
     async def _send_alert(self, detection_key):
         """Send alert to the user."""
+        if not self._cam.conf.alert[detection_key].sendpic:
+            return
         resize = not self._cam.conf.alert[detection_key].fullpic
         photo, ts = await self._cam.take_snapshot(resize=resize)
         await self._bot.result_dispatcher.dispatch({

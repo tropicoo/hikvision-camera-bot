@@ -20,7 +20,7 @@ async def cmds(message: Message, bot: CameraBot, cam: HikvisionCam) -> None:
     commands = message.bot.cam_registry.get_commands(cam.id)
     presentation = build_command_presentation(commands)
     await message.answer(
-        f'<b>Available commands</b>\n\n{presentation}\n\n/list cameras',
+        f'<b>Available commands</b>\n\n{presentation}\n\n/list_cams',
         parse_mode='HTML')
 
 
@@ -199,5 +199,5 @@ async def cmd_help(message: Message, append: bool = False, requested: bool = Tru
                    cam_id: str = None) -> None:
     """Send help message to telegram chat."""
     log.info('Help message has been requested')
-    await message.answer('Use /list command to show available cameras and commands')
+    await message.answer('Use /list_cams command to show available cameras and commands')
     log.debug('Help message has been sent')

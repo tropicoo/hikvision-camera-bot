@@ -97,17 +97,19 @@ class VideoGifManager:
         user: str = self._conf.api.auth.user
         password: str = self._conf.api.auth.password
         host: str = self._conf.api.host
+        rtsp_port: int = self._conf.rtsp_port
 
         gif_conf: Addict = self._conf.alert.video_gif
         rec_time: int = gif_conf.record_time
         loglevel: str = gif_conf.loglevel
         channel: int = gif_conf.channel
-        rtsp_type: str = gif_conf.get('rtsp_transport_type', 'tcp')
+        rtsp_transport_type: str = gif_conf.rtsp_transport_type
 
         return FFMPEG_VIDEO_GIF_CMD.format(host=urlsplit(host).netloc,
+                                           rtsp_port=rtsp_port,
                                            user=user,
                                            pw=password,
                                            channel=channel,
                                            rec_time=rec_time,
                                            loglevel=loglevel,
-                                           rtsp_transport_type=rtsp_type)
+                                           rtsp_transport_type=rtsp_transport_type)

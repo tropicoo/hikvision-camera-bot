@@ -23,6 +23,7 @@ class HikvisionCam:
         self.id = id
         self.conf = conf
         self.description: str = conf.description
+        self.hashtag: str = f'#{conf.hashtag.lower()}'
         self.bot = bot
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(conf=conf.api)

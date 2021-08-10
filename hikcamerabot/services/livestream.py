@@ -168,6 +168,7 @@ class AbstractFfmpegStreamService(AbstractService, metaclass=abc.ABCMeta):
                                     filter=null_audio['filter'],
                                     format=self._enc_conf.format,
                                     host=urlsplit(self._hik_host).netloc,
+                                    rtsp_port=self.cam.conf.rtsp_port,
                                     loglevel=self._enc_conf.loglevel,
                                     map=null_audio['map'],
                                     pw=self._hik_password,

@@ -76,6 +76,8 @@ Configuration is simply stored in JSON format.
     "camera_list": {
       "cam_1": {
         "description": "Kitchen Camera",
+        "hashtag": "kitchen",
+        "rtsp_port": 554,
         "api": {
           "host": "http://192.168.10.10",
           "auth": {
@@ -96,14 +98,17 @@ Configuration is simply stored in JSON format.
           },
           "motion_detection": {
             "enabled": false,
+            "sendpic": true,
             "fullpic": true
           },
           "line_crossing_detection": {
             "enabled": false,
+            "sendpic": true,
             "fullpic": true
           },
           "intrusion_detection": {
             "enabled": false,
+            "sendpic": true,
             "fullpic": false
           }
         },
@@ -146,7 +151,7 @@ two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
 |---|---|
 | `/start` | Start the bot (one-time action during first start) and show help |
 | `/help` | Show help message |
-| `/list` | List all your cameras with commands |
+| `/list_cams` | List all your cameras |
 | `/cmds_cam_*` | List commands for particular camera |
 | `/getpic_cam_*` | Get resized picture from your Hikvision camera  |
 | `/getfullpic_cam_*` | Get full-sized picture from your Hikvision camera |
@@ -282,7 +287,7 @@ two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
     | `ice_public` | `0` | Icecast public switch, default 0 |
     | `url` | `"icecast://source@x.x.x.x:8000/video.webm"` | Icecast server URL, Port and media mount point |
     | `password` | `"xxxx"` | Icecast authentication password |
-    | `content_type` | `"video`/webm" | FFMPEG content-type for Icecast stream |
+    | `content_type` | `"video/webm"` | FFMPEG content-type for Icecast stream |
     
     <details>
       <summary>encoding_templates-template.json</summary>

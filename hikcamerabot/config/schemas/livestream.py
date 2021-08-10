@@ -3,6 +3,8 @@ from marshmallow import (
     validates_schema,
 )
 
+from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
+
 
 class BaseTemplate(Schema):
     _inner_validation_schema_cls = None
@@ -12,7 +14,7 @@ class BaseTemplate(Schema):
         self._inner_validation_schema = self._inner_validation_schema_cls()
         self._template_validator = f.String(
             required=True,
-            validate=v.Length(min=1))
+            validate=non_empty_str)
 
     @validates_schema
     def validate_all(self, data: dict, **kwargs) -> None:
@@ -26,11 +28,11 @@ class BaseTemplate(Schema):
 
 class Youtube(BaseTemplate):
     class _Youtube(Schema):
-        channel = f.Integer(required=True, validate=v.Range(min=1))
-        restart_period = f.Integer(required=True, validate=v.Range(min=1))
-        restart_pause = f.Integer(required=True, validate=v.Range(min=1))
-        url = f.String(required=True, validate=v.Length(min=1))
-        key = f.String(required=True, validate=v.Length(min=1))
+        channel = f.Integer(required=True, validate=int_min_1)
+        restart_period = f.Integer(required=True, validate=int_min_1)
+        restart_pause = f.Integer(required=True, validate=int_min_1)
+        url = f.String(required=True, validate=non_empty_str)
+        key = f.String(required=True, validate=non_empty_str)
 
     _inner_validation_schema_cls = _Youtube
 
@@ -38,17 +40,17 @@ class Youtube(BaseTemplate):
 class Icecast(BaseTemplate):
     class _Icecast(Schema):
         class _IceStream(Schema):
-            ice_genre = f.String(required=True, validate=v.Length(min=1))
-            ice_name = f.String(required=True, validate=v.Length(min=1))
-            ice_description = f.String(required=True, validate=v.Length(min=1))
+            ice_genre = f.String(required=True, validate=non_empty_str)
+            ice_name = f.String(required=True, validate=non_empty_str)
+            ice_description = f.String(required=True, validate=non_empty_str)
             ice_public = f.Integer(required=True)
-            url = f.String(required=True, validate=v.Length(min=1))
-            password = f.String(required=True, validate=v.Length(min=1))
-            content_type = f.String(required=True, validate=v.Length(min=1))
+            url = f.String(required=True, validate=non_empty_str)
+            password = f.String(required=True, validate=non_empty_str)
+            content_type = f.String(required=True, validate=non_empty_str)
 
-        channel = f.Integer(required=True, validate=v.Range(min=1))
-        restart_period = f.Integer(required=True, validate=v.Range(min=1))
-        restart_pause = f.Integer(required=True, validate=v.Range(min=1))
+        channel = f.Integer(required=True, validate=int_min_1)
+        restart_period = f.Integer(required=True, validate=int_min_1)
+        restart_pause = f.Integer(required=True, validate=int_min_1)
         ice_stream = f.Nested(_IceStream, required=True)
 
     _inner_validation_schema_cls = _Icecast
@@ -56,11 +58,11 @@ class Icecast(BaseTemplate):
 
 class Twitch(BaseTemplate):
     class _Twitch(Schema):
-        channel = f.Integer(required=True, validate=v.Range(min=1))
-        restart_period = f.Integer(required=True, validate=v.Range(min=1))
-        restart_pause = f.Integer(required=True, validate=v.Range(min=1))
-        url = f.String(required=True, validate=v.Length(min=1))
-        key = f.String(required=True, validate=v.Length(min=1))
+        channel = f.Integer(required=True, validate=int_min_1)
+        restart_period = f.Integer(required=True, validate=int_min_1)
+        restart_pause = f.Integer(required=True, validate=int_min_1)
+        url = f.String(required=True, validate=non_empty_str)
+        key = f.String(required=True, validate=non_empty_str)
 
     _inner_validation_schema_cls = _Twitch
 
