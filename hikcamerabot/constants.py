@@ -25,17 +25,23 @@ class ConfigFile(enum.Enum):
         return frozenset(member.value for member in cls)
 
 
+class VideoGifType:
+    ALERT = 'alert'
+    REGULAR = 'regular'
+
+
 class Event:
-    STOP = 'stop'
-    TAKE_SNAPSHOT = 'take_snapshot'
-    CONFIGURE_DETECTION = 'detection_conf'
-    CONFIGURE_ALARM = 'alarm_conf'
-    STREAM = 'stream'
-    STREAM_MSG = 'stream_msg'
     ALERT_MSG = 'alert_msg'
     ALERT_SNAPSHOT = 'alert_snapshot'
     ALERT_VIDEO = 'alert_video'
+    CONFIGURE_ALARM = 'alarm_conf'
+    CONFIGURE_DETECTION = 'detection_conf'
     ERROR_MSG = 'error_message'
+    STOP = 'stop'
+    STREAM = 'stream'
+    STREAM_MSG = 'stream_msg'
+    TAKE_SNAPSHOT = 'take_snapshot'
+    RECORD_VIDEOGIF = 'record_videogif'
 
 
 class _HTTPMethod:

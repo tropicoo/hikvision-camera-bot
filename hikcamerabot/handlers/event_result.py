@@ -16,11 +16,11 @@ class AbstractResultEventHandler(metaclass=abc.ABCMeta):
     def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
 
-    async def handle(self, data: dict) -> None:
-        await self._handle(data)
+    async def handle(self, event: dict) -> None:
+        await self._handle(event)
 
     @abc.abstractmethod
-    async def _handle(self, data: dict) -> None:
+    async def _handle(self, event: dict) -> None:
         pass
 
 
@@ -30,25 +30,25 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
         super().__init__()
         self._video_file_cache: dict[str, str] = {}
 
-    async def _handle(self, data: dict) -> None:
+    async def _handle(self, event: dict) -> None:
         try:
-            await self.__handle(data)
+            await self.__handle(event)
         finally:
             self._cleanup()
 
     def _cleanup(self):
         self._video_file_cache = {}
 
-    async def __handle(self, data: dict) -> None:
-        cam = data['cam']
+    async def __handle(self, event: dict) -> None:
+        cam = event['cam']
+        video_path = event['video_path']
         caption = f'Alert video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, ' \
                   f'/list_cams cameras'
-        for video_path in data['videos']:
-            try:
-                for uid in cam.bot.user_ids:
-                    await self._send_video(uid, video_path, caption, cam.bot)
-            finally:
-                os.remove(video_path)
+        try:
+            for uid in cam.bot.user_ids:
+                await self._send_video(uid, video_path, caption, cam.bot)
+        finally:
+            os.remove(video_path)
 
     async def _send_video(self, uid: int, video_path: str, caption: str,
                           bot) -> None:
@@ -75,16 +75,40 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             return InputFile(video_path), False
 
 
+class ResultRecordVideoGifHandler(AbstractResultEventHandler):
+    """Requested record of video gif result handler."""
+
+    async def _handle(self, event: dict) -> None:
+        await self.__handle(event)
+
+    async def __handle(self, event: dict) -> None:
+        cam = event['cam']
+        message: Message = event['message']  # Stale context, can't `answer`.
+        video_path = event['video_path']
+        caption = f'Video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, ' \
+                  f'/list_cams cameras'
+        try:
+            await cam.bot.send_chat_action(message.chat.id, action='upload_video')
+            await cam.bot.send_video(
+                message.chat.id,
+                video=InputFile(video_path),
+                caption=caption,
+                reply_to_message_id=message.message_id,
+            )
+        finally:
+            os.remove(video_path)
+
+
 class ResultAlertSnapshotHandler(AbstractResultEventHandler):
 
-    async def _handle(self, data: dict) -> None:
-        cam = data['cam']
+    async def _handle(self, event: dict) -> None:
+        cam = event['cam']
 
-        date_ = format_ts(data['ts'])
-        detection_key = data['detection_key']
-        alert_count = data['alert_count']
-        resized = data['resized']
-        photo = InputFile(data['img'])
+        date_ = format_ts(event['ts'])
+        detection_key = event['detection_key']
+        alert_count = event['alert_count']
+        resized = event['resized']
+        photo = InputFile(event['img'])
         trigger_name = DETECTION_SWITCH_MAP[detection_key]['name']
 
         caption = f'[{cam.description}] {trigger_name} at {date_} ' \
@@ -119,11 +143,11 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
 
 class ResultStreamConfHandler(AbstractResultEventHandler):
 
-    async def _handle(self, data: dict):
-        message = data['message']
-        name = data['name']
-        switch = data['params']['switch']
-        msg = data.get('msg') or '{0} stream successfully {1}'.format(
+    async def _handle(self, event: dict):
+        message = event['message']
+        name = event['name']
+        switch = event['params']['switch']
+        msg = event.get('msg') or '{0} stream successfully {1}'.format(
             name, 'enabled' if switch else 'disabled')
         await message.answer(make_bold(msg), parse_mode='HTML')
         self._log.info(msg)
@@ -131,12 +155,12 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
 
 class ResultAlarmConfHandler(AbstractResultEventHandler):
 
-    async def _handle(self, data: dict):
-        message = data['message']
-        name = data['name']
-        switch = data['params']['switch']
+    async def _handle(self, event: dict):
+        message = event['message']
+        name = event['name']
+        switch = event['params']['switch']
 
-        msg = data.get('msg') or '{0} successfully {1}'.format(
+        msg = event.get('msg') or '{0} successfully {1}'.format(
             name, 'enabled' if switch else 'disabled')
         await message.answer(make_bold(msg), parse_mode='HTML')
         self._log.info(msg)
@@ -146,12 +170,12 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
 
 
 class ResultDetectionConfHandler(AbstractResultEventHandler):
-    async def _handle(self, data: dict):
-        message = data['message']
-        name = DETECTION_SWITCH_MAP[data['name']]['name']
-        switch = data['params']['switch']
+    async def _handle(self, event: dict):
+        message = event['message']
+        name = DETECTION_SWITCH_MAP[event['name']]['name']
+        switch = event['params']['switch']
 
-        msg = data.get('msg') or '{0} successfully {1}'.format(
+        msg = event.get('msg') or '{0} successfully {1}'.format(
             name, 'enabled' if switch else 'disabled')
         await message.answer(make_bold(msg), parse_mode='HTML')
         self._log.info(msg)
@@ -162,38 +186,38 @@ class ResultDetectionConfHandler(AbstractResultEventHandler):
 
 class ResultTakeSnapshotHandler(AbstractResultEventHandler):
 
-    async def _handle(self, data: dict) -> None:
-        await self._send_resized_photo(data) if data['params']['resize'] else \
-            await self._send_full_photo(data)
+    async def _handle(self, event: dict) -> None:
+        await self._send_resized_photo(event) if event['params']['resize'] else \
+            await self._send_full_photo(event)
 
-    async def _send_resized_photo(self, data: dict) -> None:
-        cam = data['cam']
-        message: Message = data['message']
+    async def _send_resized_photo(self, event: dict) -> None:
+        cam = event['cam']
+        message: Message = event['message']
 
         caption = f'[{cam.conf.description}] ' \
-                  f'Snapshot taken on {format_ts(data["create_ts"])} ' \
-                  f'(snapshot #{data["taken_count"]}) {cam.hashtag}'
+                  f'Snapshot taken on {format_ts(event["create_ts"])} ' \
+                  f'(snapshot #{event["taken_count"]}) {cam.hashtag}'
         caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending resized cam snapshot')
         await cam.bot.send_chat_action(chat_id=message.chat.id,
                                        action='upload_photo')
-        await message.reply_photo(InputFile(data['img']), caption)
+        await message.reply_photo(InputFile(event['img']), caption)
         self._log.info('Resized snapshot sent')
 
-    async def _send_full_photo(self, data: dict) -> None:
-        cam = data['cam']
-        message: Message = data['message']
+    async def _send_full_photo(self, event: dict) -> None:
+        cam = event['cam']
+        message: Message = event['message']
 
-        date_ = format_ts(data["create_ts"])
+        date_ = format_ts(event["create_ts"])
         filename = f'Full snapshot {date_}.jpg'
         caption = f'[{cam.description}] Full snapshot at {date_} ' \
-                  f'(snapshot #{data["taken_count"]}) {cam.hashtag}'
+                  f'(snapshot #{event["taken_count"]}) {cam.hashtag}'
         caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending full cam snapshot')
         await cam.bot.send_chat_action(chat_id=message.chat.id,
                                        action='upload_photo')
-        photo = InputFile(data['img'], filename=filename)
+        photo = InputFile(event['img'], filename=filename)
         await message.reply_document(document=photo, caption=caption)
         self._log.info('Full snapshot "%s" sent', filename)

@@ -7,6 +7,7 @@ from hikcamerabot.handlers.event_task import (
     TaskDetectionConf,
     TaskStreamConf,
     TaskTakeSnapshot,
+    TaskRecordVideoGif,
 )
 
 
@@ -18,6 +19,7 @@ class EventDispatcher(AbstractDispatcher):
         Event.CONFIGURE_DETECTION: TaskDetectionConf,
         Event.STREAM: TaskStreamConf,
         Event.TAKE_SNAPSHOT: TaskTakeSnapshot,
+        Event.RECORD_VIDEOGIF: TaskRecordVideoGif,
     }
 
     async def dispatch(self, data: dict) -> None:

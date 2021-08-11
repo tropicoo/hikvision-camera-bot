@@ -6,10 +6,10 @@ from typing import AsyncGenerator, Optional
 from addict import Addict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
-from hikcamerabot.constants import DETECTION_SWITCH_MAP, Alarm, Detection
+from hikcamerabot.constants import Alarm, DETECTION_SWITCH_MAP, Detection
 from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
-from hikcamerabot.services.tasks.alarm import SendRecVideoTask, ServiceAlarmPusherTask
+from hikcamerabot.services.tasks.alarm import ServiceAlarmPusherTask
 from hikcamerabot.utils.task import create_task
 
 
@@ -24,12 +24,19 @@ class AlarmService(AbstractService):
         self._api = api
         self.bot = bot
         self.alert_delay: int = conf.delay
-        self.alert_count = 0
+        self._alert_count = 0
 
         self._started = asyncio.Event()
 
         self.type: str = Alarm.SERVICE_TYPE
         self.name: str = Alarm.ALARM
+
+    @property
+    def alert_count(self) -> int:
+        return self._alert_count
+
+    def increase_alert_count(self):
+        self._alert_count += 1
 
     @property
     def started(self) -> bool:
@@ -55,15 +62,6 @@ class AlarmService(AbstractService):
         task_name = f'{ServiceAlarmPusherTask.__name__}_{self.cam.id}'
         create_task(
             ServiceAlarmPusherTask(service=self).run(),
-            task_name=task_name,
-            logger=self._log,
-            exception_message='Task %s raised an exception',
-            exception_message_args=(task_name,),
-        )
-
-        task_name = f'{SendRecVideoTask.__name__}_{self.cam.id}'
-        create_task(
-            SendRecVideoTask(cam=self.cam).run(),
             task_name=task_name,
             logger=self._log,
             exception_message='Task %s raised an exception',

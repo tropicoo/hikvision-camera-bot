@@ -7,6 +7,7 @@ from aiogram import Bot
 from hikcamerabot.config.config import get_main_config
 from hikcamerabot.dispatchers.event_result import ResultDispatcher
 from hikcamerabot.dispatchers.event_task import EventDispatcher
+from hikcamerabot.managers.result_worker import ResultWorkerManager
 from hikcamerabot.registry import CameraRegistry
 from hikcamerabot.utils.task import create_task
 
@@ -23,14 +24,15 @@ class CameraBot(Bot):
         self.cam_registry: Optional[CameraRegistry] = None
         self.event_dispatcher = EventDispatcher()
         self.result_dispatcher = ResultDispatcher()
+        self.result_worker_manager = ResultWorkerManager(self.result_dispatcher)
 
     def add_cam_registry(self, cam_registry: CameraRegistry):
-        # TODO: Rework.
+        # TODO: Get rid of this injection.
         self.cam_registry = cam_registry
 
     async def start_tasks(self) -> None:
         """Start async launch tasks per camera."""
-        # await self.result_work_manager.start_worker_tasks()
+        await self.result_worker_manager.start_worker_tasks()
         for cam in self.cam_registry.get_instances():
             task_name = f'{cam.id} launch task'
             create_task(

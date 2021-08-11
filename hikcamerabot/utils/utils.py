@@ -1,6 +1,8 @@
 """Utils module."""
 import asyncio
 import logging
+import random
+import string
 from datetime import datetime
 from uuid import uuid4
 
@@ -27,6 +29,12 @@ async def shallow_sleep_async(sleep_time: float = 0.1) -> None:
 
 def gen_uuid() -> str:
     return uuid4().hex
+
+
+def gen_random_str(length=4) -> str:
+    return ''.join(
+        random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _
+        in range(length))
 
 
 def format_ts(ts: float, time_format: str = '%a %b %d %H:%M:%S %Y') -> str:

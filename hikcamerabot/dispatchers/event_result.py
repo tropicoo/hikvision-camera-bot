@@ -7,6 +7,7 @@ from hikcamerabot.handlers.event_result import (
     ResultAlertSnapshotHandler,
     ResultAlertVideoHandler,
     ResultDetectionConfHandler,
+    ResultRecordVideoGifHandler,
     ResultStreamConfHandler,
     ResultTakeSnapshotHandler,
 )
@@ -22,6 +23,7 @@ class ResultDispatcher(AbstractDispatcher):
         Event.CONFIGURE_DETECTION: ResultDetectionConfHandler,
         Event.STREAM: ResultStreamConfHandler,
         Event.TAKE_SNAPSHOT: ResultTakeSnapshotHandler,
+        Event.RECORD_VIDEOGIF: ResultRecordVideoGifHandler,
     }
 
     async def dispatch(self, data: dict) -> None:

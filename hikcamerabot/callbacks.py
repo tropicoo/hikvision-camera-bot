@@ -9,7 +9,6 @@ from hikcamerabot.constants import Alarm, Detection, Event, Stream
 from hikcamerabot.decorators import authorization_check, camera_selection
 from hikcamerabot.utils.utils import build_command_presentation, make_bold
 
-
 log = logging.getLogger(__name__)
 
 
@@ -29,9 +28,9 @@ async def cmds(message: Message, bot: CameraBot, cam: HikvisionCam) -> None:
 async def cmd_getpic(message: Message, bot: CameraBot, cam: HikvisionCam) -> None:
     """Get and send resized snapshot from the camera."""
     log.info('Resized cam snapshot from %s requested', cam.description)
-    payload = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
-               'params': {'resize': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
+             'params': {'resize': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -40,9 +39,20 @@ async def cmd_getfullpic(message: Message, bot: CameraBot,
                          cam: HikvisionCam) -> None:
     """Get and send full snapshot from the camera."""
     log.info('Full cam snapshot requested')
-    payload = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
-               'params': {'resize': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
+             'params': {'resize': False}}
+    await bot.event_dispatcher.dispatch(event)
+
+
+@authorization_check
+@camera_selection
+async def cmd_getvideo(message: Message, bot: CameraBot,
+                       cam: HikvisionCam) -> None:
+    """Get and send full snapshot from the camera."""
+    log.info('Get video gif requested')
+    event = {'cam': cam, 'event': Event.RECORD_VIDEOGIF, 'message': message,
+             'params': {}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -77,9 +87,9 @@ async def cmd_list_cams(message: Message) -> None:
 async def cmd_intrusion_detection_on(message: Message, bot: CameraBot,
                                      cam: HikvisionCam) -> None:
     """Enable camera's Intrusion Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.INTRUSION.value, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.INTRUSION.value, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -87,9 +97,9 @@ async def cmd_intrusion_detection_on(message: Message, bot: CameraBot,
 async def cmd_intrusion_detection_off(message: Message, bot: CameraBot,
                                       cam: HikvisionCam) -> None:
     """Disable camera's Intrusion Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.INTRUSION.value, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.INTRUSION.value, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -97,9 +107,9 @@ async def cmd_intrusion_detection_off(message: Message, bot: CameraBot,
 async def cmd_motion_detection_on(message: Message, bot: CameraBot,
                                   cam: HikvisionCam) -> None:
     """Enable camera's Motion Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.MOTION.value, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.MOTION.value, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -107,9 +117,9 @@ async def cmd_motion_detection_on(message: Message, bot: CameraBot,
 async def cmd_motion_detection_off(message: Message, bot: CameraBot,
                                    cam: HikvisionCam) -> None:
     """Disable camera's Motion Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.MOTION.value, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.MOTION.value, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -117,9 +127,9 @@ async def cmd_motion_detection_off(message: Message, bot: CameraBot,
 async def cmd_line_detection_on(message: Message, bot: CameraBot,
                                 cam: HikvisionCam) -> None:
     """Enable camera's Line Crossing Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.LINE.value, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.LINE.value, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -127,9 +137,9 @@ async def cmd_line_detection_on(message: Message, bot: CameraBot,
 async def cmd_line_detection_off(message: Message, bot: CameraBot,
                                  cam: HikvisionCam) -> None:
     """Disable camera's Line Crossing Detection."""
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-               'name': Detection.LINE.value, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
+             'name': Detection.LINE.value, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -137,9 +147,9 @@ async def cmd_line_detection_off(message: Message, bot: CameraBot,
 async def cmd_stream_yt_on(message: Message, bot: CameraBot,
                            cam: HikvisionCam) -> None:
     """Start YouTube stream."""
-    payload = {'cam': cam, 'message': message, 'event': Event.STREAM,
-               'name': Stream.YOUTUBE, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.STREAM,
+             'name': Stream.YOUTUBE, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -147,9 +157,9 @@ async def cmd_stream_yt_on(message: Message, bot: CameraBot,
 async def cmd_stream_yt_off(message: Message, bot: CameraBot,
                             cam: HikvisionCam) -> None:
     """Stop YouTube stream."""
-    payload = {'cam': cam, 'message': message, 'event': Event.STREAM,
-               'name': Stream.YOUTUBE, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.STREAM,
+             'name': Stream.YOUTUBE, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -157,9 +167,9 @@ async def cmd_stream_yt_off(message: Message, bot: CameraBot,
 async def cmd_stream_icecast_on(message: Message, bot: CameraBot,
                                 cam: HikvisionCam) -> None:
     """Start Icecast stream."""
-    payload = {'cam': cam, 'message': message, 'event': Event.STREAM,
-               'name': Stream.ICECAST, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.STREAM,
+             'name': Stream.ICECAST, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -167,9 +177,9 @@ async def cmd_stream_icecast_on(message: Message, bot: CameraBot,
 async def cmd_stream_icecast_off(message: Message, bot: CameraBot,
                                  cam: HikvisionCam) -> None:
     """Stop Icecast stream."""
-    payload = {'cam': cam, 'message': message, 'event': Event.STREAM,
-               'name': Stream.ICECAST, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.STREAM,
+             'name': Stream.ICECAST, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -178,9 +188,9 @@ async def cmd_alert_on(message: Message, bot: CameraBot,
                        cam: HikvisionCam) -> None:
     """Enable camera's Alert Mode."""
     log.info('Enabling camera\'s alert mode requested')
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
-               'name': Alarm.ALARM, 'params': {'switch': True}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
+             'name': Alarm.ALARM, 'params': {'switch': True}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -189,9 +199,9 @@ async def cmd_alert_off(message: Message, bot: CameraBot,
                         cam: HikvisionCam) -> None:
     """Disable camera's Alert Mode."""
     log.info('Disabling camera\'s alert mode requested')
-    payload = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
-               'name': Alarm.ALARM, 'params': {'switch': False}}
-    await bot.event_dispatcher.dispatch(payload)
+    event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
+             'name': Alarm.ALARM, 'params': {'switch': False}}
+    await bot.event_dispatcher.dispatch(event)
 
 
 @authorization_check
@@ -199,5 +209,6 @@ async def cmd_help(message: Message, append: bool = False, requested: bool = Tru
                    cam_id: str = None) -> None:
     """Send help message to telegram chat."""
     log.info('Help message has been requested')
-    await message.answer('Use /list_cams command to show available cameras and commands')
+    await message.answer(
+        'Use /list_cams command to show available cameras and commands')
     log.debug('Help message has been sent')

@@ -23,13 +23,12 @@ class HikvisionCam:
         self.id = id
         self.conf = conf
         self.description: str = conf.description
-        self.hashtag: str = f'#{conf.hashtag.lower()}'
+        self.hashtag: str = f'#{conf.hashtag.lower()}' if conf.hashtag else ''
         self.bot = bot
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(conf=conf.api)
 
         self._img = ImageProcessor()
-        self.video_manager = VideoGifManager(self.id, conf)
 
         self.alarm = AlarmService(conf=conf.alert, api=self._api, cam=self, bot=bot)
         self.stream_yt = YouTubeStreamService(
@@ -50,6 +49,7 @@ class HikvisionCam:
         self.service_manager.register((self.alarm, self.stream_yt,
                                        self.stream_icecast))
         self.snapshots_taken = 0
+        self.video_manager = VideoGifManager(cam=self, conf=conf)
 
     def __repr__(self) -> str:
         return f'<HikvisionCam desc="{self.description}">'

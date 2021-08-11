@@ -12,6 +12,7 @@ def setup_commands() -> tuple[dict, dict[Union[tuple[str, ...], str], Callable]]
                 'cmds_{0}': cb.cmds,
                 'getpic_{0}': cb.cmd_getpic,
                 'getfullpic_{0}': cb.cmd_getfullpic,
+                'getvideo_{0}': cb.cmd_getvideo,
             },
         },
         'Motion Detection': {
