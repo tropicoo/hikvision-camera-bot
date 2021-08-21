@@ -11,7 +11,7 @@ TG_MAX_MSG_SIZE = 4096
 FFMPEG_LOG_LEVELS = {'quiet', 'panic', 'fatal', 'error', 'warning',
                      'info', 'verbose', 'debug', 'trace'}
 RTSP_TRANSPORT_TYPES = {'tcp', 'udp'}
-RTSP_DEFAULT_PORT: int = 554
+RTSP_DEFAULT_PORT = 554
 
 
 @enum.unique

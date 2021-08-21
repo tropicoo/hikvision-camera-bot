@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 @camera_selection
 async def cmds(message: Message, bot: CameraBot, cam: HikvisionCam) -> None:
     """Print camera commands."""
-    commands = message.bot.cam_registry.get_commands(cam.id)
+    commands = bot.cam_registry.get_commands(cam.id)
     presentation = build_command_presentation(commands)
     await message.answer(
         f'<b>Available commands</b>\n\n{presentation}\n\n/list_cams',
@@ -67,12 +67,12 @@ async def cmd_stop(message: Message) -> None:
 async def cmd_list_cams(message: Message) -> None:
     """List user's cameras."""
     log.info('Camera list has been requested')
-
-    cam_count: int = message.bot.cam_registry.get_count()
+    bot: CameraBot = message.bot # noqa
+    cam_count = bot.cam_registry.get_count()
     msg = [make_bold('You have {0} camera{1}'.format(
         cam_count, '' if cam_count == 1 else 's'))]
 
-    for cam_id, meta in message.bot.cam_registry.get_all().items():
+    for cam_id, meta in bot.cam_registry.get_all().items():
         msg.append(
             f'<b>Camera:</b> {cam_id}\n'
             f'<b>Description:</b> {meta["cam"].description}\n'

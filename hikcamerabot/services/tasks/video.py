@@ -2,13 +2,18 @@ import asyncio
 import logging
 import os
 import time
+from typing import TYPE_CHECKING
 
-from addict import Addict
+from addict import Dict
 from aiogram.types import Message
 
 from hikcamerabot.config.config import get_result_queue
 from hikcamerabot.constants import Event, VideoGifType
 from hikcamerabot.utils.utils import format_ts, gen_random_str
+
+if TYPE_CHECKING:
+    from hikcamerabot.camerabot import CameraBot
+    from hikcamerabot.camera import HikvisionCam
 
 
 class RecordVideoTask:
@@ -24,8 +29,8 @@ class RecordVideoTask:
 
     FILENAME_TIME_FORMAT = '%Y-%b-%d--%H-%M-%S'
 
-    def __init__(self, ffmpeg_cmd: str, storage_path: str, conf: Addict,
-                 cam, video_type: str, context: Message = None):
+    def __init__(self, ffmpeg_cmd: str, storage_path: str, conf: Dict,
+                 cam: 'HikvisionCam', video_type: str, context: Message = None):
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
         self._cam = cam
@@ -33,7 +38,7 @@ class RecordVideoTask:
         self._video_type = video_type
         self._file_path = os.path.join(storage_path, self._get_filename())
         self._ffmpeg_cmd_full = f'{ffmpeg_cmd} {self._file_path}'
-        self._context = context
+        self._msg = context
         self._event = self._video_type_to_event[self._video_type]
 
     async def run(self) -> None:
@@ -50,9 +55,9 @@ class RecordVideoTask:
             err_msg = f'Failed to record {self._file_path}'
             self._log.error(err_msg)
             await self._bot.send_message(
-                self._context.chat.id,
+                self._msg.chat.id,
                 text=f'{err_msg}.\nEvent type: {self._event}\nCheck logs.',
-                reply_to_message_id=self._context.message_id if self._context else None,
+                reply_to_message_id=self._msg.message_id if self._msg else None,
             )
         return validated
 
@@ -82,7 +87,7 @@ class RecordVideoTask:
             'event': self._event,
             'video_path': self._file_path,
             'cam': self._cam,
-            'message': self._context
+            'message': self._msg
         })
 
     def _get_filename(self) -> str:

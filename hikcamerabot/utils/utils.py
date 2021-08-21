@@ -53,7 +53,7 @@ def get_user_info(message: Message) -> str:
            f'full name: {chat.full_name}'
 
 
-def build_command_presentation(commands: dict) -> str:
+def build_command_presentation(commands: dict[str, list]) -> str:
     groups = []
     for desc, cmds in commands.items():
         groups.append('{0}\n{1}'.format(desc, '\n'.join(['/' + c for c in cmds])))

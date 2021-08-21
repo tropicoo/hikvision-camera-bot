@@ -3,7 +3,7 @@ import logging
 from collections import deque
 from urllib.parse import urlsplit
 
-from addict import Addict
+from addict import Dict
 from aiogram.types import Message
 
 from hikcamerabot.constants import FFMPEG_VIDEO_GIF_CMD, VideoGifType
@@ -14,7 +14,7 @@ from hikcamerabot.utils.task import create_task
 class VideoGifManager:
     """Video Gif Manager Class."""
 
-    def __init__(self, cam, conf: Addict):
+    def __init__(self, cam, conf: Dict):
         """Constructor.
 
         :Parameters:
@@ -69,7 +69,7 @@ class VideoGifManager:
         host: str = self._conf.api.host
         rtsp_port: int = self._conf.rtsp_port
 
-        gif_conf: Addict = self._conf.alert.video_gif
+        gif_conf: Dict = self._conf.alert.video_gif
         rec_time: int = gif_conf.record_time
         loglevel: str = gif_conf.loglevel
         channel: int = gif_conf.channel

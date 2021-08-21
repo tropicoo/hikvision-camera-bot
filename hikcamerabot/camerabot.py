@@ -20,7 +20,7 @@ class CameraBot(Bot):
         super().__init__(conf.telegram.token)
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.info('Initializing bot')
-        self.user_ids = conf.telegram.allowed_user_ids
+        self.user_ids: list[int] = conf.telegram.allowed_user_ids
         self.cam_registry: Optional[CameraRegistry] = None
         self.event_dispatcher = EventDispatcher()
         self.result_dispatcher = ResultDispatcher()

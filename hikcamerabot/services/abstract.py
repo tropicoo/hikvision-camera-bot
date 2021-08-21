@@ -1,8 +1,11 @@
 import abc
 import logging
-from typing import Optional, Union
+from typing import Optional, TYPE_CHECKING, Union
 
 from hikcamerabot.constants import Alarm, Stream
+
+if TYPE_CHECKING:
+    from hikcamerabot.camera import HikvisionCam
 
 
 class AbstractService(metaclass=abc.ABCMeta):

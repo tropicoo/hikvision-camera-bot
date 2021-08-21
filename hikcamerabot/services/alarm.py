@@ -3,7 +3,7 @@
 import asyncio
 from typing import AsyncGenerator, Optional
 
-from addict import Addict
+from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
 from hikcamerabot.constants import Alarm, DETECTION_SWITCH_MAP, Detection
@@ -18,7 +18,7 @@ class AlarmService(AbstractService):
 
     ALARM_TRIGGERS: frozenset[str] = Detection.choices()
 
-    def __init__(self, conf: Addict, api: HikvisionAPI, cam: 'HikvisionCam', bot):
+    def __init__(self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot):
         super().__init__(cam)
         self._conf = conf
         self._api = api

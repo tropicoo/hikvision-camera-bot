@@ -3,34 +3,42 @@ import asyncio
 import logging
 from datetime import datetime
 from io import BytesIO
+from typing import TYPE_CHECKING
 
-from addict import Addict
+from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
 from hikcamerabot.managers.service import ServiceManager
 from hikcamerabot.managers.video import VideoGifManager
 from hikcamerabot.services.alarm import AlarmService
-from hikcamerabot.services.livestream import IcecastStreamService, YouTubeStreamService
+from hikcamerabot.services.livestream import (
+    IcecastStreamService,
+    YouTubeStreamService,
+)
 from hikcamerabot.utils.image import ImageProcessor
+
+if TYPE_CHECKING:
+    from hikcamerabot.camerabot import CameraBot
 
 
 class HikvisionCam:
     """Hikvision Camera Class."""
 
-    def __init__(self, id: str, conf: Addict, bot):
+    def __init__(self, id: str, conf: Dict, bot: 'CameraBot'):  # noqa
         self._log = logging.getLogger(self.__class__.__name__)
         self.id = id
         self.conf = conf
         self.description: str = conf.description
-        self.hashtag: str = f'#{conf.hashtag.lower()}' if conf.hashtag else ''
+        self.hashtag = f'#{conf.hashtag.lower()}' if conf.hashtag else ''
         self.bot = bot
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(conf=conf.api)
 
         self._img = ImageProcessor()
 
-        self.alarm = AlarmService(conf=conf.alert, api=self._api, cam=self, bot=bot)
+        self.alarm = AlarmService(conf=conf.alert, api=self._api, cam=self,
+                                  bot=bot)
         self.stream_yt = YouTubeStreamService(
             conf=conf.livestream.youtube,
             hik_user=conf.api.auth.user,

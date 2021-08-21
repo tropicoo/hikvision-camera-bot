@@ -2,9 +2,15 @@
 
 import re
 from functools import wraps
+from typing import TYPE_CHECKING
+
+from aiogram.types import Message
 
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
 from hikcamerabot.utils.utils import get_user_info
+
+if TYPE_CHECKING:
+    from hikcamerabot.camerabot import CameraBot
 
 
 # def event_error_handler(func):
@@ -48,8 +54,8 @@ def authorization_check(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        message = args[0]
-        bot = message.bot
+        message: Message = args[0]
+        bot: 'CameraBot' = message.bot  # noqa
         bot._log.debug(get_user_info(message))  # noqa
 
         if message.chat.id in bot.user_ids:
@@ -66,8 +72,8 @@ def camera_selection(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        message = args[0]
-        bot = message.bot
+        message: Message = args[0]
+        bot: 'CameraBot' = message.bot # noqa
         cam_id = re.split(CMD_CAM_ID_REGEX, message.text)[-1]
         cam = bot.cam_registry.get_instance(cam_id)
         try:

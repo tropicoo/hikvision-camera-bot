@@ -1,9 +1,10 @@
 import abc
 import logging
+from typing import Optional
 
 
 class AbstractServiceTask(abc.ABC):
-    type = None
+    type: Optional[str] = None
     _event_manager_cls = None
 
     def __init__(self, service):

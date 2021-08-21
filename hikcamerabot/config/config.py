@@ -6,7 +6,7 @@ import sys
 from asyncio import Queue
 from pathlib import Path
 
-from addict import Addict
+from addict import Dict
 from marshmallow import ValidationError
 
 from hikcamerabot.config.schemas import config_schema_mapping
@@ -19,13 +19,13 @@ class ConfigLoader:
     def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
 
-    def load_configs(self) -> list[Addict, ...]:
+    def load_configs(self) -> list[Dict, ...]:
         data, errors = self._load_configs()
         if errors:
             self._process_errors_and_exit(errors)
         return data
 
-    def _load_configs(self) -> tuple[list[Addict, ...], dict]:
+    def _load_configs(self) -> tuple[list[Dict, ...], dict]:
         """Loads telegram and camera configuration from config file."""
         config_data = []
         errors = {}
@@ -44,7 +44,7 @@ class ConfigLoader:
 
                 if conf_filename == ConfigFile.MAIN.value:
                     data = self._fix_camera_list_key_ordering(data)
-                config_data.append(Addict(data))
+                config_data.append(Dict(data))
 
         return config_data, errors
 
@@ -81,13 +81,13 @@ config_loader = ConfigLoader()
 _CONF_MAIN, _CONF_LIVESTREAM_TPL, _CONF_ENCODING_TPL = config_loader.load_configs()
 
 
-def get_main_config() -> Addict:
+def get_main_config() -> Dict:
     return _CONF_MAIN
 
 
-def get_livestream_tpl_config() -> Addict:
+def get_livestream_tpl_config() -> Dict:
     return _CONF_LIVESTREAM_TPL
 
 
-def get_encoding_tpl_config() -> Addict:
+def get_encoding_tpl_config() -> Dict:
     return _CONF_ENCODING_TPL

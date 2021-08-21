@@ -6,7 +6,7 @@ from typing import Any, AsyncGenerator, Optional
 from urllib.parse import urljoin
 
 import httpx
-from addict import Addict
+from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
@@ -19,7 +19,7 @@ from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 class HikvisionAPI:
     """Hikvision API Class."""
 
-    def __init__(self, conf: Addict):
+    def __init__(self, conf: Dict):
         self._log = logging.getLogger(self.__class__.__name__)
         self.__conf = conf
         self._host = self.__conf.host
