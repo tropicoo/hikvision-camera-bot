@@ -4,6 +4,6 @@ aiogram==2.14.3
 httpx==0.18.2
 marshmallow==3.13.0
 tenacity==8.0.1
-ujson==4.0.2
+ujson==5.1.0
 uvloop==0.15.3
 xmltodict==0.12.0
