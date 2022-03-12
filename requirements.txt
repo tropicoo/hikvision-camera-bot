@@ -1,4 +1,4 @@
-Pillow==9.0.0
+Pillow==9.0.1
 addict==2.4.0
 aiogram==2.14.3
 httpx==0.18.2
