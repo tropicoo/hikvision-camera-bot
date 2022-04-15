@@ -167,15 +167,11 @@ Configuration files are stored in JSON format and can be found in `configs` dire
 
 # Usage
 ## Launch by using Docker and Docker Compose
-1. Set your timezone by editing `docker-compose.yaml` file.
+1. Set your timezone by editing `.env` file (`TZ=Europe/Kiev`).
 Currently, there is Ukrainian timezone because I live there.
 Look for your timezone here [http://www.timezoneconverter.com/cgi-bin/zoneinfo](http://www.timezoneconverter.com/cgi-bin/zoneinfo).
-If you want to use default UTC time format, just completely remove these 
-two lines or set Greenwich Mean Time timezone `"TZ=GMT"`
-    ```yaml
-    environment:
-      - "TZ=Europe/Kiev"
-    ```
+If you want to use default UTC time format, set Greenwich Mean Time timezone `TZ=GMT`
+
 2. Build image and run container in detached mode
     ```bash
     sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
