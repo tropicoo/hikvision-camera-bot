@@ -1,0 +1,189 @@
+{
+  "telegram": {
+    "api_id": 11111111,
+    "api_hash": "1a1a1a1a1a1a1a1a",
+    "lang_code": "en",
+    "token": "1b1b1b1b1b1b1b1b",
+    "allowed_user_ids": [
+      1010101010,
+      2020202020
+    ]
+  },
+  "log_level": "DEBUG",
+  "camera_list": {
+    "cam_1": {
+      "hidden": false,
+      "description": "Kitchen",
+      "hashtag": "kitchen",
+      "api": {
+        "host": "http://192.168.1.1",
+        "auth": {
+          "user": "dummy-user",
+          "password": "dummy-password"
+        },
+        "stream_timeout": 10
+      },
+      "alert": {
+        "delay": 15,
+        "video_gif": {
+          "enabled": true,
+          "channel": 102,
+          "record_time": 10,
+          "tmp_storage": "/tmp",
+          "loglevel": "error",
+          "rtsp_transport_type": "tcp"
+        },
+        "motion_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        },
+        "intrusion_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        }
+      },
+      "livestream": {
+        "youtube": {
+          "enabled": false,
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "direct.kitchen_youtube"
+        },
+        "telegram": {
+          "enabled": false,
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "direct.kitchen_telegram"
+        },
+        "srs": {
+          "enabled": true,
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "direct.kitchen_srs"
+        },
+        "dvr": {
+          "enabled": false,
+          "local_storage_path": "/data/dvr",
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "direct.kitchen_dvr",
+          "upload": {
+            "delete_after_upload": true,
+            "storage": {
+              "telegram": {
+                "enabled": false,
+                "group_id": -10000000
+              }
+            }
+          }
+        },
+        "icecast": {
+          "enabled": false,
+          "livestream_template": "tpl_kitchen",
+          "encoding_template": "vp9.kitchen"
+        }
+      },
+      "command_sections_visibility": {
+        "general": true,
+        "infrared": true,
+        "motion_detection": true,
+        "line_detection": true,
+        "intrusion_detection": true,
+        "alert_service": true,
+        "stream_youtube": true,
+        "stream_telegram": true,
+        "stream_icecast": true
+      }
+    },
+    "cam_2": {
+      "hidden": false,
+      "description": "Basement",
+      "hashtag": "basement",
+      "api": {
+        "host": "http://192.168.1.2",
+        "auth": {
+          "user": "dummy-user",
+          "password": "dummy-password"
+        },
+        "stream_timeout": 10
+      },
+      "alert": {
+        "delay": 15,
+        "video_gif": {
+          "enabled": true,
+          "channel": 102,
+          "record_time": 10,
+          "tmp_storage": "/tmp",
+          "loglevel": "error",
+          "rtsp_transport_type": "tcp"
+        },
+        "motion_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        },
+        "line_crossing_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        },
+        "intrusion_detection": {
+          "enabled": true,
+          "sendpic": true,
+          "fullpic": true
+        }
+      },
+      "livestream": {
+        "youtube": {
+          "enabled": false,
+          "livestream_template": "tpl_basement",
+          "encoding_template": "direct.basement_youtube"
+        },
+        "telegram": {
+          "enabled": false,
+          "livestream_template": "tpl_basement",
+          "encoding_template": "direct.basement_telegram"
+        },
+        "srs": {
+          "enabled": true,
+          "livestream_template": "tpl_basement",
+          "encoding_template": "direct.basement_srs"
+        },
+        "dvr": {
+          "enabled": false,
+          "local_storage_path": "/data/dvr",
+          "livestream_template": "tpl_basement",
+          "encoding_template": "direct.basement_dvr",
+          "upload": {
+            "delete_after_upload": true,
+            "storage": {
+              "telegram": {
+                "enabled": false,
+                "group_id": -10000000
+              }
+            }
+          }
+        },
+        "icecast": {
+          "enabled": false,
+          "livestream_template": "tpl_basement",
+          "encoding_template": "vp9.basement"
+        }
+      },
+      "command_sections_visibility": {
+        "general": true,
+        "infrared": true,
+        "motion_detection": true,
+        "line_detection": true,
+        "intrusion_detection": true,
+        "alert_service": true,
+        "stream_youtube": true,
+        "stream_telegram": true,
+        "stream_icecast": true
+      }
+    }
+  }
+}

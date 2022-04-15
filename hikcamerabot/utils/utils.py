@@ -4,9 +4,16 @@ import logging
 import random
 import string
 from datetime import datetime
+from typing import Any, TYPE_CHECKING
 from uuid import uuid4
 
-from aiogram.types import Message
+from pyrogram.types import Message
+
+from hikcamerabot.config.config import get_main_config
+from hikcamerabot.constants import CmdSectionType
+
+if TYPE_CHECKING:
+    from hikcamerabot.camera import HikvisionCam
 
 
 class Singleton(type):
@@ -14,7 +21,7 @@ class Singleton(type):
 
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args, **kwargs) -> Any:
         """Check whether instance already exists.
 
         Return existing or create new instance and save to dict."""
@@ -50,16 +57,22 @@ def get_user_info(message: Message) -> str:
     """Return user information who interacts with bot."""
     chat = message.chat
     return f'Request from user_id: {chat.id}, username: {chat.username}, ' \
-           f'full name: {chat.full_name}'
+           f'full name: {chat.first_name} {chat.last_name}'
 
 
-def build_command_presentation(commands: dict[str, list]) -> str:
+def build_command_presentation(commands: dict[str, list[str]],
+                               cam: 'HikvisionCam') -> str:
     groups = []
-    for desc, cmds in commands.items():
-        groups.append('{0}\n{1}'.format(desc, '\n'.join(['/' + c for c in cmds])))
+    visibility_opts: dict[str, bool] = cam.conf.command_sections_visibility
+    for section_desc, cmds in commands.items():
+        if visibility_opts[CmdSectionType(section_desc).name]:
+            rendered_cmds = '\n'.join([f'/{cmd}' for cmd in cmds])
+            groups.append(f'{section_desc}\n{rendered_cmds}')
     return '\n\n'.join(groups)
 
 
 def setup_logging() -> None:
+    logging.getLogger().setLevel(get_main_config().log_level)
+    logging.getLogger('pyrogram').setLevel(logging.WARNING)
     log_format = '%(asctime)s - [%(levelname)s] - [%(name)s:%(lineno)s] - %(message)s'
     logging.basicConfig(format=log_format)

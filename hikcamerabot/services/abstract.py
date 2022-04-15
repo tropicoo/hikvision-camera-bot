@@ -2,7 +2,7 @@ import abc
 import logging
 from typing import Optional, TYPE_CHECKING, Union
 
-from hikcamerabot.constants import Alarm, Stream
+from hikcamerabot.constants import Alarm, Detection, Stream
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -11,14 +11,13 @@ if TYPE_CHECKING:
 class AbstractService(metaclass=abc.ABCMeta):
     """Base Service Class."""
 
-    name: str = None
+    name: Optional[Detection] = None
+    type: Optional[Union[Alarm, Stream]] = None
 
-    def __init__(self, cam: 'HikvisionCam'):
+    def __init__(self, cam: 'HikvisionCam') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._cls_name = self.__class__.__name__
         self.cam = cam
-
-        self.type: Optional[Union[Alarm, Stream]] = None
 
     def __str__(self) -> str:
         return self._cls_name

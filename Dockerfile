@@ -10,11 +10,16 @@ RUN apk add --no-cache \
 COPY ./requirements.txt /app/requirements.txt
 
 WORKDIR /app
+
 RUN apk add --no-cache --virtual .build-deps \
-    linux-headers libffi-dev zlib-dev build-base && \
-    pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apk --purge del .build-deps
+        linux-headers \
+        libffi-dev \
+        zlib-dev \
+        build-base \
+    && pip install --upgrade pip setuptools wheel \
+    && MAKEFLAGS="-j$(nproc)" \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apk --purge del .build-deps
 
 COPY . /app
 

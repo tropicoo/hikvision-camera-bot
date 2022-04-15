@@ -1,6 +1,6 @@
+import asyncio
 import logging
 
-from hikcamerabot.config.config import get_main_config
 from hikcamerabot.setup import BotSetup
 from hikcamerabot.version import __version__
 
@@ -10,27 +10,27 @@ class BotLauncher:
     camera instances and finally starts the bot.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
-        logging.getLogger().setLevel(get_main_config().log_level)
         self._setup = BotSetup()
         self._bot = self._setup.get_bot()
-        self._dispatcher = self._setup.get_dispatcher()
 
-    async def run(self) -> None:
-        """Run bot and DirectoryWatcher."""
-        self._log.info('Starting %s bot version %s',
-                       (await self._bot.me).first_name, __version__)
+    async def launch(self) -> None:
+        """Launch (run) bot."""
         await self._start_bot()
 
     async def _start_bot(self) -> None:
         """Start telegram bot and related processes."""
-        await self._bot.start_tasks()
-        await self._bot.send_startup_message()
+        await self._bot.start()
 
-        # TODO: Look into theirs `executor`.
-        try:
-            await self._dispatcher.start_polling()
-        finally:
-            await self._dispatcher.bot.close()
+        self._log.info('Starting %s bot version %s',
+                       (await self._bot.get_me()).first_name, __version__)
+
+        self._bot.start_tasks()
+        await self._bot.send_startup_message()
+        await self._run_bot_forever()
+
+    async def _run_bot_forever(self) -> None:
+        while True:
+            await asyncio.sleep(86400)

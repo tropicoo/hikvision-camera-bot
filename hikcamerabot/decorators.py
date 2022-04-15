@@ -4,7 +4,7 @@ import re
 from functools import wraps
 from typing import TYPE_CHECKING
 
-from aiogram.types import Message
+from pyrogram.types import Message
 
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
 from hikcamerabot.utils.utils import get_user_info
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 #         handler, data = args
 #         try:
 #             return await func(*args, **kwargs)
-#         except Exception as err:
+#         except Exceptio n as err:
 #             return {'error_full': traceback.format_exc(), 'error': str(err),
 #                     **data}
 #
@@ -54,15 +54,15 @@ def authorization_check(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        message: Message = args[0]
-        bot: 'CameraBot' = message.bot  # noqa
+        bot: CameraBot = args[0]
+        message: Message = args[1]
         bot._log.debug(get_user_info(message))  # noqa
 
         if message.chat.id in bot.user_ids:
             return await func(*args, **kwargs)
 
         bot._log.error('User authorization error: %s', message.chat.id)  # noqa
-        await message.answer('Not authorized')
+        await message.reply_text('Not authorized')
 
     return wrapper
 
@@ -72,12 +72,12 @@ def camera_selection(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        message: Message = args[0]
-        bot: 'CameraBot' = message.bot # noqa
+        bot: CameraBot = args[0]
+        message: Message = args[1]
         cam_id = re.split(CMD_CAM_ID_REGEX, message.text)[-1]
         cam = bot.cam_registry.get_instance(cam_id)
         try:
-            return await func(*args, bot=bot, cam=cam, **kwargs)
+            return await func(*args, cam=cam, **kwargs)
         except Exception:
             bot._log.exception('Failed to process event for %s', cam_id)
 

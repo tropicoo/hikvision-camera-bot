@@ -5,9 +5,10 @@ from hikcamerabot.dispatchers.abstract import AbstractDispatcher
 from hikcamerabot.handlers.event_task import (
     TaskAlarmConf,
     TaskDetectionConf,
+    TaskIrcutFilterConf,
+    TaskRecordVideoGif,
     TaskStreamConf,
     TaskTakeSnapshot,
-    TaskRecordVideoGif,
 )
 
 
@@ -17,6 +18,7 @@ class EventDispatcher(AbstractDispatcher):
     DISPATCH = {
         Event.CONFIGURE_ALARM: TaskAlarmConf,
         Event.CONFIGURE_DETECTION: TaskDetectionConf,
+        Event.CONFIGURE_IRCUT_FILTER: TaskIrcutFilterConf,
         Event.STREAM: TaskStreamConf,
         Event.TAKE_SNAPSHOT: TaskTakeSnapshot,
         Event.RECORD_VIDEOGIF: TaskRecordVideoGif,

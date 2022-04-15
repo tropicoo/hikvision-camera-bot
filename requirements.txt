@@ -1,9 +1,9 @@
-Pillow==8.3.1
+Pillow==9.0.1
+Pyrogram==1.4.9
 addict==2.4.0
-aiogram==2.14.3
-httpx==0.18.2
-marshmallow==3.13.0
+httpx==0.21.1
+marshmallow==3.14.1
 tenacity==8.0.1
-ujson==4.0.2
-uvloop==0.15.3
+tgcrypto==1.2.3
+ujson>=5.1.0
 xmltodict==0.12.0

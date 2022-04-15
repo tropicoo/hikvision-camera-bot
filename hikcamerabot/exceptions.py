@@ -17,10 +17,6 @@ class HikvisionCamError(Exception):
     pass
 
 
-class DirectoryWatcherError(Exception):
-    pass
-
-
 class HikvisionAPIError(Exception):
     pass
 

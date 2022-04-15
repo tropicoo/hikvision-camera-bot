@@ -2,7 +2,28 @@ version: '3'
 
 services:
   hikvision-camera-bot:
-    environment:
-      - "TZ=Europe/Kiev"
-    build: .
+    container_name: "hikvision_camera_bot"
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "/data/dvr:/data/dvr"
     restart: unless-stopped
+    depends_on:
+      - hikvision-srs-server
+
+  hikvision-srs-server:
+    container_name: "hikvision_srs_server"
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: srs_prod/Dockerfile
+    command: >
+      bash -c "./objs/srs -c conf/hik-docker.conf"
+    ports:
+      - "1935:1935"
+      - "1985:1985"
+      - "8080:8080"

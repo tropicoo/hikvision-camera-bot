@@ -7,10 +7,9 @@ from hikcamerabot.launcher import BotLauncher
 from hikcamerabot.utils.utils import setup_logging
 
 
-async def main():
+async def main() -> None:
     setup_logging()
-    bot_engine = BotLauncher()
-    await bot_engine.run()
+    await BotLauncher().launch()
 
 
 if __name__ == '__main__':

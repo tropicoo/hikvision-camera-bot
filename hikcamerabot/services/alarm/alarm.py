@@ -1,24 +1,38 @@
 """Alarm module."""
 
 import asyncio
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, TYPE_CHECKING
 
 from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
-from hikcamerabot.constants import Alarm, DETECTION_SWITCH_MAP, Detection
+from hikcamerabot.constants import (
+    Alarm,
+    Detection,
+    DETECTION_SWITCH_MAP,
+    ServiceType,
+)
 from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
-from hikcamerabot.services.tasks.alarm import ServiceAlarmPusherTask
+from hikcamerabot.services.tasks.alarm import ServiceAlarmMonitoringTask
 from hikcamerabot.utils.task import create_task
+
+
+if TYPE_CHECKING:
+    from hikcamerabot.camera import HikvisionCam
+    from hikcamerabot.camerabot import CameraBot
 
 
 class AlarmService(AbstractService):
     """Alarm Service Class."""
 
-    ALARM_TRIGGERS: frozenset[str] = Detection.choices()
+    ALARM_TRIGGERS = Detection.choices()
 
-    def __init__(self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot):
+    type = ServiceType.ALARM
+    name = Alarm.ALARM
+
+    def __init__(self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam',
+                 bot: 'CameraBot'):
         super().__init__(cam)
         self._conf = conf
         self._api = api
@@ -28,14 +42,11 @@ class AlarmService(AbstractService):
 
         self._started = asyncio.Event()
 
-        self.type: str = Alarm.SERVICE_TYPE
-        self.name: str = Alarm.ALARM
-
     @property
     def alert_count(self) -> int:
         return self._alert_count
 
-    def increase_alert_count(self):
+    def increase_alert_count(self) -> None:
         self._alert_count += 1
 
     @property
@@ -56,12 +67,13 @@ class AlarmService(AbstractService):
         if self.started:
             raise ServiceRuntimeError('Alarm (alert) mode already started')
         await self._enable_triggers_on_camera()
-        self._start_service_tasks()
+        self._started.set()
+        self._start_service_task()
 
-    def _start_service_tasks(self) -> None:
-        task_name = f'{ServiceAlarmPusherTask.__name__}_{self.cam.id}'
+    def _start_service_task(self) -> None:
+        task_name = f'{ServiceAlarmMonitoringTask.__name__}_{self.cam.id}'
         create_task(
-            ServiceAlarmPusherTask(service=self).run(),
+            ServiceAlarmMonitoringTask(service=self).run(),
             task_name=task_name,
             logger=self._log,
             exception_message='Task %s raised an exception',
@@ -71,8 +83,7 @@ class AlarmService(AbstractService):
     async def _enable_triggers_on_camera(self) -> None:
         for trigger in self.ALARM_TRIGGERS:
             if self._conf[trigger].enabled:
-                await self.trigger_switch(enable=True, trigger=trigger)
-        self._started.set()
+                await self.trigger_switch(enable=True, trigger=Detection(trigger))
 
     async def stop(self) -> None:
         """Disable alarm."""
@@ -80,14 +91,14 @@ class AlarmService(AbstractService):
             raise ServiceRuntimeError('Alarm alert mode already stopped')
         self._started.clear()
 
-    async def alert_stream(self) -> AsyncGenerator:
+    async def alert_stream(self) -> AsyncGenerator[str, None]:
         """Get Alarm stream from Hikvision Camera."""
         async for chunk in self._api.alert_stream():
             yield chunk
 
-    async def trigger_switch(self, enable: bool, trigger: str) -> Optional[str]:
+    async def trigger_switch(self, enable: bool, trigger: Detection) -> Optional[str]:
         """Trigger switch."""
-        full_name = DETECTION_SWITCH_MAP[trigger]['name']
+        full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
         self._log.debug('%s %s', 'Enabling' if enable else 'Disabling', full_name)
         try:
             return await self._api.switch(enable=enable, trigger=trigger)

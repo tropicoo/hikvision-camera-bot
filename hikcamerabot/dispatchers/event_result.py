@@ -8,6 +8,7 @@ from hikcamerabot.handlers.event_result import (
     ResultAlertVideoHandler,
     ResultDetectionConfHandler,
     ResultRecordVideoGifHandler,
+    ResultSendTextHandler,
     ResultStreamConfHandler,
     ResultTakeSnapshotHandler,
 )
@@ -21,6 +22,7 @@ class ResultDispatcher(AbstractDispatcher):
         Event.ALERT_VIDEO: ResultAlertVideoHandler,
         Event.CONFIGURE_ALARM: ResultAlarmConfHandler,
         Event.CONFIGURE_DETECTION: ResultDetectionConfHandler,
+        Event.SEND_TEXT: ResultSendTextHandler,
         Event.STREAM: ResultStreamConfHandler,
         Event.TAKE_SNAPSHOT: ResultTakeSnapshotHandler,
         Event.RECORD_VIDEOGIF: ResultRecordVideoGifHandler,

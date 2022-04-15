@@ -13,10 +13,10 @@ class ServiceManager:
     Manages camera abstracted services.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # service type as key e.g. {'stream': {'youtube': <instance>}}
-        self._log = logging.getLogger(self.__class__.__name__)
         self._services = defaultdict(dict)
+        self._log = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self) -> str:
         return f'<Registered services: {self._services}>'
@@ -48,7 +48,7 @@ class ServiceManager:
                     await service.stop()
                 except Exception as err:
                     self._log.warning('Warning while stopping service "%s": '
-                                      '%s', service.name, err)
+                                      '%s', service.name.value, err)
 
     async def stop(self, service_type: str, service_name: str) -> None:
         await self._services[service_type][service_name].stop()

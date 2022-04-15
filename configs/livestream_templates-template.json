@@ -1,0 +1,96 @@
+{
+  "srs": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "sub_channel": 102,
+      "restart_period": -1,
+      "restart_pause": 0,
+      "url": "rtmp://hikvision_srs_server/live"
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "sub_channel": 102,
+      "restart_period": -1,
+      "restart_pause": 10,
+      "url": "rtmp://hikvision_srs_server/live"
+    }
+  },
+  "dvr": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "sub_channel": 102,
+      "restart_period": -1,
+      "restart_pause": 0,
+      "segment_time": 1800
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "sub_channel": 102,
+      "restart_period": -1,
+      "restart_pause": 1,
+      "segment_time": 1800
+    }
+  },
+  "youtube": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 1,
+      "url": "rtmp://a.rtmp.youtube.com/live2",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 1,
+      "url": "rtmp://a.rtmp.youtube.com/live2",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    }
+  },
+  "telegram": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 1,
+      "url": "rtmps://dc4-1.rtmp.t.me/s",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 1,
+      "url": "rtmps://dc4-1.rtmp.t.me/s",
+      "key": "xxxx-xxxx-xxxx-xxxx"
+    }
+  },
+  "icecast": {
+    "tpl_kitchen": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "ice_stream": {
+        "ice_genre": "333Default",
+        "ice_name": "222Default",
+        "ice_description": "111Default",
+        "ice_public": 0,
+        "url": "icecast://source@10.10.10.14:8000/video.webm",
+        "password": "hackme",
+        "content_type": "video/webm"
+      }
+    },
+    "tpl_basement": {
+      "channel": 101,
+      "restart_period": 39600,
+      "restart_pause": 10,
+      "ice_stream": {
+        "ice_genre": "333Default",
+        "ice_name": "222Default",
+        "ice_description": "111Default",
+        "ice_public": 0,
+        "url": "icecast://source@10.10.10.14:8000/video.webm",
+        "password": "hackme",
+        "content_type": "video/webm"
+      }
+    }
+  }
+}

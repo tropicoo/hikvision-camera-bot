@@ -1,16 +1,22 @@
 from marshmallow import (
-    INCLUDE, Schema, fields as f, validate as v,
+    fields as f,
+    INCLUDE,
+    Schema,
+    validate as v,
     validates_schema,
 )
 
-from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
-from hikcamerabot.constants import FFMPEG_LOG_LEVELS, RTSP_TRANSPORT_TYPES
+from hikcamerabot.config.schemas.validators import (
+    int_min_1, int_min_minus_1,
+    non_empty_str,
+)
+from hikcamerabot.constants import FFMPEG_LOG_LEVELS, RtspTransportType
 
 
 class BaseTemplate(Schema):
     _inner_validation_schema_cls = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._inner_validation_schema = self._inner_validation_schema_cls()
         self._template_validator = f.String(
@@ -33,9 +39,9 @@ class Direct(BaseTemplate):
         loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
         vcodec = f.String(required=True, validate=non_empty_str)
         acodec = f.String(required=True, validate=non_empty_str)
+        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
         format = f.String(required=True, validate=non_empty_str)
-        rtsp_transport_type = f.String(required=True,
-                                       validate=v.OneOf(RTSP_TRANSPORT_TYPES))
+        rtsp_transport_type = f.String(required=True, validate=v.OneOf(RtspTransportType.choices()))
 
     _inner_validation_schema_cls = _Direct
 
@@ -52,6 +58,7 @@ class X264(BaseTemplate):
         loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
         vcodec = f.String(required=True, validate=non_empty_str)
         acodec = f.String(required=True, validate=non_empty_str)
+        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
         format = f.String(required=True, validate=non_empty_str)
         rtsp_transport_type = f.String(required=True, validate=non_empty_str)
         pix_fmt = f.String(required=True, validate=non_empty_str)
@@ -79,6 +86,7 @@ class Vp9(BaseTemplate):
         loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
         vcodec = f.String(required=True, validate=non_empty_str)
         acodec = f.String(required=True, validate=non_empty_str)
+        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
         format = f.String(required=True, validate=non_empty_str)
         rtsp_transport_type = f.String(required=True, validate=non_empty_str)
         pix_fmt = f.String(required=True, validate=non_empty_str)

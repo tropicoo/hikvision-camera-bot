@@ -1,44 +1,47 @@
 """Video managers module."""
+
 import logging
 from collections import deque
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from addict import Dict
-from aiogram.types import Message
+from pyrogram.types import Message
 
-from hikcamerabot.constants import FFMPEG_VIDEO_GIF_CMD, VideoGifType
+from hikcamerabot.constants import (
+    FFMPEG_CAM_VIDEO_SOURCE, FFMPEG_CMD_VIDEO_GIF,
+    FFMPEG_SRS_VIDEO_SOURCE, RTSP_TRANSPORT_TPL, SRS_LIVESTREAM_NAME_TPL,
+    VideoGifType,
+)
 from hikcamerabot.services.tasks.video import RecordVideoTask
 from hikcamerabot.utils.task import create_task
+
+if TYPE_CHECKING:
+    from hikcamerabot.camera import HikvisionCam
 
 
 class VideoGifManager:
     """Video Gif Manager Class."""
 
-    def __init__(self, cam, conf: Dict):
-        """Constructor.
-
-        :Parameters:
-            - `conf`: obj, camera configuration object.
-        """
+    def __init__(self, cam: 'HikvisionCam') -> None:
+        """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
         self._cam = cam
-        self._conf = conf
         self._proc_task_queue = deque()
         self._ffmpeg_cmd = self.build_ffmpeg_cmd()
-        self._tmp_storage_path: str = self._conf.alert.video_gif.tmp_storage
+        self._tmp_storage_path: str = self._cam.conf.alert.video_gif.tmp_storage
 
-    def start_rec(self, context: Message) -> None:
-        self._start_rec(video_type=VideoGifType.REGULAR, context=context)
+    def start_rec(self, video_type: VideoGifType,
+                  context: Message = None) -> None:
+        """Start recording video-gif."""
+        self._start_rec(video_type=video_type, context=context)
 
-    def start_alert_rec(self) -> None:
-        self._start_rec(video_type=VideoGifType.ALERT)
-
-    def _start_rec(self, video_type: str, context: Message = None) -> None:
+    def _start_rec(self, video_type: VideoGifType,
+                   context: Message = None) -> None:
         """Start rtsp video stream recording to a temporary file."""
         rec_task = RecordVideoTask(
             ffmpeg_cmd=self._ffmpeg_cmd,
             storage_path=self._tmp_storage_path,
-            conf=self._conf,
             cam=self._cam,
             video_type=video_type,
             context=context,
@@ -64,22 +67,32 @@ class VideoGifManager:
         return videos
 
     def build_ffmpeg_cmd(self) -> str:
-        user: str = self._conf.api.auth.user
-        password: str = self._conf.api.auth.password
-        host: str = self._conf.api.host
-        rtsp_port: int = self._conf.rtsp_port
-
-        gif_conf: Dict = self._conf.alert.video_gif
+        gif_conf: Dict = self._cam.conf.alert.video_gif
         rec_time: int = gif_conf.record_time
         loglevel: str = gif_conf.loglevel
         channel: int = gif_conf.channel
-        rtsp_transport_type: str = gif_conf.rtsp_transport_type
+        is_srs_enabled = self._cam.conf.livestream.srs.enabled
 
-        return FFMPEG_VIDEO_GIF_CMD.format(host=urlsplit(host).netloc,
-                                           rtsp_port=rtsp_port,
-                                           user=user,
-                                           pw=password,
-                                           channel=channel,
-                                           rec_time=rec_time,
-                                           loglevel=loglevel,
-                                           rtsp_transport_type=rtsp_transport_type)
+        if is_srs_enabled:
+            video_source = FFMPEG_SRS_VIDEO_SOURCE.format(
+                livestream_name=SRS_LIVESTREAM_NAME_TPL.format(
+                    channel=channel,
+                    cam_id=self._cam.id,
+                )
+            )
+        else:
+            video_source = FFMPEG_CAM_VIDEO_SOURCE.format(
+                user=self._cam.conf.api.auth.user,
+                pw=self._cam.conf.api.auth.password,
+                host=urlsplit(self._cam.conf.api.host).netloc,
+                rtsp_port=self._cam.conf.rtsp_port,
+                channel=channel,
+            )
+        return FFMPEG_CMD_VIDEO_GIF.format(
+            rtsp_transport=RTSP_TRANSPORT_TPL.format(
+                rtsp_transport_type=gif_conf.rtsp_transport_type
+            ) if not is_srs_enabled else '',
+            video_source=video_source,
+            rec_time=rec_time,
+            loglevel=loglevel,
+        )
