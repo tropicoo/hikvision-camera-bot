@@ -15,6 +15,7 @@ Release date: April 15, 2022
 3. Telegram stream (direct stream won't work due to unsupported color profile).
    Telegram bug [#15684](https://bugs.telegram.org/c/15684).
 4. New command `ir_on|off|auto_cam_*` to turn on/off infrared light.
+5. Hide unwanted command sections in camera `command_sections_visibility` config section.
 
 # Misc
 1. Migrated from `aiogram` to `pyrogram`.
