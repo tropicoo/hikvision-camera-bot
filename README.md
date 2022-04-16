@@ -7,18 +7,15 @@ Version: 1.3. [Release details](releases/release_1.3.md).
 1. Send full/resized snapshots on request
 2. Auto-send snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
 3. Send so-called Telegram video-gifs on request and alert events from paragraph #2
-4. YouTube, Telegram and Icecast direct or re-encoded livestream
-5. DVR with upload to Telegram group
-6. Take stream from local SRS or directly from camera (undesirable but OK if lot of cameras)
+4. YouTube, Telegram and Icecast direct or re-encoded livestreams
+5. DVR to local storage with upload to Telegram group
+6. SRS re-stream server
 
 
 ![frames](img/screenshot-1.png)
 
 # Installation
-
-To install Hikvision Telegram Camera Bot, simply `clone` repo.
-
-
+To install Hikvision Telegram Camera Bot, simply `clone` the repo.
 
 ```shell script
 git clone https://github.com/tropicoo/hikvision-camera-bot.git
@@ -41,20 +38,20 @@ Configuration files are stored in JSON format and can be found in `configs` dire
     cp livestream_templates-template.json livestream_templates.json
     ```
 4. Edit **config.json**:
-    - Put the obtained `api_id` and `api_hash` strings to same keys
-    - Put the obtained bot API token string to `token` key
-    - [Find](https://stackoverflow.com/a/32777943) your Telegram user id
+    1. Put the obtained `api_id` and `api_hash` strings to same keys
+    2. Put the obtained bot API token string to `token` key
+    3. [Find](https://stackoverflow.com/a/32777943) your Telegram user id
     and put it to `allowed_user_ids` list as integer value. Multiple ids can
     be used, just separate them with a comma
-    - Hikvision camera settings are placed inside the `camera_list` section. Template
+    4. Hikvision camera settings are placed inside the `camera_list` section. Template
     comes with two cameras
 
         **Camera names should start with `cam_` prefix and end with 
         digit suffix**: `cam_1`, `cam_2`, `cam_<digit>` with any description.
 
-    - Write authentication credentials in `user` and `password` keys for every camera
-    - Same for `host`, which should include protocol, e.g. `http://192.168.1.1`
-    - In `alert` section you can enable sending picture on alert (Motion, 
+    5. Write authentication credentials in `user` and `password` keys for every camera
+    6. Same for `host`, which should include protocol, e.g. `http://192.168.1.1`
+    7. In `alert` section you can enable sending picture on alert (Motion, 
     Line Crossing and Intrusion (Field) Detection). Configure `delay` setting 
     in seconds between pushing alert pictures. To send resized picture change 
     `fullpic` to `false`
@@ -90,7 +87,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
         "delay": 15,
         "video_gif": {
           "enabled": true,
-          "channel": 102,
+          "channel": 101,
           "record_time": 10,
           "tmp_storage": "/tmp",
           "loglevel": "error",
@@ -172,7 +169,7 @@ Currently, there is Ukrainian timezone because I live there.
 Look for your timezone here [http://www.timezoneconverter.com/cgi-bin/zoneinfo](http://www.timezoneconverter.com/cgi-bin/zoneinfo).
 If you want to use default UTC time format, set Greenwich Mean Time timezone `TZ=GMT`
 
-2. Build image and run container in detached mode
+2. Build an image and run a container in a detached mode
     ```bash
     sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
     ```
@@ -206,39 +203,50 @@ If you want to use default UTC time format, set Greenwich Mean Time timezone `TZ
 
 #  Advanced Configuration
 ## SRS
-SRS is a stream server which takes the stream from your camera and re-streams it
-to any destinations. 
+[SRS](https://github.com/ossrs/srs/tree/4.0release) (Simple Realtime Server) is a re-stream server which takes a stream from your camera and re-streams it
+to any destination without touching native camera stream multiple times.
+SRS release version used in the bot is `4.0`.
 
-It decreases CPU and bandwidth load on the camera when you enable something like DVR,
- YouTube Livestream and try to get Video GIF or pics at the same time.
+SRS decreases CPU time and network load on the camera when you enable something like DVR,
+ YouTube Livestream or try to get Video GIF at the same time. Pictures are taken
+directly from the camera stream, not from the SRS.
+
+How it works - if you have two cameras with enabled SRS for both, there will be two
+running 24/7 bot tasks taking streams from the cameras to the SRS server. Eventually, when you
+request Video Gif, or it's triggered by some alert, video will be taken from SRS server.
 
 You can also connect to SRS server with any video player like VLC and watch the stream
 without any interruptions. URL looks like this: `rtmp://192.168.1.100/live/livestream_101_cam_2`,
 where:
-1. `192.168.1.100` is an IP address or a host of your sever.
+1. `192.168.1.100` is an IP address or a host of your server.
 2. `101` is camera's configured stream channel.
 3. `cam_2` is ID of your second configured camera.
 
-It runs in a separate docker container. Service name is `hikvision-srs-server` in `docker-compose.yml`
+SRS runs in a separate docker container. SRS config and `Dockerfile` placed
+in `srs_prod` directory. Service name is `hikvision-srs-server` in `docker-compose.yml`.
 
-If `docker-compose.yml` is list of forwarded and opened SRS ports to the world:
+
+
+If `docker-compose.yml` is a list of forwarded and open SRS ports to the world:
 ```yaml
 # If you don't plan to use anything from this, just comment out the whole section.
 ports:
-  - "1935:1935"   # SRS RTMP port
-  - "1985:1985"   # SRS API port, probably can be commented out since not used
+  - "1935:1935"   # SRS RTMP port, if you comment this out, you won't be able to connect with video player
+  - "1985:1985"   # SRS API port, can be commented out since not used
   - "8080:8080"   # SRS WebUI port
 ```
 
 ## DVR
-You can record your videos from camera to a local storage mounted as volume in
+You can record your videos from the camera to a local storage mounted as volume in
 volumes section of `hikvision-camera-bot` service in `docker-compose.yml`.
 
-DVR configuration is per camera in `config.json`.
+DVR configuration is per camera in `config.json` with livestream template name from `livestream_templates.json`.
+
 It's very simple:
 1. Use `enabled` key to turn on/off this feature.
 2. `local_storage_path` is a path inside the container to which videos will be recorded. 
-Don't change the default value `/data/dvr` since it's written in the volumes mapping section.
+Don't change this default value (`/data/dvr`) since it's written in the volumes mapping section.
+If you need to change it for some reason - you need to change both here and in the volumes mapping.
 3. `livestream_template` has a template name located inside the `livestream_templates.json` 
 file with DVR stream settings:
     ```json
@@ -252,10 +260,9 @@ file with DVR stream settings:
       }
     }
     ```
-    a) `segment_time` is time in seconds when DVR record file will be split to the
-    new one. 
+    a) `segment_time` is time in seconds when DVR record file will be split to a new one. 
 
-    b) `1800` means every file has 30 minutes of video recording.
+    b) `1800` seconds mean every file will have 30 minutes of video recording.
 
     c) File is named as `cam_1_101_1800_2022-04-15_21-19-32.mp4` with cam ID, channel name, segment time, and record start datetime.
 
@@ -278,10 +285,11 @@ file with DVR stream settings:
     }
     ```
     Recorded files can be uploaded to Telegram group. Right now upload will work only
-    if `delete_after_upload` is set to `true` meaning uploaded file will deleted 
-    from local storage.
-5. Local storage by default is `/data/dvr` in volumes mapping (the first path string, not the last).
-   Change it to any location you need.
+    if `delete_after_upload` is set to `true` meaning uploaded file will be deleted 
+    from the local storage. You need to make sure your file size will be up to 2GB since
+    Telegram rejects larger ones. Just experiment with segment time.
+5. Local storage (the real one, not in the container) by default is `/data/dvr` in volumes mapping (the first path string, not the last).
+   Change it to any location you need, e.g. to `- D:\Videos:/data/dvr` if you're on Windows.
     ```yaml
     volumes:
       - "/data/dvr:/data/dvr"
@@ -531,4 +539,4 @@ Where:
 | `height` | `-1` | height, -1 means will be automatically determined |
 | `format` | `"yuv420p"` | pixel format |
 
-> YouTube Live Streams server/key is availabe at https://www.youtube.com/live_dashboard.
+> YouTube Live Streams server/key is available at https://www.youtube.com/live_dashboard.
