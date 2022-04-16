@@ -27,7 +27,7 @@
         "delay": 15,
         "video_gif": {
           "enabled": true,
-          "channel": 102,
+          "channel": 101,
           "record_time": 10,
           "tmp_storage": "/tmp",
           "loglevel": "error",
@@ -114,7 +114,7 @@
         "delay": 15,
         "video_gif": {
           "enabled": true,
-          "channel": 102,
+          "channel": 101,
           "record_time": 10,
           "tmp_storage": "/tmp",
           "loglevel": "error",
