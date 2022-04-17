@@ -3,7 +3,8 @@
 import abc
 import logging
 import os
-from typing import Optional, TYPE_CHECKING
+from io import BytesIO
+from typing import Optional, TYPE_CHECKING, Union
 
 from pyrogram.types import Message
 from tenacity import retry, wait_fixed
@@ -113,35 +114,32 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
         detection_type: Detection = event['detection_type']
         alert_count: int = event['alert_count']
         resized: bool = event['resized']
-        photo = event['img']
+        photo: BytesIO = event['img']
         trigger_name: str = DETECTION_SWITCH_MAP[detection_type]['name'].value
 
         caption = f'[{cam.description}] {trigger_name} at {date_} ' \
                   f'(alert #{alert_count}) {cam.hashtag}\n/cmds_{cam.id}, /list_cams'
 
-        async def send_document(photo_: str) -> Message:
-            if not isinstance(photo_, str):
-                photo_.filename = f'Full_alert_snapshot_{date_}.jpg'
+        async def send_document(photo_: Union[BytesIO, str]) -> Message:
             return await self._bot.send_document(
                 chat_id=uid,
                 document=photo_,
+                file_name=f'Full_alert_snapshot_{date_}.jpg',
                 caption=caption)
 
-        async def send_photo(photo_: str) -> Message:
+        async def send_photo(photo_: Union[BytesIO, str]) -> Message:
             return await self._bot.send_photo(chat_id=uid, photo=photo_,
                                               caption=caption)
 
-        cached = False
+        cached_id: Optional[str] = None
         for uid in self._bot.user_ids:
             try:
                 if resized:
-                    message = await send_photo(photo)
-                    file_id: str = message.photo[0]['file_id']
+                    message = await send_photo(cached_id or photo)
+                    cached_id = message.photo.file_id
                 else:
-                    message = await send_document(photo)
-                    file_id: str = message.document.file_id
-                if not cached:
-                    photo = file_id
+                    message = await send_document(cached_id or photo)
+                    cached_id = message.document.file_id
             except Exception:
                 self._log.exception('Failed to send message to user ID %s', uid)
 

@@ -70,17 +70,16 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
 
             if detection_type:
                 self.service.increase_alert_count()
-                await self._send_alerts(detection_type)
+                self._send_alerts(detection_type)
                 wait_before = int(time.time()) + self.service.alert_delay
         else:
             raise ChunkLoopError
 
-    async def _send_alerts(self, detection_type: Detection) -> None:
+    def _send_alerts(self, detection_type: Detection) -> None:
         self._log.info('Sending alerts for %s', detection_type)
-        await self._alert_notifier.notify(detection_type)
+        # TODO: Put to queue and await everything, don't schedule tasks.
+        self._alert_notifier.notify(detection_type)
 
-
-# ------------------------------------------------------------------------------ #
 
 class AbstractAlertNotificationTask(metaclass=abc.ABCMeta):
 
@@ -120,10 +119,10 @@ class AlarmVideoGifNotificationTask(AbstractAlertNotificationTask):
 class AlarmPicNotificationTask(AbstractAlertNotificationTask):
 
     async def _run(self) -> None:
-        if self._cam.conf.alert[self._detection_type].sendpic:
-            await self._take_pic()
+        if self._cam.conf.alert[self._detection_type.value].sendpic:
+            await self._send_pic()
 
-    async def _take_pic(self) -> None:
+    async def _send_pic(self) -> None:
         resize = not self._cam.conf.alert[self._detection_type.value].fullpic
         photo, ts = await self._cam.take_snapshot(resize=resize)
         await self._result_queue.put({
@@ -148,7 +147,7 @@ class AlertNotifier:
         self._log = logging.getLogger(self.__class__.__name__)
         self._service = service
 
-    async def notify(self, detection_type: Detection) -> None:
+    def notify(self, detection_type: Detection) -> None:
         for task_cls in self.ALARM_NOTIFICATION_TASKS:
             task = task_cls(service=self._service, detection_type=detection_type)
             create_task(
