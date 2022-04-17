@@ -62,7 +62,8 @@ def authorization_check(func):
             return await func(*args, **kwargs)
 
         bot._log.error('User authorization error: %s', message.chat.id)  # noqa
-        await message.reply_text('Not authorized')
+        await message.reply_text('Not authorized',
+                                 reply_to_message_id=message.message_id)
 
     return wrapper
 

@@ -7,7 +7,7 @@ from io import BytesIO
 from typing import Optional, TYPE_CHECKING, Union
 
 from pyrogram.types import Message
-from tenacity import retry, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from hikcamerabot.constants import (
     Alarm, DETECTION_SWITCH_MAP, Detection, Stream,
@@ -59,14 +59,20 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
         finally:
             os.remove(video_path)
 
-    @retry(wait=wait_fixed(0.5))
+    @retry(wait=wait_fixed(0.5), stop=stop_after_attempt(10))
     async def _send_video(self, uid: int, video_path: str, caption: str,
                           bot: 'CameraBot') -> None:
-        file_, is_cached = self._get_file(video_path)
-        await bot.send_chat_action(chat_id=uid, action='upload_video')
-        message = await bot.send_video(chat_id=uid, video=file_, caption=caption)
-        if not is_cached:
-            self._video_file_cache[video_path] = message.video.file_id
+        try:
+            file_, is_cached = self._get_file(video_path)
+            await bot.send_chat_action(chat_id=uid, action='upload_video')
+            message = await bot.send_video(chat_id=uid, video=file_,
+                                           caption=caption)
+            if not is_cached:
+                self._video_file_cache[video_path] = message.video.file_id
+        except Exception:
+            self._log.exception('Failed to send video in %s. Retrying',
+                                self.__class__.__name__)
+            raise
 
     def _get_file(self, video_path: str) -> tuple[str, bool]:
         """Get str file id from cache or `InputFile` from video path.
@@ -89,20 +95,24 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
         finally:
             os.remove(video_path)
 
-    @retry(wait=wait_fixed(0.5))
+    @retry(wait=wait_fixed(0.5), stop=stop_after_attempt(10))
     async def _upload_video(self, event):
-        cam: 'HikvisionCam' = event['cam']
-        message: Message = event['message']  # Stale context, can't `reply`.
-        video_path: str = event['video_path']
-        caption = f'Video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, ' \
-                  f'/list_cams'
-        await self._bot.send_chat_action(message.chat.id, action='upload_video')
-        await self._bot.send_video(
-            message.chat.id,
-            video=video_path,
-            caption=caption,
-            reply_to_message_id=message.message_id,
-        )
+        try:
+            cam: 'HikvisionCam' = event['cam']
+            message: Message = event['message']  # Stale context, can't `reply`.
+            video_path: str = event['video_path']
+            caption = f'Video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, ' \
+                      f'/list_cams'
+            await self._bot.send_chat_action(message.chat.id, action='upload_video')
+            await self._bot.send_video(
+                message.chat.id,
+                video=video_path,
+                caption=caption,
+                reply_to_message_id=message.message_id,
+            )
+        except Exception:
+            self._log.exception('Failed to upload video gif. Retrying')
+            raise
 
 
 class ResultAlertSnapshotHandler(AbstractResultEventHandler):
@@ -152,7 +162,9 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
         switch: bool = event['params']['switch']
         text: str = event.get('text') or '{0} stream successfully {1}'.format(
             name.value.capitalize(), 'enabled' if switch else 'disabled')
-        await message.reply(make_bold(text), parse_mode='HTML')
+        await message.reply(make_bold(text),
+                            reply_to_message_id=message.message_id,
+                            parse_mode='HTML')
         self._log.info(text)
 
 
@@ -182,7 +194,9 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
 
         text: str = event.get('text') or '{0} successfully {1}'.format(
             name.value.capitalize(), 'enabled' if switch else 'disabled')
-        await message.reply(make_bold(text), parse_mode='HTML')
+        await message.reply(make_bold(text),
+                            reply_to_message_id=message.message_id,
+                            parse_mode='HTML')
         self._log.info(text)
         # err_msg = 'Failed to {0} {1}: {2}'.format(
         #     'enable' if switch else 'disable', name, err)
@@ -197,7 +211,9 @@ class ResultDetectionConfHandler(AbstractResultEventHandler):
 
         text = event.get('text') or '{0} successfully {1}'.format(
             name, 'enabled' if switch else 'disabled')
-        await message.reply(make_bold(text), parse_mode='HTML')
+        await message.reply(make_bold(text),
+                            reply_to_message_id=message.message_id,
+                            parse_mode='HTML')
         self._log.info(text)
         # err_msg = 'Failed to {0} {1}: {2}'.format(
         #     'enable' if switch else 'disable', name, err)
@@ -221,8 +237,9 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
 
         self._log.info('Sending resized cam snapshot')
         await self._bot.send_chat_action(chat_id=message.chat.id,
-                                         action='upload_photo')
-        await message.reply_photo(event['img'], caption=caption)
+                                         action='upload_photo', )
+        await message.reply_photo(event['img'], caption=caption,
+                                  reply_to_message_id=message.message_id)
         self._log.info('Resized snapshot sent')
 
     async def _send_full_photo(self, event: dict) -> None:
@@ -239,5 +256,6 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         await self._bot.send_chat_action(chat_id=message.chat.id,
                                          action='upload_photo')
         await message.reply_document(document=event['img'], caption=caption,
+                                     reply_to_message_id=message.message_id,
                                      file_name=filename)
         self._log.info('Full snapshot "%s" sent', filename)

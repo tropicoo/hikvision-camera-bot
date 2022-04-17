@@ -8,7 +8,7 @@ from hikcamerabot.camerabot import CameraBot
 from hikcamerabot.clients.hikvision.constants import IrcutFilterType
 from hikcamerabot.constants import Alarm, Detection, Event, ServiceType, Stream
 from hikcamerabot.decorators import authorization_check, camera_selection
-from hikcamerabot.utils.utils import build_command_presentation, make_bold
+from hikcamerabot.utils.utils import make_bold
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ async def cmds(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     presentation = bot.cam_registry.get_commands_presentation(cam.id)
     await message.reply_text(
         f'<b>Available commands</b>\n\n{presentation}\n\n/list_cams',
+        reply_to_message_id=message.message_id,
         parse_mode='HTML')
 
 
@@ -111,7 +112,9 @@ async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
             f'<b>Description:</b> {meta["cam"].description}\n'
             f'<b>Commands</b>: /cmds_{cam_id}')
 
-    await message.reply_text('\n\n'.join(msg), parse_mode='HTML')
+    await message.reply_text('\n\n'.join(msg),
+                             reply_to_message_id=message.message_id,
+                             parse_mode='HTML')
     log.info('Camera list has been sent')
 
 
@@ -271,5 +274,6 @@ async def cmd_help(bot: CameraBot, message: Message, append: bool = False,
     """Send help message to telegram chat."""
     log.info('Help message has been requested')
     await message.reply_text(
-        'Use /list_cams command to show available cameras and commands')
+        'Use /list_cams command to show available cameras and commands',
+        reply_to_message_id=message.message_id, )
     log.debug('Help message has been sent')

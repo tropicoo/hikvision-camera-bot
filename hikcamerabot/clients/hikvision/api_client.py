@@ -54,7 +54,7 @@ class HikvisionAPIClient(AbstractHikvisionAPIClient):
                       timeout: float = CONN_TIMEOUT,
                       ) -> httpx.Response:
         url = urljoin(self.host, endpoint)
-        self._log.debug(data)
+        self._log.debug('Request: %s - %s - %s', method, endpoint, data)
         try:
             response = await self.session.request(
                 method,
@@ -64,7 +64,8 @@ class HikvisionAPIClient(AbstractHikvisionAPIClient):
                 timeout=timeout,
             )
         except Exception as err:
-            err_msg = 'API encountered an unknown error.'
+            err_msg = f'API encountered an unknown error for method {method}, ' \
+                      f'endpoint {endpoint}, data {data}'
             self._log.exception(err_msg)
             raise APIRequestError(f'{err_msg}: {err}') from err
         self._verify_status_code(response.status_code)
