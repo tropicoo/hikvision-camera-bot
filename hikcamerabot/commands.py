@@ -14,6 +14,7 @@ def setup_commands() -> tuple[dict, dict[Union[list[str], str], Callable]]:
                 'getpic_{0}': cb.cmd_getpic,
                 'getfullpic_{0}': cb.cmd_getfullpic,
                 'getvideo_{0}': cb.cmd_getvideo,
+                'getvideor_{0}': cb.cmd_getvideor,
             },
         },
         CmdSectionType.infrared.value: {

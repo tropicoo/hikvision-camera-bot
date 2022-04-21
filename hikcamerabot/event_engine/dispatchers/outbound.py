@@ -1,8 +1,8 @@
 """Result dispatcher module."""
 
 from hikcamerabot.constants import Event
-from hikcamerabot.dispatchers.abstract import AbstractDispatcher
-from hikcamerabot.handlers.event_result import (
+from hikcamerabot.event_engine.dispatchers.abstract import AbstractDispatcher
+from hikcamerabot.event_engine.handlers.outbound import (
     ResultAlarmConfHandler,
     ResultAlertSnapshotHandler,
     ResultAlertVideoHandler,
@@ -12,10 +12,11 @@ from hikcamerabot.handlers.event_result import (
     ResultStreamConfHandler,
     ResultTakeSnapshotHandler,
 )
+from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 
 
-class ResultDispatcher(AbstractDispatcher):
-    """Result Dispatcher Class."""
+class OutboundEventDispatcher(AbstractDispatcher):
+    """Outbound (Result) Dispatcher Class."""
 
     DISPATCH = {
         Event.ALERT_SNAPSHOT: ResultAlertSnapshotHandler,
@@ -28,7 +29,7 @@ class ResultDispatcher(AbstractDispatcher):
         Event.RECORD_VIDEOGIF: ResultRecordVideoGifHandler,
     }
 
-    async def dispatch(self, data: dict) -> None:
-        """Dispatch data to appropriate handler."""
-        self._log.debug('Result event data: %s', data)
-        await self._dispatch[data['event']].handle(data)
+    async def dispatch(self, event: BaseOutboundEvent) -> None:
+        """Dispatch outbound event to appropriate handler."""
+        self._log.debug('Outbound event: %s', event)
+        await self._dispatch[event.event].handle(event)

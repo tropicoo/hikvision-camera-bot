@@ -26,11 +26,16 @@ class ImageProcessor(metaclass=Singleton):
         resized_snapshot = BytesIO()
 
         snapshot: Image.Image = raw_snapshot.resize(ImgType.SIZE, Image.ANTIALIAS)
-        snapshot.save(resized_snapshot, ImgType.FORMAT, quality=ImgType.QUALITY,
-                      optimize=True)
+        snapshot.save(
+            resized_snapshot, ImgType.FORMAT, quality=ImgType.QUALITY, optimize=True
+        )
         resized_snapshot.seek(0)
 
-        self._log.debug('Raw snapshot: %s, %s, %s', raw_snapshot.format,
-                        raw_snapshot.mode, raw_snapshot.size)
+        self._log.debug(
+            'Raw snapshot: %s, %s, %s',
+            raw_snapshot.format,
+            raw_snapshot.mode,
+            raw_snapshot.size,
+        )
         self._log.debug('Resized snapshot: %s', ImgType.SIZE)
         return resized_snapshot

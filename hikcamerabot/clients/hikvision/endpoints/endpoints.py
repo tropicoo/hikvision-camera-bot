@@ -37,15 +37,21 @@ class IrcutFilterEndpoint(AbstractEndpoint):
                 method=Http.PUT,
             )
         except APIRequestError:
-            self._log.error('Failed to set \'%s\' IrcutFilterType (Day/Night)',
-                            filter_type.value)
+            self._log.error(
+                'Failed to set \'%s\' IrcutFilterType (Day/Night)', filter_type.value
+            )
             raise
         self._validate_response_xml(response_xml)
 
-    def _build_payload(self, filter_type: IrcutFilterType,
-                       current_capabilities: Dict) -> str:
-        level: str = current_capabilities.ImageChannel.IrcutFilter.nightToDayFilterLevel['#text']
-        time: str = current_capabilities.ImageChannel.IrcutFilter.nightToDayFilterTime['#text']
+    def _build_payload(
+        self, filter_type: IrcutFilterType, current_capabilities: Dict
+    ) -> str:
+        level: str = (
+            current_capabilities.ImageChannel.IrcutFilter.nightToDayFilterLevel['#text']
+        )
+        time: str = current_capabilities.ImageChannel.IrcutFilter.nightToDayFilterTime[
+            '#text'
+        ]
         return self._XML_PAYLOAD_TPL.format(
             filter_type=filter_type.value,
             night_to_day_filter_level=level,
@@ -54,21 +60,23 @@ class IrcutFilterEndpoint(AbstractEndpoint):
 
 
 class ExposureEndpoint(AbstractEndpoint):
-    _XML_PAYLOAD_TPL = '<Exposure>' \
-                       '<ExposureType>{exposure_type}</ExposureType>' \
-                       '<OverexposeSuppress>' \
-                       '<enabled>{overexposure_enabled}</enabled>' \
-                       '<Type>{overexposure_suppress_type}</Type>' \
-                       '<DistanceLevel>{distance_level}</DistanceLevel>' \
-                       '</OverexposeSuppress>' \
-                       '</Exposure>'
+    _XML_PAYLOAD_TPL = (
+        '<Exposure>'
+        '<ExposureType>{exposure_type}</ExposureType>'
+        '<OverexposeSuppress>'
+        '<enabled>{overexposure_enabled}</enabled>'
+        '<Type>{overexposure_suppress_type}</Type>'
+        '<DistanceLevel>{distance_level}</DistanceLevel>'
+        '</OverexposeSuppress>'
+        '</Exposure>'
+    )
 
     async def __call__(
-            self,
-            exposure_type: ExposureType = None,
-            overexpose_suppress_enabled: OverexposeSuppressEnabledType = None,
-            overexposure_suppress_type: OverexposeSuppressType = None,
-            distance_level: int = None,
+        self,
+        exposure_type: ExposureType = None,
+        overexpose_suppress_enabled: OverexposeSuppressEnabledType = None,
+        overexposure_suppress_type: OverexposeSuppressType = None,
+        distance_level: int = None,
     ) -> None:
         kwargs = {
             'exposure_type': exposure_type,
@@ -94,8 +102,7 @@ class ExposureEndpoint(AbstractEndpoint):
             raise
         self._validate_response_xml(response_xml)
 
-    def _build_payload(self, kwargs: Dict,
-                       current_capabilities: Optional[Dict]) -> str:
+    def _build_payload(self, kwargs: Dict, current_capabilities: Optional[Dict]) -> str:
         return self._XML_PAYLOAD_TPL.format(
             exposure_type=kwargs.get(
                 'exposure_type',
@@ -112,7 +119,8 @@ class ExposureEndpoint(AbstractEndpoint):
             distance_level=kwargs.get(
                 'distance_level',
                 current_capabilities.distance_level,
-            ))
+            ),
+        )
 
 
 class TakeSnapshotEndpoint(AbstractEndpoint):
@@ -131,8 +139,8 @@ class AlertStreamEndpoint(AbstractEndpoint):
         url = urljoin(self._api_client.host, Endpoint.ALERT_STREAM.value)
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
         async with self._api_client.session.stream(
-                Http.GET, url,
-                timeout=timeout) as response:
+            Http.GET, url, timeout=timeout
+        ) as response:
             chunk: str
             async for chunk in response.aiter_text():
                 yield chunk

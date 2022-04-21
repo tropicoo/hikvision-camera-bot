@@ -1,35 +1,17 @@
-import abc
-import asyncio
-import logging
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.constants import DvrUploadType
+from hikcamerabot.services.stream.dvr.upload.tasks.abstract import (
+    AbstractDvrUploadTask,
+)
 
 if TYPE_CHECKING:
-    from hikcamerabot.camera import HikvisionCam
     from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile
 
 _UPLOAD_RETRY_WAIT = 5
-
-
-class AbstractDvrUploadTask(metaclass=abc.ABCMeta):
-    UPLOAD_TYPE: Optional[DvrUploadType] = None
-
-    def __init__(self, cam: 'HikvisionCam', conf: Dict,
-                 queue: asyncio.Queue['DvrFile']) -> None:
-        self._log = logging.getLogger(self.__class__.__name__)
-        self._cam = cam
-        self._bot = cam.bot
-        self._conf = conf
-        self._queue = queue
-
-    @abc.abstractmethod
-    async def run(self) -> None:
-        pass
 
 
 class TelegramDvrUploadTask(AbstractDvrUploadTask):
@@ -50,18 +32,15 @@ class TelegramDvrUploadTask(AbstractDvrUploadTask):
         try:
             await self.__upload(file_)
         except Exception:
-            self._log.exception(
-                'Failed to upload video %s. Retrying', file_.full_path)
+            self._log.exception('Failed to upload video %s. Retrying', file_.full_path)
             raise
 
     def _validate_file(self, file_: 'DvrFile') -> bool:
         if not file_.exists:
-            self._log.error('File %s does not exist, cannot upload',
-                            file_.full_path)
+            self._log.error('File %s does not exist, cannot upload', file_.full_path)
             return False
         if Path(file_.full_path).stat().st_size == 0:
-            self._log.error('File %s empty, cannot upload',
-                            file_.full_path)
+            self._log.error('File %s empty, cannot upload', file_.full_path)
             return False
         return True
 
@@ -71,8 +50,7 @@ class TelegramDvrUploadTask(AbstractDvrUploadTask):
 
         self._log.debug('Uploading DVR video %s', file_.full_path)
         caption = f'Video from {self._cam.description} {self._cam.hashtag}'
-        await self._bot.send_chat_action(self._conf.group_id,
-                                         action='upload_video')
+        await self._bot.send_chat_action(self._conf.group_id, action='upload_video')
         await self._bot.send_video(
             self._conf.group_id,
             caption=caption,

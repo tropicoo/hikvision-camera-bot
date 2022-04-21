@@ -19,10 +19,15 @@ class CameraRegistry:
     def __repr__(self) -> str:
         return str(self._registry)
 
-    def add(self, cam: HikvisionCam, commands: dict, commands_presentation: str) -> None:
+    def add(
+        self, cam: HikvisionCam, commands: dict, commands_presentation: str
+    ) -> None:
         """Add metadata to teh registry."""
-        self._registry[cam.id] = {'cam': cam, 'cmds': commands,
-                                  'cmds_presentation': commands_presentation}
+        self._registry[cam.id] = {
+            'cam': cam,
+            'cmds': commands,
+            'cmds_presentation': commands_presentation,
+        }
 
     def get_commands(self, cam_id: str) -> dict:
         """Get camera commands."""

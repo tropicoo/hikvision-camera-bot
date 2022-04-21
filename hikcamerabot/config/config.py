@@ -4,12 +4,15 @@ import logging
 import sys
 from asyncio import Queue
 from pathlib import Path
+from typing import Union
 
 from addict import Dict
 from marshmallow import ValidationError
 
 from hikcamerabot.config.schemas import CONFIG_SCHEMA_MAPPING
 from hikcamerabot.constants import ConfigFile
+from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
+from hikcamerabot.event_engine.events.outbound import SendTextOutboundEvent
 from hikcamerabot.exceptions import ConfigError
 
 
@@ -65,15 +68,16 @@ class ConfigLoader:
 
     def _process_errors_and_exit(self, errors: dict) -> None:
         for config_filename, errors_messages in errors.items():
-            self._log.error('Config validation error - "%s": %s', config_filename,
-                            errors_messages)
+            self._log.error(
+                'Config validation error - "%s": %s', config_filename, errors_messages
+            )
         sys.exit('Fix config files and try again.')
 
 
 _RESULT_QUEUE = Queue()
 
 
-def get_result_queue() -> Queue:
+def get_result_queue() -> Queue[Union[BaseOutboundEvent, SendTextOutboundEvent]]:
     return _RESULT_QUEUE
 
 

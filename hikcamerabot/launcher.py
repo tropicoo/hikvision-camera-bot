@@ -24,8 +24,11 @@ class BotLauncher:
         """Start telegram bot and related processes."""
         await self._bot.start()
 
-        self._log.info('Starting %s bot version %s',
-                       (await self._bot.get_me()).first_name, __version__)
+        self._log.info(
+            'Starting %s bot version %s',
+            (await self._bot.get_me()).first_name,
+            __version__,
+        )
 
         self._bot.start_tasks()
         await self._bot.send_startup_message()

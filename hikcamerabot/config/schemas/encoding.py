@@ -7,7 +7,8 @@ from marshmallow import (
 )
 
 from hikcamerabot.config.schemas.validators import (
-    int_min_1, int_min_minus_1,
+    int_min_1,
+    int_min_minus_1,
     non_empty_str,
 )
 from hikcamerabot.constants import FFMPEG_LOG_LEVELS, RtspTransportType
@@ -19,9 +20,7 @@ class BaseTemplate(Schema):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._inner_validation_schema = self._inner_validation_schema_cls()
-        self._template_validator = f.String(
-            required=True,
-            validate=non_empty_str)
+        self._template_validator = f.String(required=True, validate=non_empty_str)
 
     @validates_schema
     def validate_all(self, data: dict, **kwargs) -> None:
@@ -41,7 +40,9 @@ class Direct(BaseTemplate):
         acodec = f.String(required=True, validate=non_empty_str)
         asample_rate = f.Integer(required=True, validate=int_min_minus_1)
         format = f.String(required=True, validate=non_empty_str)
-        rtsp_transport_type = f.String(required=True, validate=v.OneOf(RtspTransportType.choices()))
+        rtsp_transport_type = f.String(
+            required=True, validate=v.OneOf(RtspTransportType.choices())
+        )
 
     _inner_validation_schema_cls = _Direct
 

@@ -1,7 +1,7 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.3. [Release details](releases/release_1.3.md).
+Version: 1.4. [Release details](releases/release_1.4.md).
 
 ## Features
 1. Send full/resized snapshots on request
@@ -83,30 +83,45 @@ Configuration files are stored in JSON format and can be found in `configs` dire
         },
         "stream_timeout": 10
       },
-      "alert": {
-        "delay": 15,
-        "video_gif": {
-          "enabled": true,
+      "rtsp_port": 554,
+      "video_gif": {
+        "on_demand": {
           "channel": 101,
           "record_time": 10,
+          "rewind_time": 10,
           "tmp_storage": "/tmp",
           "loglevel": "error",
           "rtsp_transport_type": "tcp"
         },
+        "on_alert": {
+          "channel": 101,
+          "record_time": 10,
+          "rewind_time": 10,
+          "rewind": true,
+          "tmp_storage": "/tmp",
+          "loglevel": "error",
+          "rtsp_transport_type": "tcp"
+        }
+      },
+      "alert": {
+        "delay": 15,
         "motion_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         },
         "line_crossing_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         },
         "intrusion_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         }
       },
       "livestream": {

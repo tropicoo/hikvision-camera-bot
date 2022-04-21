@@ -16,9 +16,7 @@ class BaseTemplate(Schema):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._inner_validation_schema = self._inner_validation_schema_cls()
-        self._template_validator = f.String(
-            required=True,
-            validate=non_empty_str)
+        self._template_validator = f.String(required=True, validate=non_empty_str)
 
     @validates_schema
     def validate_all(self, data: dict, **kwargs) -> None:
@@ -95,7 +93,7 @@ class Icecast(BaseTemplate):
 
 class Livestream(Schema):
     youtube = f.Nested(Youtube, required=True)
-    telegram = f.Nested(Telegram, required=False)
+    telegram = f.Nested(Telegram, required=True)
     icecast = f.Nested(Icecast, required=True)
     srs = f.Nested(Srs, required=True)
     dvr = f.Nested(Dvr, required=True)

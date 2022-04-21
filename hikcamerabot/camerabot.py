@@ -5,9 +5,9 @@ from typing import Optional
 from pyrogram import Client
 
 from hikcamerabot.config.config import get_main_config
-from hikcamerabot.dispatchers.event_result import ResultDispatcher
-from hikcamerabot.dispatchers.event_task import EventDispatcher
-from hikcamerabot.managers.result_worker import ResultWorkerManager
+from hikcamerabot.event_engine.dispatchers.outbound import OutboundEventDispatcher
+from hikcamerabot.event_engine.dispatchers.inbound import InboundEventDispatcher
+from hikcamerabot.event_engine.workers.manager import ResultWorkerManager
 from hikcamerabot.registry import CameraRegistry
 from hikcamerabot.utils.task import create_task
 
@@ -27,9 +27,9 @@ class CameraBot(Client):
         self._log.info('Initializing bot')
         self.user_ids: list[int] = conf.telegram.allowed_user_ids
         self.cam_registry: Optional[CameraRegistry] = None
-        self.event_dispatcher = EventDispatcher(bot=self)
-        self.result_dispatcher = ResultDispatcher(bot=self)
-        self.result_worker_manager = ResultWorkerManager(self.result_dispatcher)
+        self.inbound_dispatcher = InboundEventDispatcher(bot=self)
+        self.outbound_dispatcher = OutboundEventDispatcher(bot=self)
+        self.result_worker_manager = ResultWorkerManager(self.outbound_dispatcher)
 
     def add_cam_registry(self, cam_registry: CameraRegistry) -> None:
         # TODO: Get rid of this injection.
@@ -55,7 +55,8 @@ class CameraBot(Client):
         self._log.info('Sending welcome message')
         await self.send_message_all(
             f'{(await self.get_me()).first_name} bot started, see /help for '
-            f'available commands')
+            f'available commands'
+        )
 
     async def send_message_all(self, msg: str, **kwargs) -> None:
         """Send message to all defined user IDs in config.json."""
@@ -63,5 +64,6 @@ class CameraBot(Client):
             try:
                 await self.send_message(user_id, msg, **kwargs)
             except Exception:
-                self._log.exception('Failed to send message "%s" to user ID '
-                                    '%s', msg, user_id)
+                self._log.exception(
+                    'Failed to send message "%s" to user ID ' '%s', msg, user_id
+                )

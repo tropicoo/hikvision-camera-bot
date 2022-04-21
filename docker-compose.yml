@@ -9,6 +9,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
+      # First path is real local storage path. Change to your preferred path.
       - "/data/dvr:/data/dvr"
     restart: unless-stopped
     depends_on:
@@ -21,9 +22,14 @@ services:
     build:
       context: .
       dockerfile: srs_prod/Dockerfile
+    tmpfs:
+      # Store HLS .ts files in RAM. Depending on 'hls_fragment' and 'hls_window' default size '128M' might be increased.
+      # Check usage inside the container with 'df -h'.
+      - /srs/trunk/objs/nginx/html/hls:mode=770,size=128M
     command: >
       bash -c "./objs/srs -c conf/hik-docker.conf"
     ports:
+      # SRS RTMP port. If you comment this out, you won't be able to connect with video player like VLC.
       - "1935:1935"
-      - "1985:1985"
+      # SRS WebUI port. Also serves HLS stream; same warning as for previous port mapping.
       - "8080:8080"

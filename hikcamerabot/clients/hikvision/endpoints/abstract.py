@@ -30,7 +30,8 @@ class AbstractEndpoint(metaclass=abc.ABCMeta):
         response_xml = await self._api_client.request(
             endpoint=Endpoint.CHANNEL_CAPABILITIES.value,
             headers=self._XML_HEADERS,
-            method=Http.GET)
+            method=Http.GET,
+        )
         return Dict(xmltodict.parse(response_xml.text))
 
     def _validate_response_xml(self, response_xml: httpx.Response) -> None:

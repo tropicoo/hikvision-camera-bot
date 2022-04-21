@@ -8,11 +8,9 @@ from hikcamerabot.constants import (
     DvrUploadType,
 )
 from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile
-from hikcamerabot.services.tasks.dvr.dvr import (
-    DvrFileDeleteTask,
-    DvrFileMonitoringTask,
-)
-from hikcamerabot.services.tasks.dvr.upload import TelegramDvrUploadTask
+from hikcamerabot.services.stream.dvr.tasks.file_delete import DvrFileDeleteTask
+from hikcamerabot.services.stream.dvr.tasks.file_monitoring import DvrFileMonitoringTask
+from hikcamerabot.services.stream.dvr.upload.tasks.telegram import TelegramDvrUploadTask
 from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:
@@ -70,18 +68,18 @@ class DvrUploadEngine:
         await asyncio.gather(
             self._start_storage_tasks(),
             self._start_file_monitoring_task_(),
-            self._start_file_deletion_task_()
+            self._start_file_deletion_task_(),
         )
 
     async def _start_storage_tasks(self) -> None:
         for storage, queue in self._storage_queues.items():
-            self._log.debug('Starting %s upload task for %s storage',
-                            self._cam.description, storage)
+            self._log.debug(
+                'Starting %s upload task for %s storage', self._cam.description, storage
+            )
             task = self._UPLOAD_TASKS[DvrUploadType(storage)]
             create_task(
                 task(
-                    cam=self._cam, conf=self._conf.upload.storage[storage],
-                    queue=queue
+                    cam=self._cam, conf=self._conf.upload.storage[storage], queue=queue
                 ).run(),
                 task_name=task.__name__,
                 logger=self._log,
@@ -90,8 +88,9 @@ class DvrUploadEngine:
             )
 
     async def _start_file_monitoring_task_(self) -> None:
-        self._log.debug('Starting DVR file monitoring task for %s',
-                        self._cam.description)
+        self._log.debug(
+            'Starting DVR file monitoring task for %s', self._cam.description
+        )
         create_task(
             DvrFileMonitoringTask(engine=self, conf=self._cam.conf).run(),
             task_name=DvrFileMonitoringTask.__name__,
@@ -102,8 +101,9 @@ class DvrUploadEngine:
 
     async def _start_file_deletion_task_(self) -> None:
         if self._conf.upload.delete_after_upload:
-            self._log.debug('Starting DVR file deletion task for %s',
-                            self._cam.description)
+            self._log.debug(
+                'Starting DVR file deletion task for %s', self._cam.description
+            )
             create_task(
                 self._FILE_DELETE_TASK_CLS(
                     queue=self._delete_candidates_queue,

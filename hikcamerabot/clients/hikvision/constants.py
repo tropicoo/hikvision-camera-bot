@@ -15,7 +15,6 @@ class Endpoint(enum.Enum):
 
 @enum.unique
 class _BaseEndpointEnum(enum.Enum):
-
     def __str__(self) -> str:
         return str(self.value)
 

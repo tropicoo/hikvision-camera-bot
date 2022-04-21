@@ -57,11 +57,15 @@ class BotSetup:
         self._log.debug('Camera Meta Registry: %r', cam_registry)
         return cam_registry
 
-    def _setup_message_handler(self, callback: Callable,
-                               cmd: Union[str, list[str]]) -> None:
-        self._bot.add_handler(MessageHandler(
-            callback,
-            filters=filters.user(self._bot.user_ids) & filters.command(cmd)))
+    def _setup_message_handler(
+        self, callback: Callable, cmd: Union[str, list[str]]
+    ) -> None:
+        self._bot.add_handler(
+            MessageHandler(
+                callback,
+                filters=filters.user(self._bot.user_ids) & filters.command(cmd),
+            )
+        )
 
     def _setup_global_cmds(self, global_cmds: dict) -> None:
         """Set up global bot command callbacks (handlers) in place."""

@@ -40,8 +40,9 @@ def gen_uuid() -> str:
 
 def gen_random_str(length=4) -> str:
     return ''.join(
-        random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _
-        in range(length))
+        random.SystemRandom().choice(string.ascii_lowercase + string.digits)
+        for _ in range(length)
+    )
 
 
 def format_ts(ts: float, time_format: str = '%a %b %d %H:%M:%S %Y') -> str:
@@ -56,12 +57,15 @@ def make_bold(text: str) -> str:
 def get_user_info(message: Message) -> str:
     """Return user information who interacts with bot."""
     chat = message.chat
-    return f'Request from user_id: {chat.id}, username: {chat.username}, ' \
-           f'full name: {chat.first_name} {chat.last_name}'
+    return (
+        f'Request from user_id: {chat.id}, username: {chat.username}, '
+        f'full name: {chat.first_name} {chat.last_name}'
+    )
 
 
-def build_command_presentation(commands: dict[str, list[str]],
-                               cam: 'HikvisionCam') -> str:
+def build_command_presentation(
+    commands: dict[str, list[str]], cam: 'HikvisionCam'
+) -> str:
     groups = []
     visibility_opts: dict[str, bool] = cam.conf.command_sections_visibility
     for section_desc, cmds in commands.items():

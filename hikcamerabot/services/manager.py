@@ -36,8 +36,10 @@ class ServiceManager:
                     if service.enabled_in_conf:
                         await service.start()
                     else:
-                        self._log.info('Do not start service "%s" - '
-                                       'disabled by default', service)
+                        self._log.info(
+                            'Do not start service "%s" - ' 'disabled by default',
+                            service,
+                        )
                 else:
                     await service.start()
 
@@ -47,8 +49,11 @@ class ServiceManager:
                 try:
                     await service.stop()
                 except Exception as err:
-                    self._log.warning('Warning while stopping service "%s": '
-                                      '%s', service.name.value, err)
+                    self._log.warning(
+                        'Warning while stopping service "%s": ' '%s',
+                        service.name.value,
+                        err,
+                    )
 
     async def stop(self, service_type: str, service_name: str) -> None:
         await self._services[service_type][service_name].stop()
