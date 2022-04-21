@@ -5,7 +5,7 @@ import logging
 from typing import Optional, TYPE_CHECKING
 
 from hikcamerabot.config.config import get_result_queue
-from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.constants import DETECTION_SWITCH_MAP, Event
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 from hikcamerabot.event_engine.events.inbound import (
     AlertConfEvent,
@@ -153,7 +153,7 @@ class TaskIrcutFilterConf(AbstractTaskEvent):
         await event.cam.set_ircut_filter(filter_type=event.filter_type)
         await self._result_queue.put(
             SendTextOutboundEvent(
-                event=event.event,
+                event=Event.SEND_TEXT,
                 message=event.message,
                 text=make_bold('OK'),
             )
