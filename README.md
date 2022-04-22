@@ -423,7 +423,7 @@ Where:
     "x264": {
       "kitchen": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "libx264",
         "acodec": "aac",
         "format": "flv",
@@ -445,7 +445,7 @@ Where:
       },
       "basement": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "libx264",
         "acodec": "aac",
         "format": "flv",
@@ -515,7 +515,7 @@ Where:
     "direct": {
       "kitchen": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "copy",
         "acodec": "aac",
         "format": "flv",
@@ -523,7 +523,7 @@ Where:
       },
       "basement": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "copy",
         "acodec": "aac",
         "format": "flv",

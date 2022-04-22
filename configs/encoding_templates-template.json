@@ -94,7 +94,7 @@
   "x264": {
     "kitchen": {
       "null_audio": false,
-      "loglevel": "quiet",
+      "loglevel": "error",
       "vcodec": "libx264",
       "acodec": "aac",
       "asample_rate": -1,
@@ -117,7 +117,7 @@
     },
     "basement": {
       "null_audio": false,
-      "loglevel": "quiet",
+      "loglevel": "error",
       "vcodec": "libx264",
       "acodec": "aac",
       "asample_rate": -1,

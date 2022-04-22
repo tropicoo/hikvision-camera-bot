@@ -18,7 +18,6 @@ class ResultWorkerTask:
         self._res_queue = get_result_queue()
 
     async def run(self) -> None:
-        # TODO: Control with asyncio.Event.
         while True:
             while not self._res_queue.empty():
                 event = await self._res_queue.get()

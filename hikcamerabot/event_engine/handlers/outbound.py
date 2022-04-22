@@ -61,7 +61,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
         )
         try:
             for uid in self._bot.user_ids:
-                await self._send_video(uid, caption)
+                await self._send_video(uid, event, caption)
         finally:
             os.remove(event.video_path)
             if event.thumb_path:
