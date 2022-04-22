@@ -84,7 +84,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
                 thumb=event.thumb_path,
                 supports_streaming=True,
             )
-            if message and not is_cached:
+            if message and message.video and not is_cached:
                 self._video_file_cache[event.video_path] = message.video.file_id
         except Exception:
             self._log.exception(
