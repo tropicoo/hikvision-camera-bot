@@ -18,6 +18,7 @@ from hikcamerabot.event_engine.events.inbound import (
 )
 
 from hikcamerabot.utils.utils import make_bold
+from hikcamerabot.utils.version_checker import HikCameraBotVersionChecker
 
 log = logging.getLogger(__name__)
 
@@ -138,6 +139,13 @@ async def cmd_stop(bot: CameraBot, message: Message) -> None:
     # log.info(f'Stopping {(await bot.first_name)} bot')
     # TODO: Is this even needed?
     pass
+
+
+@authorization_check
+async def cmd_app_version(bot: CameraBot, message: Message) -> None:
+    ctx = await HikCameraBotVersionChecker().get_context()
+    text = f'Latest {ctx.latest}\nCurrent {ctx.current}'
+    await message.reply_text(text, reply_to_message_id=message.message_id)
 
 
 @authorization_check
@@ -401,7 +409,8 @@ async def cmd_help(
     """Send help message to telegram chat."""
     log.info('Help message has been requested')
     await message.reply_text(
-        'Use /list_cams command to show available cameras and commands',
+        'Use /list_cams to show available cameras and commands,\n'
+        '/version to check bot version',
         reply_to_message_id=message.message_id,
     )
     log.debug('Help message has been sent')

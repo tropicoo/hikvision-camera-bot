@@ -73,6 +73,9 @@ def setup_commands() -> tuple[dict, dict[Union[list[str], str], Callable]]:
         'help': cb.cmd_help,
         'stop': cb.cmd_stop,
         'list_cams': cb.cmd_list_cams,
+        'version': cb.cmd_app_version,
+        'ver': cb.cmd_app_version,
+        'v': cb.cmd_app_version,
     }
 
     return tpl_cmds, global_cmds
