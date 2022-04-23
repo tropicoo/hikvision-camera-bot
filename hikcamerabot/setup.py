@@ -63,7 +63,7 @@ class BotSetup:
         self._bot.add_handler(
             MessageHandler(
                 callback,
-                filters=filters.user(self._bot.user_ids) & filters.command(cmd),
+                filters=filters.user(self._bot.chat_users) & filters.command(cmd),
             )
         )
 

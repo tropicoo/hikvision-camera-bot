@@ -4,7 +4,9 @@ import enum
 
 from typing import Union
 
-CMD_CAM_ID_REGEX = r'^.*(?=cam_[0-9]+)'
+# /cmds_cam_1 | /cmds_cam_1@SomeNameBot -> cam_1
+CMD_CAM_ID_REGEX = r'(cam_[0-9]+)(?:@|$)'
+
 CONN_TIMEOUT = 5
 SEND_TIMEOUT = 300
 

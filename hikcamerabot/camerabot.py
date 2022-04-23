@@ -5,8 +5,8 @@ from typing import Optional
 from pyrogram import Client
 
 from hikcamerabot.config.config import get_main_config
-from hikcamerabot.event_engine.dispatchers.outbound import OutboundEventDispatcher
 from hikcamerabot.event_engine.dispatchers.inbound import InboundEventDispatcher
+from hikcamerabot.event_engine.dispatchers.outbound import OutboundEventDispatcher
 from hikcamerabot.event_engine.workers.manager import ResultWorkerManager
 from hikcamerabot.registry import CameraRegistry
 from hikcamerabot.utils.task import create_task
@@ -25,7 +25,9 @@ class CameraBot(Client):
         )
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.info('Initializing bot')
-        self.user_ids: list[int] = conf.telegram.allowed_user_ids
+        self.chat_users: list[int] = conf.telegram.chat_users
+        self.alert_users: list[int] = conf.telegram.alert_users
+        self.startup_message_users: list[int] = conf.telegram.startup_message_users
         self.cam_registry: Optional[CameraRegistry] = None
         self.inbound_dispatcher = InboundEventDispatcher(bot=self)
         self.outbound_dispatcher = OutboundEventDispatcher(bot=self)
@@ -53,17 +55,23 @@ class CameraBot(Client):
     async def send_startup_message(self) -> None:
         """Send welcome message after bot launch."""
         self._log.info('Sending welcome message')
-        await self.send_message_all(
+        text = (
             f'{(await self.get_me()).first_name} bot started, see /help for '
             f'available commands'
         )
+        for user_id in self.startup_message_users:
+            await self._send_message(text, user_id)
 
-    async def send_message_all(self, msg: str, **kwargs) -> None:
-        """Send message to all defined user IDs in config.json."""
-        for user_id in self.user_ids:
-            try:
-                await self.send_message(user_id, msg, **kwargs)
-            except Exception:
-                self._log.exception(
-                    'Failed to send message "%s" to user ID ' '%s', msg, user_id
-                )
+    async def send_alert_message(self, text: str, **kwargs) -> None:
+        """Send message to alert users."""
+        self._log.info('Sending message to alert users')
+        for user_id in self.alert_users:
+            await self._send_message(text, user_id, **kwargs)
+
+    async def _send_message(self, text: str, user_id: int, **kwargs):
+        try:
+            await self.send_message(user_id, text, **kwargs)
+        except Exception:
+            self._log.exception(
+                'Failed to send message "%s" to user ID %s', text, user_id
+            )

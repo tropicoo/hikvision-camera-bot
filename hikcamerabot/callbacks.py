@@ -39,9 +39,6 @@ async def cmds(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
 async def cmd_ir_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Get and send resized snapshot from the camera."""
     log.info('Resized cam snapshot from %s requested', cam.description)
-    # event = {'cam': cam, 'event': Event.CONFIGURE_IRCUT_FILTER,
-    #          'message': message,
-    #          'params': {'filter_type': IrcutFilterType.NIGHT}}
     event = IrcutConfEvent(
         cam=cam,
         event=Event.CONFIGURE_IRCUT_FILTER,
@@ -56,9 +53,6 @@ async def cmd_ir_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None
 async def cmd_ir_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Get and send resized snapshot from the camera."""
     log.info('Resized cam snapshot from %s requested', cam.description)
-    # event = {'cam': cam, 'event': Event.CONFIGURE_IRCUT_FILTER,
-    #          'message': message,
-    #          'params': {'filter_type': IrcutFilterType.DAY}}
     event = IrcutConfEvent(
         cam=cam,
         event=Event.CONFIGURE_IRCUT_FILTER,
@@ -73,9 +67,6 @@ async def cmd_ir_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> Non
 async def cmd_ir_auto(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Get and send resized snapshot from the camera."""
     log.info('Resized cam snapshot from %s requested', cam.description)
-    # event = {'cam': cam, 'event': Event.CONFIGURE_IRCUT_FILTER,
-    #          'message': message,
-    #          'params': {'filter_type': IrcutFilterType.AUTO}}
     event = IrcutConfEvent(
         cam=cam,
         event=Event.CONFIGURE_IRCUT_FILTER,
@@ -90,8 +81,6 @@ async def cmd_ir_auto(bot: CameraBot, message: Message, cam: HikvisionCam) -> No
 async def cmd_getpic(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Get and send resized snapshot from the camera."""
     log.info('Resized cam snapshot from %s requested', cam.description)
-    # event = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
-    #          'params': {'resize': True}}
     event = GetPicEvent(
         cam=cam,
         event=Event.TAKE_SNAPSHOT,
@@ -106,8 +95,6 @@ async def cmd_getpic(bot: CameraBot, message: Message, cam: HikvisionCam) -> Non
 async def cmd_getfullpic(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Get and send full snapshot from the camera."""
     log.info('Full cam snapshot requested')
-    # event = {'cam': cam, 'event': Event.TAKE_SNAPSHOT, 'message': message,
-    #          'params': {'resize': False}}
     event = GetPicEvent(
         cam=cam,
         event=Event.TAKE_SNAPSHOT,
@@ -122,8 +109,6 @@ async def cmd_getfullpic(bot: CameraBot, message: Message, cam: HikvisionCam) ->
 async def cmd_getvideo(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Record video gif."""
     log.info('Get video gif requested')
-    # event = {'cam': cam, 'event': Event.RECORD_VIDEOGIF, 'message': message,
-    #          'params': {'rewind': False}}
     event = GetVideoEvent(
         cam=cam,
         event=Event.RECORD_VIDEOGIF,
@@ -138,8 +123,6 @@ async def cmd_getvideo(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
 async def cmd_getvideor(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Record rewind video gif."""
     log.info('Get rewound video gif requested')
-    # event = {'cam': cam, 'event': Event.RECORD_VIDEOGIF, 'message': message,
-    #          'params': {'rewind': True}}
     event = GetVideoEvent(
         cam=cam,
         event=Event.RECORD_VIDEOGIF,
@@ -187,8 +170,6 @@ async def cmd_intrusion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Enable camera's Intrusion Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'type': Detection.INTRUSION, 'params': {'switch': True}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -205,8 +186,6 @@ async def cmd_intrusion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Disable camera's Intrusion Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'type': Detection.INTRUSION, 'params': {'switch': False}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -223,8 +202,6 @@ async def cmd_motion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Enable camera's Motion Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'type': Detection.MOTION, 'params': {'switch': True}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -241,8 +218,6 @@ async def cmd_motion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Disable camera's Motion Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'type': Detection.MOTION, 'params': {'switch': False}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -259,8 +234,6 @@ async def cmd_line_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Enable camera's Line Crossing Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'name': Detection.LINE, 'params': {'switch': True}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -277,8 +250,6 @@ async def cmd_line_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Disable camera's Line Crossing Detection."""
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_DETECTION,
-    #          'type': Detection.LINE, 'params': {'switch': False}}
     event = DetectionConfEvent(
         cam=cam,
         event=Event.CONFIGURE_DETECTION,
@@ -293,9 +264,6 @@ async def cmd_line_detection_off(
 @camera_selection
 async def cmd_stream_yt_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Start YouTube stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.YOUTUBE, 'params': {'switch': True}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -313,9 +281,6 @@ async def cmd_stream_yt_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Stop YouTube stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.YOUTUBE, 'params': {'switch': False}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -331,9 +296,6 @@ async def cmd_stream_yt_off(
 @camera_selection
 async def cmd_stream_tg_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Start Telegram stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.TELEGRAM, 'params': {'switch': True}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -351,9 +313,6 @@ async def cmd_stream_tg_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Stop Telegram stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.TELEGRAM, 'params': {'switch': False}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -371,9 +330,6 @@ async def cmd_stream_icecast_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Start Icecast stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.ICECAST, 'params': {'switch': True}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -391,9 +347,6 @@ async def cmd_stream_icecast_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
     """Stop Icecast stream."""
-    # event = {'cam': cam, 'message': message, 'event': Event.STREAM,
-    #          'service_type': ServiceType.STREAM,
-    #          'stream_type': Stream.ICECAST, 'params': {'switch': False}}
     event = StreamEvent(
         cam=cam,
         event=Event.STREAM,
@@ -410,9 +363,6 @@ async def cmd_stream_icecast_off(
 async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Enable camera's Alert Mode."""
     log.info('Enabling camera\'s alert mode requested')
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
-    #          'service_type': ServiceType.ALARM,
-    #          'name': Alarm.ALARM, 'params': {'switch': True}}
     event = AlertConfEvent(
         cam=cam,
         event=Event.CONFIGURE_ALARM,
@@ -429,9 +379,6 @@ async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
 async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Disable camera's Alert Mode."""
     log.info('Disabling camera\'s alert mode requested')
-    # event = {'cam': cam, 'message': message, 'event': Event.CONFIGURE_ALARM,
-    #          'service_type': ServiceType.ALARM,
-    #          'name': Alarm.ALARM, 'params': {'switch': False}}
     event = AlertConfEvent(
         cam=cam,
         event=Event.CONFIGURE_ALARM,

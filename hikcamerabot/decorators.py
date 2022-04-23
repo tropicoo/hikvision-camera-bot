@@ -58,7 +58,7 @@ def authorization_check(func):
         message: Message = args[1]
         bot._log.debug(get_user_info(message))  # noqa
 
-        if message.chat.id in bot.user_ids:
+        if message.chat.id in bot.chat_users:
             return await func(*args, **kwargs)
 
         bot._log.error('User authorization error: %s', message.chat.id)  # noqa
@@ -76,7 +76,7 @@ def camera_selection(func):
     async def wrapper(*args, **kwargs):
         bot: CameraBot = args[0]
         message: Message = args[1]
-        cam_id = re.split(CMD_CAM_ID_REGEX, message.text)[-1]
+        cam_id = re.findall(CMD_CAM_ID_REGEX, message.text)[0]
         cam = bot.cam_registry.get_instance(cam_id)
         try:
             return await func(*args, cam=cam, **kwargs)

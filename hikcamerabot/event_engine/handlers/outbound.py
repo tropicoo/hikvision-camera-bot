@@ -60,7 +60,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             f'/list_cams'
         )
         try:
-            for uid in self._bot.user_ids:
+            for uid in self._bot.alert_users:
                 await self._send_video(uid, event, caption)
         finally:
             os.remove(event.video_path)
@@ -84,6 +84,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
                 thumb=event.thumb_path,
                 supports_streaming=True,
             )
+            self._log.debug('Debug context message: %s', message)
             if message and message.video and not is_cached:
                 self._video_file_cache[event.video_path] = message.video.file_id
         except Exception:
@@ -170,7 +171,7 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
             )
 
         cached_id: Optional[str] = None
-        for uid in self._bot.user_ids:
+        for uid in self._bot.alert_users:
             try:
                 if resized:
                     message = await send_photo(cached_id or photo)
@@ -209,7 +210,7 @@ class ResultSendTextHandler(AbstractResultEventHandler):
                 parse_mode=parse_mode,
             )
         else:
-            await self._bot.send_message_all(text, parse_mode=parse_mode)
+            await self._bot.send_alert_message(text, parse_mode=parse_mode)
 
 
 class ResultAlarmConfHandler(AbstractResultEventHandler):

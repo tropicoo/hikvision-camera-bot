@@ -115,6 +115,7 @@ class RecordVideoGifTask:
             await self._send_result()
 
     async def _make_thumbnail_frame(self) -> None:
+        # TODO: Refactor duplicate code. Move to mixin.
         if not await MakeThumbnailTask(self._thumb_path, self._file_path).run():
             self._log.error(
                 'Error during making thumbnail context of %s', self._file_path
@@ -123,7 +124,7 @@ class RecordVideoGifTask:
         self._thumb_created = True
 
     async def _get_probe_ctx(self) -> None:
-        # TODO: Refactor duplicate code.
+        # TODO: Refactor duplicate code. Move to mixin.
         self._probe_ctx = await GetFfprobeContextTask(self._file_path).run()
         if not self._probe_ctx:
             return

@@ -4,7 +4,15 @@
     "api_hash": "1a1a1a1a1a1a1a1a",
     "lang_code": "en",
     "token": "1b1b1b1b1b1b1b1b",
-    "allowed_user_ids": [
+    "chat_users": [
+      1010101010,
+      2020202020
+    ],
+    "alert_users": [
+      1010101010,
+      2020202020
+    ],
+    "startup_message_users": [
       1010101010,
       2020202020
     ]

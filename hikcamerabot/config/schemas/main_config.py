@@ -148,9 +148,9 @@ class Telegram(Schema):
     api_hash = f.Str(required=True, validate=non_empty_str)
     lang_code = f.Str(required=True, validate=non_empty_str)
     token = f.Str(required=True, validate=non_empty_str)
-    allowed_user_ids = f.List(
-        f.Int(required=True), required=True, validate=non_empty_str
-    )
+    chat_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
+    alert_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
+    startup_message_users = f.List(f.Int(required=True), required=True)
 
 
 class MainConfig(Schema):
