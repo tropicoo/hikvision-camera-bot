@@ -83,7 +83,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
       "hidden": false,
       "description": "Kitchen",
       "hashtag": "kitchen",
-      "group": "Test group",
+      "group": "Default group",
       "api": {
         "host": "http://192.168.1.1",
         "auth": {

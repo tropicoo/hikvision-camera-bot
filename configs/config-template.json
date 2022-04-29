@@ -23,7 +23,7 @@
       "hidden": false,
       "description": "Kitchen",
       "hashtag": "kitchen",
-      "group": "Test group",
+      "group": "Default group",
       "api": {
         "host": "http://192.168.1.1",
         "auth": {
@@ -126,7 +126,7 @@
       "hidden": false,
       "description": "Basement",
       "hashtag": "basement",
-      "group": "Test group",
+      "group": "Default group",
       "api": {
         "host": "http://192.168.1.2",
         "auth": {
