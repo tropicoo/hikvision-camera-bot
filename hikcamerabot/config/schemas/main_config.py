@@ -12,8 +12,8 @@ from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
 from hikcamerabot.constants import (
     CMD_CAM_ID_REGEX,
     FFMPEG_LOG_LEVELS,
-    RtspTransportType,
 )
+from hikcamerabot.enums import RtspTransportType
 
 
 class LivestreamConf(Schema):
@@ -110,7 +110,8 @@ class CameraListConfig(Schema):
     class _CameraListConfig(Schema):
         hidden = f.Boolean(required=True)
         description = f.Str(required=True, validate=non_empty_str)
-        hashtag = f.Str(required=True, allow_none=False)
+        hashtag = f.Str(required=True, allow_none=True)
+        group = f.Str(required=True, allow_none=True)
         api = f.Nested(CamAPI, required=True)
         rtsp_port = f.Int(required=True)
         video_gif = f.Nested(VideoGif, required=True)

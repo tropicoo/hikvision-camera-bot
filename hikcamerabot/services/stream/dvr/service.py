@@ -4,9 +4,8 @@ from hikcamerabot.constants import (
     FFMPEG_CMD_DVR,
     FFMPEG_CMD_NULL_AUDIO,
     RTSP_TRANSPORT_TPL,
-    Stream,
-    VideoEncoder,
 )
+from hikcamerabot.enums import Stream, VideoEncoder
 from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.stream.dvr.upload.engine import DvrUploadEngine
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask

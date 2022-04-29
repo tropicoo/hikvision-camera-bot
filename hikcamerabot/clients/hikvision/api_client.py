@@ -9,7 +9,7 @@ from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
-from hikcamerabot.constants import CONN_TIMEOUT, Http
+from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 
 
@@ -25,7 +25,7 @@ class AbstractHikvisionAPIClient(metaclass=abc.ABCMeta):
         endpoint: str,
         data: Any = None,
         headers: dict = None,
-        method: str = Http.GET,
+        method: str = 'GET',
         timeout: float = CONN_TIMEOUT,
     ) -> Any:
         pass
@@ -50,7 +50,7 @@ class HikvisionAPIClient(AbstractHikvisionAPIClient):
         endpoint: str,
         data: Any = None,
         headers: dict = None,
-        method: str = Http.GET,
+        method: str = 'GET',
         timeout: float = CONN_TIMEOUT,
     ) -> httpx.Response:
         url = urljoin(self.host, endpoint)

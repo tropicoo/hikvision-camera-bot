@@ -1,6 +1,5 @@
 """Camera Bot Module."""
 import logging
-from typing import Optional
 
 from pyrogram import Client
 
@@ -13,29 +12,27 @@ from hikcamerabot.utils.task import create_task
 
 
 class CameraBot(Client):
-    """Extended aiogram's 'Bot' class."""
+    """Extended pyrogram 'Client' class."""
 
     def __init__(self) -> None:
         conf = get_main_config()
         super().__init__(
-            session_name='default_session',
+            name='default_client',
             api_id=conf.telegram.api_id,
             api_hash=conf.telegram.api_hash,
             bot_token=conf.telegram.token,
         )
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.info('Initializing bot')
+
         self.chat_users: list[int] = conf.telegram.chat_users
         self.alert_users: list[int] = conf.telegram.alert_users
         self.startup_message_users: list[int] = conf.telegram.startup_message_users
-        self.cam_registry: Optional[CameraRegistry] = None
+
+        self.cam_registry = CameraRegistry()
         self.inbound_dispatcher = InboundEventDispatcher(bot=self)
         self.outbound_dispatcher = OutboundEventDispatcher(bot=self)
         self.result_worker_manager = ResultWorkerManager(self.outbound_dispatcher)
-
-    def add_cam_registry(self, cam_registry: CameraRegistry) -> None:
-        # TODO: Get rid of this injection.
-        self.cam_registry = cam_registry
 
     def start_tasks(self) -> None:
         """Start and forget async launch tasks per camera. They start all
@@ -53,7 +50,7 @@ class CameraBot(Client):
             )
 
     async def send_startup_message(self) -> None:
-        """Send welcome message after bot launch."""
+        """Send welcome message to defined telegram ids after bot launch."""
         self._log.info('Sending welcome message')
         text = (
             f'{(await self.get_me()).first_name} bot started, see /help for '

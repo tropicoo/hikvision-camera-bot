@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from hikcamerabot.clients.hikvision.constants import IrcutFilterType
-from hikcamerabot.constants import Alarm, Detection, ServiceType, Stream
+from hikcamerabot.clients.hikvision.enums import IrcutFilterType
+from hikcamerabot.enums import Alarm, Detection, ServiceType, Stream
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 
 

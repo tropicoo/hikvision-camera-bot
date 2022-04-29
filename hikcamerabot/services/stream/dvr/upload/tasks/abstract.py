@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 
 from addict import Dict
 
-from hikcamerabot.constants import DvrUploadType
+from hikcamerabot.enums import DvrUploadType
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam

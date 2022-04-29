@@ -3,7 +3,7 @@ import time
 from httpx import ConnectError
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
-from hikcamerabot.constants import Detection, ServiceType
+from hikcamerabot.enums import Detection, ServiceType
 from hikcamerabot.exceptions import ChunkDetectorError, ChunkLoopError
 from hikcamerabot.services.abstract import AbstractServiceTask
 from hikcamerabot.services.alarm.notifier import AlertNotifier
@@ -38,7 +38,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             raise
         except ConnectError:
             self._log.error(
-                'Failed to connect to %s alert stream. Retrying ' 'in %s seconds...',
+                'Failed to connect to %s alert stream. Retrying in %s seconds...',
                 self._cam.id,
                 self.RETRY_WAIT,
             )

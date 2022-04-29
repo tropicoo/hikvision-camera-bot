@@ -2,9 +2,8 @@
 
 from hikcamerabot.constants import (
     FFMPEG_CMD_TRANSCODE_ICECAST,
-    Stream,
-    VideoEncoder,
 )
+from hikcamerabot.enums import Stream, VideoEncoder
 from hikcamerabot.exceptions import ServiceConfigError
 from hikcamerabot.services.stream.abstract import (
     AbstractExternalLivestreamService,

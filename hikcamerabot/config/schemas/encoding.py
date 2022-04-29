@@ -11,7 +11,8 @@ from hikcamerabot.config.schemas.validators import (
     int_min_minus_1,
     non_empty_str,
 )
-from hikcamerabot.constants import FFMPEG_LOG_LEVELS, RtspTransportType
+from hikcamerabot.constants import FFMPEG_LOG_LEVELS
+from hikcamerabot.enums import RtspTransportType
 
 
 class BaseTemplate(Schema):

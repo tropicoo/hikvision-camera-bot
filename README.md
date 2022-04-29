@@ -41,8 +41,8 @@ Configuration files are stored in JSON format and can be found in `configs` dire
     1. Put the obtained `api_id` and `api_hash` strings to same keys
     2. Put the obtained bot API token string to `token` key
     3. [Find](https://stackoverflow.com/a/32777943) your Telegram user id
-    and put it to `allowed_user_ids` list as integer value. Multiple ids can
-    be used, just separate them with a comma
+    and put it to `chat_users`, `alert_users` and `startup_message_users` lists as 
+    integer value. Multiple ids can be used, just separate them with a comma.
     4. Hikvision camera settings are placed inside the `camera_list` section. Template
     comes with two cameras
 
@@ -64,7 +64,15 @@ Configuration files are stored in JSON format and can be found in `configs` dire
     "api_hash": "1a1a1a1a1a1a1a1a",
     "lang_code": "en",
     "token": "1b1b1b1b1b1b1b1b",
-    "allowed_user_ids": [
+    "chat_users": [
+      1010101010,
+      2020202020
+    ],
+    "alert_users": [
+      1010101010,
+      2020202020
+    ],
+    "startup_message_users": [
       1010101010,
       2020202020
     ]
@@ -75,6 +83,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
       "hidden": false,
       "description": "Kitchen",
       "hashtag": "kitchen",
+      "group": "Test group",
       "api": {
         "host": "http://192.168.1.1",
         "auth": {

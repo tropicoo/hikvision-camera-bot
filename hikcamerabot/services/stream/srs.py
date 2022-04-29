@@ -4,9 +4,8 @@ from hikcamerabot.constants import (
     FFMPEG_CMD_NULL_AUDIO,
     FFMPEG_CMD_SRS,
     SRS_LIVESTREAM_NAME_TPL,
-    Stream,
-    VideoEncoder,
 )
+from hikcamerabot.enums import Stream, VideoEncoder
 from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask
 from hikcamerabot.utils.task import create_task

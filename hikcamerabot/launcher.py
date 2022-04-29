@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from hikcamerabot.setup import BotSetup
+from hikcamerabot.bot_setup import BotSetup
 from hikcamerabot.version import __version__
 
 
@@ -17,21 +17,20 @@ class BotLauncher:
         self._bot = self._setup.get_bot()
 
     async def launch(self) -> None:
-        """Launch (run) bot."""
+        """Launch bot."""
         await self._start_bot()
 
     async def _start_bot(self) -> None:
         """Start telegram bot and related processes."""
         await self._bot.start()
 
-        self._log.info(
-            'Starting %s bot version %s',
-            (await self._bot.get_me()).first_name,
-            __version__,
-        )
+        bot_name = (await self._bot.get_me()).first_name
+        self._log.info('Starting %s bot version %s', bot_name, __version__)
 
         self._bot.start_tasks()
         await self._bot.send_startup_message()
+
+        self._log.info('Bot %s has started', bot_name)
         await self._run_bot_forever()
 
     async def _run_bot_forever(self) -> None:

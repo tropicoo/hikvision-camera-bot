@@ -1,15 +1,15 @@
 import logging
 from collections import defaultdict
-from typing import Callable, Union
+from typing import Callable
 
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
 
+from hikcamerabot.callbacks import cmd_list_group_cams
 from hikcamerabot.camera import HikvisionCam
 from hikcamerabot.camerabot import CameraBot
 from hikcamerabot.commands import setup_commands
 from hikcamerabot.config.config import get_main_config
-from hikcamerabot.registry import CameraRegistry
 from hikcamerabot.utils.utils import build_command_presentation
 
 
@@ -20,10 +20,9 @@ class BotSetup:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = get_main_config()
         self._bot = CameraBot()
-        cam_registry = self._create_and_setup_cameras()
-        self._bot.add_cam_registry(cam_registry)
+        self._create_and_setup_cameras()
 
-    def _create_and_setup_cameras(self) -> CameraRegistry:
+    def _create_and_setup_cameras(self) -> None:
         """Create cameras and setup for the dispatcher.
 
         Iterate trough the config, create event queues per camera,
@@ -31,12 +30,11 @@ class BotSetup:
 
         Hidden (undesirable) cameras will be excluded from the setup.
         """
-        cam_registry = CameraRegistry()
         tpl_cmds, global_cmds = setup_commands()
 
         for cam_id, cam_conf in self._conf.camera_list.items():
             if cam_conf.hidden:
-                # Ignore/skip camera and its settings.
+                # Skip camera and its settings.
                 continue
 
             cam_cmds = defaultdict(list)
@@ -47,19 +45,17 @@ class BotSetup:
                     self._setup_message_handler(callback, cmd)
 
             cam = HikvisionCam(id=cam_id, conf=cam_conf, bot=self._bot)
-            cam_registry.add(
+            self._bot.cam_registry.add(
                 cam=cam,
                 commands=cam_cmds,
                 commands_presentation=build_command_presentation(cam_cmds, cam),
             )
 
         self._setup_global_cmds(global_cmds)
-        self._log.debug('Camera Meta Registry: %r', cam_registry)
-        return cam_registry
+        self._setup_group_cmds()
+        self._log.debug('Camera Meta Registry: %r', self._bot.cam_registry)
 
-    def _setup_message_handler(
-        self, callback: Callable, cmd: Union[str, list[str]]
-    ) -> None:
+    def _setup_message_handler(self, callback: Callable, cmd: str) -> None:
         self._bot.add_handler(
             MessageHandler(
                 callback,
@@ -71,6 +67,10 @@ class BotSetup:
         """Set up global bot command callbacks (handlers) in place."""
         for cmd, callback in global_cmds.items():
             self._setup_message_handler(callback, cmd)
+
+    def _setup_group_cmds(self) -> None:
+        for cmd in self._bot.cam_registry.get_groups_registry():
+            self._setup_message_handler(cmd_list_group_cams, cmd)
 
     def get_bot(self) -> CameraBot:
         return self._bot

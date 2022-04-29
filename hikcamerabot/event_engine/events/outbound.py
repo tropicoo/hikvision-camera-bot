@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from io import BytesIO
 from typing import Optional
 
+from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from hikcamerabot.constants import Alarm, Detection, Event, ServiceType, Stream
+from hikcamerabot.enums import Alarm, Detection, Event, ServiceType, Stream
 from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 
 
@@ -39,7 +40,7 @@ class SnapshotOutboundEvent(BaseOutboundEvent):
 class SendTextOutboundEvent:
     event: Event
     text: str
-    parse_mode: str = 'HTML'
+    parse_mode: ParseMode = ParseMode.HTML
     message: Optional[Message] = None
 
 

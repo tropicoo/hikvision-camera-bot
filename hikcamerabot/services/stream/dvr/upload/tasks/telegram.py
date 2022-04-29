@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pyrogram.enums import ChatAction
 from tenacity import retry, wait_fixed
 
-from hikcamerabot.constants import DvrUploadType
+from hikcamerabot.enums import DvrUploadType
 from hikcamerabot.services.stream.dvr.upload.tasks.abstract import (
     AbstractDvrUploadTask,
 )
@@ -50,7 +51,9 @@ class TelegramDvrUploadTask(AbstractDvrUploadTask):
 
         self._log.debug('Uploading DVR video %s', file_.full_path)
         caption = f'Video from {self._cam.description} {self._cam.hashtag}'
-        await self._bot.send_chat_action(self._conf.group_id, action='upload_video')
+        await self._bot.send_chat_action(
+            self._conf.group_id, action=ChatAction.UPLOAD_VIDEO
+        )
         await self._bot.send_video(
             self._conf.group_id,
             caption=caption,

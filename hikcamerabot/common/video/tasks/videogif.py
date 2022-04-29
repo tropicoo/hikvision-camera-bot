@@ -12,9 +12,7 @@ from pyrogram.types import Message
 
 from hikcamerabot.common.video.tasks.ffprobe_context import GetFfprobeContextTask
 from hikcamerabot.common.video.tasks.thumbnail import MakeThumbnailTask
-from hikcamerabot.config.config import get_result_queue
 from hikcamerabot.constants import (
-    Event,
     FFMPEG_CAM_VIDEO_SRC,
     FFMPEG_CMD_HLS_VIDEO_GIF,
     FFMPEG_CMD_VIDEO_GIF,
@@ -22,14 +20,15 @@ from hikcamerabot.constants import (
     FFMPEG_SRS_RTMP_VIDEO_SRC,
     RTSP_TRANSPORT_TPL,
     SRS_LIVESTREAM_NAME_TPL,
-    VideoGifType,
 )
+from hikcamerabot.enums import Event, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
     SendTextOutboundEvent,
     VideoOutboundEvent,
 )
+from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.utils.task import wrap
-from hikcamerabot.utils.utils import format_ts, gen_random_str, make_bold
+from hikcamerabot.utils.utils import format_ts, gen_random_str, bold
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -137,6 +136,14 @@ class RecordVideoGifTask:
         self._height = video_streams[0]['height']
         self._width = video_streams[0]['width']
 
+    def _post_err_cleanup(self):
+        """Delete video file and thumb if they exist after exception."""
+        for file_path in (self._file_path, self._thumb_path):
+            try:
+                os.remove(file_path)
+            except Exception as err:
+                self._log.warning('File path %s not deleted: %s', file_path, err)
+
     async def _start_ffmpeg_subprocess(self) -> None:
         proc_timeout = (
             self._cam.conf.alert.video_gif.record_time + self._PROCESS_TIMEOUT
@@ -151,6 +158,7 @@ class RecordVideoGifTask:
                 self._file_path,
             )
             await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
+            self._post_err_cleanup()
 
     async def _validate_file(self) -> bool:
         """Validate recorded file existence and size."""
@@ -167,6 +175,7 @@ class RecordVideoGifTask:
 
         if is_empty:
             self._log.error('Failed to validate %s: File is empty', self._file_path)
+            self._post_err_cleanup()
         return not is_empty
 
     async def _send_result(self) -> None:
@@ -190,7 +199,7 @@ class RecordVideoGifTask:
                 SendTextOutboundEvent(
                     event=Event.SEND_TEXT,
                     message=self._message,
-                    text=make_bold(text),
+                    text=bold(text),
                 )
             )
 

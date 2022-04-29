@@ -22,10 +22,8 @@ from hikcamerabot.constants import (
     FFMPEG_SRS_RTMP_VIDEO_SRC,
     RTSP_TRANSPORT_TPL,
     SRS_LIVESTREAM_NAME_TPL,
-    ServiceType,
-    Stream,
-    VideoEncoder,
 )
+from hikcamerabot.enums import ServiceType, Stream, VideoEncoder
 from hikcamerabot.exceptions import ServiceConfigError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
 from hikcamerabot.services.tasks.livestream import (

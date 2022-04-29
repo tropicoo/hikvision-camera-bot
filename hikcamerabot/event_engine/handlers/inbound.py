@@ -4,8 +4,8 @@ import abc
 import logging
 from typing import Optional, TYPE_CHECKING
 
-from hikcamerabot.config.config import get_result_queue
-from hikcamerabot.constants import DETECTION_SWITCH_MAP, Event
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.enums import Event
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 from hikcamerabot.event_engine.events.inbound import (
     AlertConfEvent,
@@ -22,8 +22,9 @@ from hikcamerabot.event_engine.events.outbound import (
     SnapshotOutboundEvent,
     StreamOutboundEvent,
 )
+from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.exceptions import ServiceRuntimeError
-from hikcamerabot.utils.utils import make_bold
+from hikcamerabot.utils.utils import bold
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
@@ -155,6 +156,6 @@ class TaskIrcutFilterConf(AbstractTaskEvent):
             SendTextOutboundEvent(
                 event=Event.SEND_TEXT,
                 message=event.message,
-                text=make_bold('OK'),
+                text=bold('OK'),
             )
         )

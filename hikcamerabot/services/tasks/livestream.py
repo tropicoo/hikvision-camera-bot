@@ -3,7 +3,7 @@ import logging
 
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
-from hikcamerabot.constants import ServiceType
+from hikcamerabot.enums import ServiceType
 from hikcamerabot.exceptions import HikvisionCamError
 from hikcamerabot.services.abstract import AbstractServiceTask
 from hikcamerabot.utils.utils import shallow_sleep_async

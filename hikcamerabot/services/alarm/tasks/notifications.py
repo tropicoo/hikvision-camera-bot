@@ -2,12 +2,12 @@ import abc
 import logging
 from typing import TYPE_CHECKING
 
-from hikcamerabot.config.config import get_result_queue
-from hikcamerabot.constants import Detection, Event, VideoGifType
+from hikcamerabot.enums import Detection, Event, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
     AlertSnapshotOutboundEvent,
     SendTextOutboundEvent,
 )
+from hikcamerabot.event_engine.queue import get_result_queue
 
 if TYPE_CHECKING:
     from hikcamerabot.services.alarm import AlarmService

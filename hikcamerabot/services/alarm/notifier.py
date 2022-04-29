@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from hikcamerabot.constants import Detection
+from hikcamerabot.enums import Detection
 from hikcamerabot.services.alarm.tasks.notifications import (
     AlarmPicNotificationTask,
     AlarmTextMessageNotificationTask,

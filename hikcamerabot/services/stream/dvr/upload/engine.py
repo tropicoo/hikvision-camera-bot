@@ -4,9 +4,7 @@ from typing import TYPE_CHECKING
 
 from addict import Dict
 
-from hikcamerabot.constants import (
-    DvrUploadType,
-)
+from hikcamerabot.enums import DvrUploadType
 from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile
 from hikcamerabot.services.stream.dvr.tasks.file_delete import DvrFileDeleteTask
 from hikcamerabot.services.stream.dvr.tasks.file_monitoring import DvrFileMonitoringTask

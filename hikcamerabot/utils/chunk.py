@@ -3,9 +3,8 @@ from typing import Optional
 
 from hikcamerabot.constants import (
     DETECTION_SWITCH_MAP,
-    Detection,
-    DetectionEventName,
 )
+from hikcamerabot.enums import Detection, DetectionEventName
 from hikcamerabot.exceptions import ChunkDetectorError
 
 

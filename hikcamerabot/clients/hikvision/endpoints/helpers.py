@@ -4,8 +4,9 @@ from typing import Optional, TYPE_CHECKING
 
 import xmltodict
 
-from hikcamerabot.clients.hikvision.constants import Endpoint
-from hikcamerabot.constants import Detection, DETECTION_SWITCH_MAP, Http
+from hikcamerabot.clients.hikvision.enums import Endpoint
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.enums import Detection
 from hikcamerabot.exceptions import APIRequestError, HikvisionAPIError
 
 
@@ -51,32 +52,31 @@ class CameraConfigSwitch:
 
         xml_payload = self._prepare_xml_payload(xml, enable)
         try:
-            response_xml = await self._api.request(
-                endpoint, headers=self.XML_HEADERS, data=xml_payload, method=Http.PUT
+            response = await self._api.request(
+                endpoint, headers=self.XML_HEADERS, data=xml_payload, method='PUT'
             )
-            response_xml = response_xml.text
+            response = response.text
         except APIRequestError:
-            err_msg = 'Failed to {0} {1}.'.format(
-                'enable' if enable else 'disable', full_name
-            )
+            action = 'enable' if enable else 'disable'
+            err_msg = f'Failed to {action} {full_name}.'
             self._log.error(err_msg)
             raise
 
-        self._parse_response_xml(response_xml)
+        self._parse_response_xml(response)
         return None
 
     async def _get_switch_state(
         self, name: Detection, endpoint: str
     ) -> tuple[bool, str]:
-        response = await self._api.request(endpoint, method=Http.GET)
+        response = await self._api.request(endpoint, method='GET')
         xml = response.text
         xml_dict = xmltodict.parse(xml)
         state: str = xml_dict[DETECTION_SWITCH_MAP[name]['method'].value]['enabled']
         return state == 'true', xml
 
-    def _parse_response_xml(self, response_xml: str) -> None:
+    def _parse_response_xml(self, response: str) -> None:
         try:
-            xml_dict = xmltodict.parse(response_xml)['ResponseStatus']
+            xml_dict = xmltodict.parse(response)['ResponseStatus']
             if xml_dict['statusCode'] != 1 and xml_dict['statusString'] != 'OK':
                 err_msg = 'Camera returned failed errored XML'
                 self._log.error(err_msg)

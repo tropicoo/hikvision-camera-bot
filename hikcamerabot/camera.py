@@ -9,8 +9,8 @@ from addict import Dict
 from pyrogram.types import Message
 
 from hikcamerabot.clients.hikvision import HikvisionAPI, HikvisionAPIClient
-from hikcamerabot.clients.hikvision.constants import IrcutFilterType
-from hikcamerabot.constants import VideoGifType
+from hikcamerabot.clients.hikvision.enums import IrcutFilterType
+from hikcamerabot.enums import VideoGifType
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
 from hikcamerabot.services.manager import ServiceManager
 from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
@@ -85,7 +85,8 @@ class HikvisionCam:
         self.id = id
         self.conf = conf
         self.description: str = conf.description
-        self.hashtag = f'#{conf.hashtag.lower()}' if conf.hashtag else ''
+        self.hashtag = f'#{conf.hashtag.lower()}' if conf.hashtag else self.id
+        self.group = conf.group or 'Default group'
         self.bot = bot
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(api_client=HikvisionAPIClient(conf=conf.api))

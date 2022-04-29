@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING
 
 from pyrogram.types import Message
 
-from hikcamerabot.constants import (
-    VideoGifType,
-)
 from hikcamerabot.common.video.tasks.videogif import RecordVideoGifTask
+from hikcamerabot.enums import VideoGifType
 from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:

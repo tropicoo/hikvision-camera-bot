@@ -28,7 +28,7 @@ class DvrFileDeleteTask:
                 file_ = await self._queue.get()
                 if file_.is_locked:
                     self._log.debug(
-                        'File %s cannot be deleted right now: ' '%d locks left',
+                        'File %s cannot be deleted right now: %d locks left',
                         file_,
                         file_.lock_count,
                     )

@@ -6,12 +6,8 @@ from typing import AsyncGenerator, Optional, TYPE_CHECKING
 from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
-from hikcamerabot.constants import (
-    Alarm,
-    Detection,
-    DETECTION_SWITCH_MAP,
-    ServiceType,
-)
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.enums import Alarm, Detection, ServiceType
 from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
 from hikcamerabot.services.alarm.tasks.alarm_monitoring_task import (
