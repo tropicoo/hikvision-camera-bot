@@ -22,3 +22,4 @@ Release date:
 # Misc
 1. Bumped Python version from 3.9 to 3.10 in Dockerfile.
 2. If text message from the bot exceeds max size it will be split and sent with smaller chunks.
+3. SRS re-stream is now disabled by default in the config template.

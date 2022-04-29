@@ -85,7 +85,7 @@
           "encoding_template": "direct.kitchen_telegram"
         },
         "srs": {
-          "enabled": true,
+          "enabled": false,
           "livestream_template": "tpl_kitchen",
           "encoding_template": "direct.kitchen_srs"
         },
@@ -188,7 +188,7 @@
           "encoding_template": "direct.basement_telegram"
         },
         "srs": {
-          "enabled": true,
+          "enabled": false,
           "livestream_template": "tpl_basement",
           "encoding_template": "direct.basement_srs"
         },

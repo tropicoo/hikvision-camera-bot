@@ -145,7 +145,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
           "encoding_template": "direct.kitchen_telegram"
         },
         "srs": {
-          "enabled": true,
+          "enabled": false,
           "livestream_template": "tpl_kitchen",
           "encoding_template": "direct.kitchen_srs"
         },
