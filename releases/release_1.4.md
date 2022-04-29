@@ -2,7 +2,7 @@
 
 Version: 1.4
 
-Release date:
+Release date: April 30, 2022
 
 # Important
 1. Bot needs full re-configuration (again) due to changed config templates with new items.
