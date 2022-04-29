@@ -1,15 +1,19 @@
+"""Marshmallow (sorry, no Pydantic) validation config schemas."""
+
 from marshmallow import (
-    INCLUDE, Schema, fields as f, validate as v, validates_schema,
+    INCLUDE,
+    Schema,
+    fields as f,
+    validate as v,
+    validates_schema,
 )
 
 from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
 from hikcamerabot.constants import (
     CMD_CAM_ID_REGEX,
-    Detection as DetectionMode,
     FFMPEG_LOG_LEVELS,
-    RTSP_DEFAULT_PORT,
-    RtspTransportType,
 )
+from hikcamerabot.enums import RtspTransportType
 
 
 class LivestreamConf(Schema):
@@ -41,29 +45,39 @@ class Livestream(Schema):
     srs = f.Nested(LivestreamConf, required=True)
     dvr = f.Nested(DvrLivestreamConf, required=True)
     youtube = f.Nested(LivestreamConf, required=True)
-    telegram = f.Nested(LivestreamConf, required=False)
+    telegram = f.Nested(LivestreamConf, required=True)
     icecast = f.Nested(LivestreamConf, required=True)
 
 
 class Detection(Schema):
     enabled = f.Boolean(required=True)
-    sendpic = f.Boolean(required=False, load_default=True)
+    sendpic = f.Boolean(required=True)
     fullpic = f.Boolean(required=True)
+    send_videogif = f.Boolean(required=True)
+
+
+class VideoGifOnDemand(Schema):
+    channel = f.Int(required=True)
+    record_time = f.Int(required=True, validate=int_min_1)
+    rewind_time = f.Int(required=True, validate=int_min_1)
+    tmp_storage = f.Str(required=True, validate=non_empty_str)
+    loglevel = f.Str(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
+    rtsp_transport_type = f.Str(
+        required=True, validate=v.OneOf(RtspTransportType.choices())
+    )
+
+
+class VideoGifOnAlert(VideoGifOnDemand):
+    rewind = f.Boolean(required=True)
 
 
 class VideoGif(Schema):
-    enabled = f.Boolean(required=True)
-    channel = f.Int(required=True)
-    record_time = f.Int(required=True, validate=int_min_1)
-    tmp_storage = f.Str(required=True, validate=non_empty_str)
-    loglevel = f.Str(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
-    rtsp_transport_type = f.Str(required=True,
-                                validate=v.OneOf(RtspTransportType.choices()))
+    on_alert = f.Nested(VideoGifOnAlert, required=True)
+    on_demand = f.Nested(VideoGifOnDemand, required=True)
 
 
 class Alert(Schema):
     delay = f.Int(required=True, validate=v.Range(min=0))
-    video_gif = f.Nested(VideoGif, required=True)
     motion_detection = f.Nested(Detection, required=True)
     line_crossing_detection = f.Nested(Detection, required=True)
     intrusion_detection = f.Nested(Detection, required=True)
@@ -92,13 +106,15 @@ class CmdSectionsVisibility(Schema):
     stream_icecast = f.Boolean(required=True)
 
 
-class CamConfig(Schema):
-    class _CamConfig(Schema):
+class CameraListConfig(Schema):
+    class _CameraListConfig(Schema):
         hidden = f.Boolean(required=True)
         description = f.Str(required=True, validate=non_empty_str)
-        hashtag = f.Str(required=False, allow_none=False, load_default='')
+        hashtag = f.Str(required=True, allow_none=True)
+        group = f.Str(required=True, allow_none=True)
         api = f.Nested(CamAPI, required=True)
         rtsp_port = f.Int(required=True)
+        video_gif = f.Nested(VideoGif, required=True)
         alert = f.Nested(Alert, required=True)
         livestream = f.Nested(Livestream, required=True)
         command_sections_visibility = f.Nested(CmdSectionsVisibility, required=True)
@@ -108,31 +124,20 @@ class CamConfig(Schema):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._inner_validation_schema = self._CamConfig()
-        self._cam_id_validator = f.Str(required=True, validate=v.Regexp(
-            CMD_CAM_ID_REGEX,
-            error=f'Check main config. Bad camera ID, example name: "cam_1"'))
+        self._inner_validation_schema = self._CameraListConfig()
+        self._cam_id_validator = f.Str(
+            required=True,
+            validate=v.Regexp(
+                CMD_CAM_ID_REGEX,
+                error='Check main config. Bad camera ID syntax, example: "cam_1"',
+            ),
+        )
 
     @validates_schema
-    def validate_all(self, data: dict, **kwargs) -> None:
+    def validate_all(self, data: dict[str, dict], **kwargs) -> None:
         for cam_id, cam_conf in data.items():
-            self.__modify_cam_conf(cam_conf)
             self._cam_id_validator.validate(cam_id)
             self._inner_validation_schema.load(cam_conf)
-
-    def __modify_cam_conf(self, cam_conf: dict) -> None:
-        """Nasty hack with modification in-place. Is done since we won't the old
-        users to get an error with new fields.
-        """
-        cam_conf['rtsp_port'] = cam_conf.get('rtsp_port', RTSP_DEFAULT_PORT)
-        cam_conf['hashtag'] = cam_conf.get('hashtag', '')
-
-        alert = cam_conf['alert']
-        alert['video_gif']['rtsp_transport_type'] = alert['video_gif'].get(
-            'rtsp_transport_type', 'tcp')
-
-        for detection in DetectionMode.choices():
-            alert[detection]['sendpic'] = alert[detection].get('sendpic', True)
 
     class Meta:
         unknown = INCLUDE
@@ -144,8 +149,9 @@ class Telegram(Schema):
     api_hash = f.Str(required=True, validate=non_empty_str)
     lang_code = f.Str(required=True, validate=non_empty_str)
     token = f.Str(required=True, validate=non_empty_str)
-    allowed_user_ids = f.List(f.Int(required=True), required=True,
-                              validate=non_empty_str)
+    chat_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
+    alert_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
+    startup_message_users = f.List(f.Int(required=True), required=True)
 
 
 class MainConfig(Schema):
@@ -153,7 +159,7 @@ class MainConfig(Schema):
 
     telegram = f.Nested(Telegram, required=True)
     log_level = f.Str(required=True, validate=v.OneOf(_APP_LOG_LEVELS))
-    camera_list = f.Nested(CamConfig, required=True)
+    camera_list = f.Nested(CameraListConfig, required=True)
 
     class Meta:
         ordered = True

@@ -1,15 +1,15 @@
 """Config module."""
 import json
 import logging
+import re
 import sys
-from asyncio import Queue
 from pathlib import Path
 
 from addict import Dict
 from marshmallow import ValidationError
 
 from hikcamerabot.config.schemas import CONFIG_SCHEMA_MAPPING
-from hikcamerabot.constants import ConfigFile
+from hikcamerabot.enums import ConfigFile
 from hikcamerabot.exceptions import ConfigError
 
 
@@ -57,29 +57,25 @@ class ConfigLoader:
 
     def _fix_camera_list_key_ordering(self, config: dict) -> dict:
         """Fix ordering since something randomly affects marshmallow ordering."""
+
+        def sort_int(cam_id: str) -> list[int]:
+            return [int(id_) for id_ in re.findall(r'\d+', cam_id)]
+
         cam_list_fixed = {}
-        for k in sorted(config['camera_list'].keys()):
+        for k in sorted(config['camera_list'].keys(), key=sort_int):
             cam_list_fixed[k] = config['camera_list'][k]
         config['camera_list'] = cam_list_fixed
         return config
 
     def _process_errors_and_exit(self, errors: dict) -> None:
-        for config_filename, errors_messages in errors.items():
-            self._log.error('Config validation error - "%s": %s', config_filename,
-                            errors_messages)
+        for config_filename, error_messages in errors.items():
+            self._log.error(
+                'Config validation error - "%s": %s', config_filename, error_messages
+            )
         sys.exit('Fix config files and try again.')
 
 
-_RESULT_QUEUE = Queue()
-
-
-def get_result_queue() -> Queue:
-    return _RESULT_QUEUE
-
-
-config_loader = ConfigLoader()
-
-_CONF_MAIN, _CONF_LIVESTREAM_TPL, _CONF_ENCODING_TPL = config_loader.load_configs()
+_CONF_MAIN, _CONF_LIVESTREAM_TPL, _CONF_ENCODING_TPL = ConfigLoader().load_configs()
 
 
 def get_main_config() -> Dict:

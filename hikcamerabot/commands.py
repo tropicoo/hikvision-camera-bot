@@ -1,12 +1,12 @@
 """Telegram bot commands module."""
 
-from typing import Callable, Union
+from typing import Callable
 
 import hikcamerabot.callbacks as cb
-from hikcamerabot.constants import CmdSectionType
+from hikcamerabot.enums import CmdSectionType
 
 
-def setup_commands() -> tuple[dict, dict[Union[list[str], str], Callable]]:
+def setup_commands() -> tuple[dict, dict[list[str] | str, Callable]]:
     tpl_cmds = {
         CmdSectionType.general.value: {
             'commands': {
@@ -14,6 +14,7 @@ def setup_commands() -> tuple[dict, dict[Union[list[str], str], Callable]]:
                 'getpic_{0}': cb.cmd_getpic,
                 'getfullpic_{0}': cb.cmd_getfullpic,
                 'getvideo_{0}': cb.cmd_getvideo,
+                'getvideor_{0}': cb.cmd_getvideor,
             },
         },
         CmdSectionType.infrared.value: {
@@ -71,7 +72,11 @@ def setup_commands() -> tuple[dict, dict[Union[list[str], str], Callable]]:
         'start': cb.cmd_help,
         'help': cb.cmd_help,
         'stop': cb.cmd_stop,
+        'groups': cb.cmd_list_groups,
         'list_cams': cb.cmd_list_cams,
+        'version': cb.cmd_app_version,
+        'ver': cb.cmd_app_version,
+        'v': cb.cmd_app_version,
     }
 
     return tpl_cmds, global_cmds

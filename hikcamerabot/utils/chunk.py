@@ -3,20 +3,21 @@ from typing import Optional
 
 from hikcamerabot.constants import (
     DETECTION_SWITCH_MAP,
-    Detection,
-    DetectionEventName,
 )
+from hikcamerabot.enums import Detection, DetectionEventName
 from hikcamerabot.exceptions import ChunkDetectorError
 
 
 class ChunkDetector:
     """Detect trigger chunk from alarm/alert stream."""
 
-    DETECTION_REGEX = re.compile(fr'^<eventType>('
-                                 fr'{DetectionEventName.MOTION.value}|'
-                                 fr'{DetectionEventName.LINE.value}|'
-                                 fr'{DetectionEventName.INTRUSION.value})<',
-                                 re.MULTILINE)
+    DETECTION_REGEX = re.compile(
+        fr'^<eventType>('
+        fr'{DetectionEventName.MOTION.value}|'
+        fr'{DetectionEventName.LINE.value}|'
+        fr'{DetectionEventName.INTRUSION.value})<',
+        re.MULTILINE,
+    )
     DETECTION_KEY_GROUP = 1
 
     @classmethod

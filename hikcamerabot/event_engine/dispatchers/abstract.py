@@ -1,11 +1,13 @@
 import abc
 import logging
-from typing import TYPE_CHECKING
-
-from hikcamerabot.types import DispatchTypeDict
+from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
+    from hikcamerabot.event_engine.handlers.inbound import AbstractTaskEvent
+    from hikcamerabot.event_engine.handlers.outbound import AbstractResultEventHandler
+
+DispatchTypeDict = dict[str, Type['AbstractTaskEvent | AbstractResultEventHandler']]
 
 
 class AbstractDispatcher(metaclass=abc.ABCMeta):

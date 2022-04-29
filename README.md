@@ -1,7 +1,7 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.3. [Release details](releases/release_1.3.md).
+Version: 1.4. [Release details](releases/release_1.4.md).
 
 ## Features
 1. Send full/resized snapshots on request
@@ -41,8 +41,8 @@ Configuration files are stored in JSON format and can be found in `configs` dire
     1. Put the obtained `api_id` and `api_hash` strings to same keys
     2. Put the obtained bot API token string to `token` key
     3. [Find](https://stackoverflow.com/a/32777943) your Telegram user id
-    and put it to `allowed_user_ids` list as integer value. Multiple ids can
-    be used, just separate them with a comma
+    and put it to `chat_users`, `alert_users` and `startup_message_users` lists as 
+    integer value. Multiple ids can be used, just separate them with a comma.
     4. Hikvision camera settings are placed inside the `camera_list` section. Template
     comes with two cameras
 
@@ -64,7 +64,15 @@ Configuration files are stored in JSON format and can be found in `configs` dire
     "api_hash": "1a1a1a1a1a1a1a1a",
     "lang_code": "en",
     "token": "1b1b1b1b1b1b1b1b",
-    "allowed_user_ids": [
+    "chat_users": [
+      1010101010,
+      2020202020
+    ],
+    "alert_users": [
+      1010101010,
+      2020202020
+    ],
+    "startup_message_users": [
       1010101010,
       2020202020
     ]
@@ -75,6 +83,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
       "hidden": false,
       "description": "Kitchen",
       "hashtag": "kitchen",
+      "group": "Default group",
       "api": {
         "host": "http://192.168.1.1",
         "auth": {
@@ -83,30 +92,45 @@ Configuration files are stored in JSON format and can be found in `configs` dire
         },
         "stream_timeout": 10
       },
-      "alert": {
-        "delay": 15,
-        "video_gif": {
-          "enabled": true,
+      "rtsp_port": 554,
+      "video_gif": {
+        "on_demand": {
           "channel": 101,
           "record_time": 10,
+          "rewind_time": 10,
           "tmp_storage": "/tmp",
           "loglevel": "error",
           "rtsp_transport_type": "tcp"
         },
+        "on_alert": {
+          "channel": 101,
+          "record_time": 10,
+          "rewind_time": 10,
+          "rewind": true,
+          "tmp_storage": "/tmp",
+          "loglevel": "error",
+          "rtsp_transport_type": "tcp"
+        }
+      },
+      "alert": {
+        "delay": 15,
         "motion_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         },
         "line_crossing_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         },
         "intrusion_detection": {
-          "enabled": true,
+          "enabled": false,
           "sendpic": true,
-          "fullpic": true
+          "fullpic": false,
+          "send_videogif": true
         }
       },
       "livestream": {
@@ -121,7 +145,7 @@ Configuration files are stored in JSON format and can be found in `configs` dire
           "encoding_template": "direct.kitchen_telegram"
         },
         "srs": {
-          "enabled": true,
+          "enabled": false,
           "livestream_template": "tpl_kitchen",
           "encoding_template": "direct.kitchen_srs"
         },
@@ -408,7 +432,7 @@ Where:
     "x264": {
       "kitchen": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "libx264",
         "acodec": "aac",
         "format": "flv",
@@ -430,7 +454,7 @@ Where:
       },
       "basement": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "libx264",
         "acodec": "aac",
         "format": "flv",
@@ -500,7 +524,7 @@ Where:
     "direct": {
       "kitchen": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "copy",
         "acodec": "aac",
         "format": "flv",
@@ -508,7 +532,7 @@ Where:
       },
       "basement": {
         "null_audio": false,
-        "loglevel": "quiet",
+        "loglevel": "error",
         "vcodec": "copy",
         "acodec": "aac",
         "format": "flv",

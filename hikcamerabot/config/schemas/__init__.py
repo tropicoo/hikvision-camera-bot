@@ -5,8 +5,7 @@ from marshmallow import Schema
 from hikcamerabot.config.schemas.encoding import Encoding
 from hikcamerabot.config.schemas.livestream import Livestream
 from hikcamerabot.config.schemas.main_config import MainConfig
-from hikcamerabot.constants import ConfigFile
-
+from hikcamerabot.enums import ConfigFile
 
 CONFIG_SCHEMA_MAPPING: dict[ConfigFile, Type[Schema]] = {
     ConfigFile.MAIN: MainConfig,

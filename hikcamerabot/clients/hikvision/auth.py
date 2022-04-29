@@ -8,11 +8,13 @@ class DigestAuthCached(httpx.DigestAuth):
 
     __challenge = None
 
-    def auth_flow(self, request: httpx.Request) -> Generator[
-        httpx.Request, httpx.Response, None]:
+    def auth_flow(
+        self, request: httpx.Request
+    ) -> Generator[httpx.Request, httpx.Response, None]:
         if self.__challenge:
-            request.headers['Authorization'] = \
-                self._build_auth_header(request, self.__challenge)
+            request.headers['Authorization'] = self._build_auth_header(
+                request, self.__challenge
+            )
 
         response = yield request
 
@@ -30,6 +32,7 @@ class DigestAuthCached(httpx.DigestAuth):
             return
 
         self.__challenge = self._parse_challenge(request, response, auth_header)
-        request.headers['Authorization'] = \
-            self._build_auth_header(request, self.__challenge)
+        request.headers['Authorization'] = self._build_auth_header(
+            request, self.__challenge
+        )
         yield request

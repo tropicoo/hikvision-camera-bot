@@ -6,15 +6,13 @@ from typing import AsyncGenerator, Optional, TYPE_CHECKING
 from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
-from hikcamerabot.constants import (
-    Alarm,
-    Detection,
-    DETECTION_SWITCH_MAP,
-    ServiceType,
-)
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.enums import Alarm, Detection, ServiceType
 from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
-from hikcamerabot.services.tasks.alarm import ServiceAlarmMonitoringTask
+from hikcamerabot.services.alarm.tasks.alarm_monitoring_task import (
+    ServiceAlarmMonitoringTask,
+)
 from hikcamerabot.utils.task import create_task
 
 
@@ -31,8 +29,9 @@ class AlarmService(AbstractService):
     type = ServiceType.ALARM
     name = Alarm.ALARM
 
-    def __init__(self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam',
-                 bot: 'CameraBot'):
+    def __init__(
+        self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot: 'CameraBot'
+    ):
         super().__init__(cam)
         self._conf = conf
         self._api = api

@@ -13,12 +13,17 @@ from hikcamerabot.config.config import (
     get_livestream_tpl_config,
 )
 from hikcamerabot.constants import (
-    FFMPEG_CAM_VIDEO_SOURCE, FFMPEG_CMD_LIVESTREAM, FFMPEG_CMD_NULL_AUDIO,
-    FFMPEG_CMD_SCALE_FILTER, FFMPEG_CMD_TRANSCODE,
-    FFMPEG_CMD_TRANSCODE_GENERAL, FFMPEG_SRS_VIDEO_SOURCE,
-    RTSP_TRANSPORT_TPL, SRS_LIVESTREAM_NAME_TPL, ServiceType, Stream,
-    VideoEncoder,
+    FFMPEG_CAM_VIDEO_SRC,
+    FFMPEG_CMD_LIVESTREAM,
+    FFMPEG_CMD_NULL_AUDIO,
+    FFMPEG_CMD_SCALE_FILTER,
+    FFMPEG_CMD_TRANSCODE,
+    FFMPEG_CMD_TRANSCODE_GENERAL,
+    FFMPEG_SRS_RTMP_VIDEO_SRC,
+    RTSP_TRANSPORT_TPL,
+    SRS_LIVESTREAM_NAME_TPL,
 )
+from hikcamerabot.enums import ServiceType, Stream, VideoEncoder
 from hikcamerabot.exceptions import ServiceConfigError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
 from hikcamerabot.services.tasks.livestream import (
@@ -42,12 +47,12 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
     _IGNORE_RESTART_CHECK = -1
 
     def __init__(
-            self,
-            conf: Dict,
-            hik_user: str,
-            hik_password: str,
-            hik_host: str,
-            cam: 'HikvisionCam',
+        self,
+        conf: Dict,
+        hik_user: str,
+        hik_password: str,
+        hik_host: str,
+        cam: 'HikvisionCam',
     ):
         super().__init__(cam)
 
@@ -91,13 +96,13 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
     def _generate_video_source(self) -> str:
         """From direct cam video source or SRS."""
         if self._srs_enabled:
-            return FFMPEG_SRS_VIDEO_SOURCE.format(
+            return FFMPEG_SRS_RTMP_VIDEO_SRC.format(
                 livestream_name=SRS_LIVESTREAM_NAME_TPL.format(
                     channel=self._stream_conf.channel,
                     cam_id=self.cam.id,
                 )
             )
-        return FFMPEG_CAM_VIDEO_SOURCE.format(
+        return FFMPEG_CAM_VIDEO_SRC.format(
             user=self._hik_user,
             pw=self._hik_password,
             host=urlsplit(self._hik_host).netloc,
@@ -163,8 +168,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         """Check if the stream needs to be restarted."""
         if self._stream_conf.restart_period == self._IGNORE_RESTART_CHECK:
             return False
-        return int(time.time()) > \
-               self._start_ts + self._stream_conf.restart_period
+        return int(time.time()) > self._start_ts + self._stream_conf.restart_period
 
     async def restart(self) -> None:
         """Restart the stream."""
@@ -198,8 +202,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             self._log.error(err_msg)
             raise ServiceConfigError(err_msg)
 
-        self._stream_conf = \
-            get_livestream_tpl_config()[self.name.value][tpl_name_ls]
+        self._stream_conf = get_livestream_tpl_config()[self.name.value][tpl_name_ls]
         self._enc_conf = get_encoding_tpl_config()[enc_codec_name][tpl_name_enc]
 
         cmd_tpl = self._format_ffmpeg_cmd_tpl()
@@ -213,35 +216,42 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
                 maxrate=self._enc_conf.maxrate,
                 pass_mode=self._enc_conf.pass_mode,
                 pix_fmt=self._enc_conf.pix_fmt,
-                scale=self._generate_scale_cmd())
+                scale=self._generate_scale_cmd(),
+            )
 
-        self._generate_transcode_cmd(cmd_tpl, cmd_transcode,
-                                     VideoEncoder(enc_codec_name))
+        self._generate_transcode_cmd(
+            cmd_tpl, cmd_transcode, VideoEncoder(enc_codec_name)
+        )
 
     @abc.abstractmethod
     def _format_ffmpeg_cmd_tpl(self) -> str:
         pass
 
     def _generate_scale_cmd(self) -> str:
-        return FFMPEG_CMD_SCALE_FILTER.format(
-            width=self._enc_conf.scale.width,
-            height=self._enc_conf.scale.height,
-            format=self._enc_conf.scale.format) \
-            if self._enc_conf.scale.enabled else ''
+        return (
+            FFMPEG_CMD_SCALE_FILTER.format(
+                width=self._enc_conf.scale.width,
+                height=self._enc_conf.scale.height,
+                format=self._enc_conf.scale.format,
+            )
+            if self._enc_conf.scale.enabled
+            else ''
+        )
 
     def _generate_x264_cmd(self) -> str:
         return FFMPEG_CMD_TRANSCODE[VideoEncoder.X264].format(
-            preset=self._enc_conf.preset,
-            tune=self._enc_conf.tune)
+            preset=self._enc_conf.preset, tune=self._enc_conf.tune
+        )
 
     def _generate_vp9_cmd(self) -> str:
         return FFMPEG_CMD_TRANSCODE[VideoEncoder.VP9].format(
-            deadline=self._enc_conf.deadline,
-            speed=self._enc_conf.speed)
+            deadline=self._enc_conf.deadline, speed=self._enc_conf.speed
+        )
 
     @abc.abstractmethod
-    def _generate_transcode_cmd(self, cmd_tpl, cmd_transcode,
-                                enc_codec_name: VideoEncoder) -> str:
+    def _generate_transcode_cmd(
+        self, cmd_tpl, cmd_transcode, enc_codec_name: VideoEncoder
+    ) -> str:
         # Example: self._cmd = cmd_tpl.format(...)
         pass
 
@@ -250,19 +260,26 @@ class AbstractExternalLivestreamService(AbstractStreamService):
     _FFMPEG_CMD_TPL = FFMPEG_CMD_LIVESTREAM
 
     def _format_ffmpeg_cmd_tpl(self) -> str:
-        null_audio = FFMPEG_CMD_NULL_AUDIO if self._enc_conf.null_audio else \
-            {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
+        null_audio = (
+            FFMPEG_CMD_NULL_AUDIO
+            if self._enc_conf.null_audio
+            else {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
+        )
         return self._FFMPEG_CMD_TPL.format(
             abitrate=null_audio['bitrate'],
             asample_rate=f'-ar {self._enc_conf.asample_rate}'
-            if self._enc_conf.asample_rate != -1 else '',
+            if self._enc_conf.asample_rate != -1
+            else '',
             acodec=self._enc_conf.acodec,
             rtsp_transport=RTSP_TRANSPORT_TPL.format(
                 rtsp_transport_type=self._enc_conf.rtsp_transport_type
-            ) if not self._srs_enabled else '',
+            )
+            if not self._srs_enabled
+            else '',
             video_source=self._generate_video_source(),
             filter=null_audio['filter'],
             format=self._enc_conf.format,
             loglevel=self._enc_conf.loglevel,
             map=null_audio['map'],
-            vcodec=self._enc_conf.vcodec)
+            vcodec=self._enc_conf.vcodec,
+        )

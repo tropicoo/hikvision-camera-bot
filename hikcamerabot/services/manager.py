@@ -2,20 +2,17 @@
 
 import logging
 from collections import defaultdict
-from typing import Iterable
+from typing import Any, DefaultDict, Iterable
 
 from hikcamerabot.services.abstract import AbstractService
 
 
 class ServiceManager:
-    """Service Manager Class.
-
-    Manages camera abstracted services.
-    """
+    """Service Manager Class. Manages camera abstracted services."""
 
     def __init__(self) -> None:
         # service type as key e.g. {'stream': {'youtube': <instance>}}
-        self._services = defaultdict(dict)
+        self._services: DefaultDict[Any, dict[Any, AbstractService]] = defaultdict(dict)
         self._log = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self) -> str:
@@ -36,8 +33,11 @@ class ServiceManager:
                     if service.enabled_in_conf:
                         await service.start()
                     else:
-                        self._log.info('Do not start service "%s" - '
-                                       'disabled by default', service)
+                        self._log.info(
+                            '[%s] Do not start service "%s" - disabled by default',
+                            service.cam.id,
+                            service,
+                        )
                 else:
                     await service.start()
 
@@ -47,8 +47,11 @@ class ServiceManager:
                 try:
                     await service.stop()
                 except Exception as err:
-                    self._log.warning('Warning while stopping service "%s": '
-                                      '%s', service.name.value, err)
+                    self._log.warning(
+                        'Warning while stopping service "%s": %s',
+                        service.name.value,
+                        err,
+                    )
 
     async def stop(self, service_type: str, service_name: str) -> None:
         await self._services[service_type][service_name].stop()
@@ -60,12 +63,12 @@ class ServiceManager:
         return self._services[service_type][service_name]
 
     def get_all(self) -> list[AbstractService]:
-        services: list[AbstractService] = []
+        services = []
         for service_type_dict in self._services.values():
             services.extend(service_type_dict.values())
         return services
 
-    def get_count(self, stream_type: str = None) -> int:
+    def count(self, stream_type: str = None) -> int:
         try:
             return len(self._services[stream_type])
         except KeyError:

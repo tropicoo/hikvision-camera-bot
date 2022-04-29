@@ -9,11 +9,11 @@ from addict import Dict
 from pyrogram.types import Message
 
 from hikcamerabot.clients.hikvision import HikvisionAPI, HikvisionAPIClient
-from hikcamerabot.clients.hikvision.constants import IrcutFilterType
-from hikcamerabot.constants import VideoGifType
+from hikcamerabot.clients.hikvision.enums import IrcutFilterType
+from hikcamerabot.enums import VideoGifType
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
-from hikcamerabot.managers.service import ServiceManager
-from hikcamerabot.managers.video import VideoGifManager
+from hikcamerabot.services.manager import ServiceManager
+from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
 from hikcamerabot.services.alarm import AlarmService
 from hikcamerabot.services.stream import (
     DvrStreamService,
@@ -30,9 +30,9 @@ if TYPE_CHECKING:
 
 
 class ServiceContainer:
-
-    def __init__(self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam',
-                 bot: 'CameraBot') -> None:
+    def __init__(
+        self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot: 'CameraBot'
+    ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self.alarm = AlarmService(
             conf=conf.alert,
@@ -85,7 +85,8 @@ class HikvisionCam:
         self.id = id
         self.conf = conf
         self.description: str = conf.description
-        self.hashtag = f'#{conf.hashtag.lower()}' if conf.hashtag else ''
+        self.hashtag = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
+        self.group = conf.group or 'Default group'
         self.bot = bot
         self._log.debug('Initializing %s', self.description)
         self._api = HikvisionAPI(api_client=HikvisionAPIClient(conf=conf.api))
@@ -98,25 +99,30 @@ class HikvisionCam:
             bot=self.bot,
         )
         self.service_manager = ServiceManager()
-        self.service_manager.register([
-            self.services.alarm,
-            self.services.stream_yt,
-            self.services.stream_icecast,
-            self.services.srs_stream,
-            self.services.dvr_stream,
-            self.services.stream_tg,
-        ])
+        self.service_manager.register(
+            [
+                self.services.alarm,
+                self.services.stream_yt,
+                self.services.stream_icecast,
+                self.services.srs_stream,
+                self.services.dvr_stream,
+                self.services.stream_tg,
+            ]
+        )
 
         self.snapshots_taken = 0
-        self._videogif_manager = VideoGifManager(cam=self)
+        self._videogif = VideoGifRecorder(cam=self)
 
     def __repr__(self) -> str:
         return f'<HikvisionCam desc="{self.description}">'
 
-    async def start_videogif_record(self,
-                                    video_type: VideoGifType = VideoGifType.REGULAR,
-                                    context: Message = None) -> None:
-        self._videogif_manager.start_rec(video_type=video_type, context=context)
+    async def start_videogif_record(
+        self,
+        video_type: VideoGifType = VideoGifType.ON_DEMAND,
+        rewind: bool = False,
+        context: Message = None,
+    ) -> None:
+        self._videogif.start_rec(video_type=video_type, rewind=rewind, context=context)
 
     async def set_ircut_filter(self, filter_type: IrcutFilterType) -> None:
         await self._api.set_ircut_filter(filter_type)
@@ -137,9 +143,11 @@ class HikvisionCam:
         try:
             return (
                 await asyncio.get_running_loop().run_in_executor(
-                    None,
-                    lambda: self._img_processor.resize(image_obj)
-                ) if resize else image_obj, taken_at,
+                    None, lambda: self._img_processor.resize(image_obj)
+                )
+                if resize
+                else image_obj,
+                taken_at,
             )
         except Exception as err:
             err_msg = f'Failed to resize snapshot taken from {self.description}'

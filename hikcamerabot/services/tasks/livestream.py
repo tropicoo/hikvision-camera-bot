@@ -3,9 +3,9 @@ import logging
 
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
-from hikcamerabot.constants import ServiceType
+from hikcamerabot.enums import ServiceType
 from hikcamerabot.exceptions import HikvisionCamError
-from hikcamerabot.services.tasks.abstract import AbstractServiceTask
+from hikcamerabot.services.abstract import AbstractServiceTask
 from hikcamerabot.utils.utils import shallow_sleep_async
 
 
@@ -31,13 +31,18 @@ class ServiceStreamerTask(AbstractServiceTask):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._exit_msg = f'Exiting {self.service.name.value} stream task ' \
-                         f'for "{self._cam.description}"'
+        self._exit_msg = (
+            f'Exiting {self.service.name.value} stream task '
+            f'for "{self._cam.description}"'
+        )
 
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(0.1))
     async def run(self) -> None:
-        self._log.debug('Starting %s stream task for "%s"',
-                        self.service.name.value, self._cam.description)
+        self._log.debug(
+            'Starting %s stream task for "%s"',
+            self.service.name.value,
+            self._cam.description,
+        )
         try:
             while self.service.started or self._run_forever:
                 while not self.service.need_restart and self.service.alive:
@@ -47,8 +52,7 @@ class ServiceStreamerTask(AbstractServiceTask):
                 else:
                     if not self._run_forever and self._should_exit():
                         break
-                    self._log.info('Restarting %s stream',
-                                   self.service.name.value)
+                    self._log.info('Restarting %s stream', self.service.name.value)
                     await self.service.restart()
                 await shallow_sleep_async(1)
         except HikvisionCamError as err:

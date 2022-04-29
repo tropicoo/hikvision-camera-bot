@@ -9,12 +9,11 @@ from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
-from hikcamerabot.constants import CONN_TIMEOUT, Http
+from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 
 
 class AbstractHikvisionAPIClient(metaclass=abc.ABCMeta):
-
     def __init__(self, conf: Dict) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
@@ -22,12 +21,12 @@ class AbstractHikvisionAPIClient(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def request(
-            self,
-            endpoint: str,
-            data: Any = None,
-            headers: dict = None,
-            method: str = Http.GET,
-            timeout: float = CONN_TIMEOUT,
+        self,
+        endpoint: str,
+        data: Any = None,
+        headers: dict = None,
+        method: str = 'GET',
+        timeout: float = CONN_TIMEOUT,
     ) -> Any:
         pass
 
@@ -46,13 +45,14 @@ class HikvisionAPIClient(AbstractHikvisionAPIClient):
         )
 
     @retry(wait=wait_fixed(0.5))
-    async def request(self,
-                      endpoint: str,
-                      data: Any = None,
-                      headers: dict = None,
-                      method: str = Http.GET,
-                      timeout: float = CONN_TIMEOUT,
-                      ) -> httpx.Response:
+    async def request(
+        self,
+        endpoint: str,
+        data: Any = None,
+        headers: dict = None,
+        method: str = 'GET',
+        timeout: float = CONN_TIMEOUT,
+    ) -> httpx.Response:
         url = urljoin(self.host, endpoint)
         self._log.debug('Request: %s - %s - %s', method, endpoint, data)
         try:
@@ -64,8 +64,10 @@ class HikvisionAPIClient(AbstractHikvisionAPIClient):
                 timeout=timeout,
             )
         except Exception as err:
-            err_msg = f'API encountered an unknown error for method {method}, ' \
-                      f'endpoint {endpoint}, data {data}'
+            err_msg = (
+                f'API encountered an unknown error for method {method}, '
+                f'endpoint {endpoint}, data {data}'
+            )
             self._log.exception(err_msg)
             raise APIRequestError(f'{err_msg}: {err}') from err
         self._verify_status_code(response.status_code)
