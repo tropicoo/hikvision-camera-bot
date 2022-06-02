@@ -1,4 +1,4 @@
-Pillow==9.1.0
+Pillow==9.1.1
 Pyrogram==2.0.16
 addict==2.4.0
 httpx==0.22.0
