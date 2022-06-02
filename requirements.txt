@@ -1,7 +1,7 @@
 Pillow==9.1.0
 Pyrogram==2.0.16
 addict==2.4.0
-httpx==0.22.0
+httpx==0.23.0
 marshmallow==3.15.0
 tenacity==8.0.1
 tgcrypto==1.2.3
