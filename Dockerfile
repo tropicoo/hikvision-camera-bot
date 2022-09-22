@@ -22,5 +22,3 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk --purge del .build-deps
 
 COPY . /app
-
-CMD ["python", "bot.py"]

@@ -62,7 +62,7 @@ class DvrUploadEngine:
         await self._start_tasks()
         self._log.debug('Upload Engine for %s has started', self._cam.description)
 
-    async def _start_tasks(self):
+    async def _start_tasks(self) -> None:
         await asyncio.gather(
             self._start_storage_tasks(),
             self._start_file_monitoring_task_(),

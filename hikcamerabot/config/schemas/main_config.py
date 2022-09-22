@@ -28,25 +28,25 @@ class TelegramDvrUploadConf(Schema):
 
 
 class DvrUploadStorageConf(Schema):
-    telegram = f.Nested(TelegramDvrUploadConf, required=True)
+    telegram = f.Nested(TelegramDvrUploadConf(), required=True)
 
 
 class DvrUploadConf(Schema):
     delete_after_upload = f.Boolean(required=True)
-    storage = f.Nested(DvrUploadStorageConf, required=True)
+    storage = f.Nested(DvrUploadStorageConf(), required=True)
 
 
 class DvrLivestreamConf(LivestreamConf):
     local_storage_path = f.Str(required=True, validate=non_empty_str)
-    upload = f.Nested(DvrUploadConf, required=True)
+    upload = f.Nested(DvrUploadConf(), required=True)
 
 
 class Livestream(Schema):
-    srs = f.Nested(LivestreamConf, required=True)
-    dvr = f.Nested(DvrLivestreamConf, required=True)
-    youtube = f.Nested(LivestreamConf, required=True)
-    telegram = f.Nested(LivestreamConf, required=True)
-    icecast = f.Nested(LivestreamConf, required=True)
+    srs = f.Nested(LivestreamConf(), required=True)
+    dvr = f.Nested(DvrLivestreamConf(), required=True)
+    youtube = f.Nested(LivestreamConf(), required=True)
+    telegram = f.Nested(LivestreamConf(), required=True)
+    icecast = f.Nested(LivestreamConf(), required=True)
 
 
 class Detection(Schema):
@@ -72,15 +72,15 @@ class VideoGifOnAlert(VideoGifOnDemand):
 
 
 class VideoGif(Schema):
-    on_alert = f.Nested(VideoGifOnAlert, required=True)
-    on_demand = f.Nested(VideoGifOnDemand, required=True)
+    on_alert = f.Nested(VideoGifOnAlert(), required=True)
+    on_demand = f.Nested(VideoGifOnDemand(), required=True)
 
 
 class Alert(Schema):
     delay = f.Int(required=True, validate=v.Range(min=0))
-    motion_detection = f.Nested(Detection, required=True)
-    line_crossing_detection = f.Nested(Detection, required=True)
-    intrusion_detection = f.Nested(Detection, required=True)
+    motion_detection = f.Nested(Detection(), required=True)
+    line_crossing_detection = f.Nested(Detection(), required=True)
+    intrusion_detection = f.Nested(Detection(), required=True)
 
 
 class CamAPIAuth(Schema):
@@ -90,7 +90,7 @@ class CamAPIAuth(Schema):
 
 class CamAPI(Schema):
     host = f.Str(required=True, validate=non_empty_str)
-    auth = f.Nested(CamAPIAuth, required=True)
+    auth = f.Nested(CamAPIAuth(), required=True)
     stream_timeout = f.Int(required=True, validate=int_min_1)
 
 
@@ -112,12 +112,12 @@ class CameraListConfig(Schema):
         description = f.Str(required=True, validate=non_empty_str)
         hashtag = f.Str(required=True, allow_none=True)
         group = f.Str(required=True, allow_none=True)
-        api = f.Nested(CamAPI, required=True)
+        api = f.Nested(CamAPI(), required=True)
         rtsp_port = f.Int(required=True)
-        video_gif = f.Nested(VideoGif, required=True)
-        alert = f.Nested(Alert, required=True)
-        livestream = f.Nested(Livestream, required=True)
-        command_sections_visibility = f.Nested(CmdSectionsVisibility, required=True)
+        video_gif = f.Nested(VideoGif(), required=True)
+        alert = f.Nested(Alert(), required=True)
+        livestream = f.Nested(Livestream(), required=True)
+        command_sections_visibility = f.Nested(CmdSectionsVisibility(), required=True)
 
         class Meta:
             ordered = True
@@ -157,9 +157,9 @@ class Telegram(Schema):
 class MainConfig(Schema):
     _APP_LOG_LEVELS = {'DEBUG', 'WARNING', 'INFO', 'ERROR', 'CRITICAL'}
 
-    telegram = f.Nested(Telegram, required=True)
+    telegram = f.Nested(Telegram(), required=True)
     log_level = f.Str(required=True, validate=v.OneOf(_APP_LOG_LEVELS))
-    camera_list = f.Nested(CameraListConfig, required=True)
+    camera_list = f.Nested(CameraListConfig(), required=True)
 
     class Meta:
         ordered = True

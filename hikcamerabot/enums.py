@@ -54,7 +54,7 @@ class CmdSectionType(_BaseUniqueEnum):
 
 
 class Alarm(_BaseNonUniqueEnum):
-    ALARM = 'alarm'
+    ALARM = 'Alarm'
 
 
 class ServiceType(_BaseUniqueEnum):
@@ -68,11 +68,11 @@ class DvrUploadType(_BaseUniqueEnum):
 
 
 class Stream(_BaseUniqueEnum):
-    DVR = 'dvr'
-    ICECAST = 'icecast'
-    SRS = 'srs'
-    TELEGRAM = 'telegram'
-    YOUTUBE = 'youtube'
+    DVR = 'DVR'
+    ICECAST = 'ICECAST'
+    SRS = 'SRS'
+    TELEGRAM = 'TELEGRAM'
+    YOUTUBE = 'YOUTUBE'
 
 
 class VideoEncoder(_BaseUniqueEnum):

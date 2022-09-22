@@ -20,7 +20,7 @@ class FfmpegStdoutReaderTask:
     async def run(self) -> None:
         self._log.info('Starting %s', self.__class__.__name__)
         while self._proc.returncode is None:
-            self._log.debug('Reading stdout from %s', self._cmd)
+            self._log.debug('Reading stdout from "%s"', self._cmd)
             self._log.info((await self._proc.stdout.read(50)).decode())
             await asyncio.sleep(0.2)
         self._log.info('Exiting %s', self.__class__.__name__)

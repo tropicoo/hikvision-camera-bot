@@ -156,7 +156,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         except ProcessLookupError as err:
             self._log.error('Failed to kill process: %s', err)
         except Exception:
-            err_msg = f'Failed to kill/disable {self.name.value.capitalize()} stream'
+            err_msg = f'Failed to kill/disable {self.name.value} stream'
             self._log.exception(err_msg)
             raise ServiceRuntimeError(err_msg)
 
@@ -202,7 +202,9 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             self._log.error(err_msg)
             raise ServiceConfigError(err_msg)
 
-        self._stream_conf = get_livestream_tpl_config()[self.name.value][tpl_name_ls]
+        self._stream_conf = get_livestream_tpl_config()[self.name.value.lower()][
+            tpl_name_ls
+        ]
         self._enc_conf = get_encoding_tpl_config()[enc_codec_name][tpl_name_enc]
 
         cmd_tpl = self._format_ffmpeg_cmd_tpl()

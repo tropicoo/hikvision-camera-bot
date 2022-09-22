@@ -1,9 +1,11 @@
 """Decorators module."""
 
+import logging
 import re
 from functools import wraps
 from typing import TYPE_CHECKING
 
+from emoji import emojize
 from pyrogram.types import Message
 
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
@@ -11,6 +13,8 @@ from hikcamerabot.utils.utils import get_user_info
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
+
+log = logging.getLogger(__name__)
 
 
 # def event_error_handler(func):
@@ -56,13 +60,13 @@ def authorization_check(func):
     async def wrapper(*args, **kwargs):
         bot: CameraBot = args[0]
         message: Message = args[1]
-        bot._log.debug(get_user_info(message))  # noqa
+        log.debug(get_user_info(message))
 
         if message.chat.id in bot.chat_users:
             return await func(*args, **kwargs)
 
-        bot._log.error('User authorization error: %s', message.chat.id)  # noqa
-        await message.reply_text('Not authorized', quote=True)
+        log.error('User authorization error: %s', message.chat.id)
+        await message.reply_text(emojize(':stop_sign: Not authorized'), quote=True)
 
     return wrapper
 
@@ -79,6 +83,7 @@ def camera_selection(func):
         try:
             return await func(*args, cam=cam, **kwargs)
         except Exception:
-            bot._log.exception('Failed to process event for %s', cam_id)
+            log.exception('Failed to process event for %s', cam_id)
+            log.debug('Failed event context: %s', message)
 
     return wrapper

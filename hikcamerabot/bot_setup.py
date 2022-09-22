@@ -34,7 +34,9 @@ class BotSetup:
 
         for cam_id, cam_conf in self._conf.camera_list.items():
             if cam_conf.hidden:
-                # Skip camera and its settings.
+                self._log.info(
+                    '[%s] Skipping camera config - %s', cam_id, cam_conf.description
+                )
                 continue
 
             cam_cmds = defaultdict(list)

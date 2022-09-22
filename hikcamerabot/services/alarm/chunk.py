@@ -25,8 +25,7 @@ class ChunkDetector:
         """Detect chunk in regard of `DETECTION_REGEX` string and return
         detection key.
 
-        :Parameters:
-            - `chunk`: string, one line from alert stream.
+        :param chunk: string, one line from alert stream.
         """
         match = cls.DETECTION_REGEX.search(chunk)
         if not match:

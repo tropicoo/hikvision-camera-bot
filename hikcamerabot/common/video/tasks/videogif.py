@@ -19,6 +19,7 @@ from hikcamerabot.constants import (
     FFMPEG_SRS_HLS_VIDEO_SRC,
     FFMPEG_SRS_RTMP_VIDEO_SRC,
     RTSP_TRANSPORT_TPL,
+    SRS_DOCKER_CONTAINER_NAME,
     SRS_LIVESTREAM_NAME_TPL,
 )
 from hikcamerabot.enums import Event, VideoGifType
@@ -54,7 +55,7 @@ class RecordVideoGifTask:
         rewind: bool,
         cam: 'HikvisionCam',
         video_type: VideoGifType,
-        context: Message = None,
+        message: Message = None,
     ):
         self._log = logging.getLogger(self.__class__.__name__)
         self._cam = cam
@@ -75,7 +76,7 @@ class RecordVideoGifTask:
         if self._rewind:
             self._rec_time += self._gif_conf.rewind_time
 
-        self._message = context
+        self._message = message
         self._event = self._VIDEO_TYPE_TO_EVENT[self._video_type]
         self._result_queue = get_result_queue()
         self._killpg = wrap(os.killpg)
@@ -136,7 +137,7 @@ class RecordVideoGifTask:
         self._height = video_streams[0]['height']
         self._width = video_streams[0]['width']
 
-    def _post_err_cleanup(self):
+    def _post_err_cleanup(self) -> None:
         """Delete video file and thumb if they exist after exception."""
         for file_path in (self._file_path, self._thumb_path):
             try:
@@ -217,7 +218,7 @@ class RecordVideoGifTask:
             )
             if self._rewind:
                 video_source = FFMPEG_SRS_HLS_VIDEO_SRC.format(
-                    ip_address=socket.gethostbyname('hikvision_srs_server'),
+                    ip_address=socket.gethostbyname(SRS_DOCKER_CONTAINER_NAME),
                     livestream_name=livestream_name,
                 )
                 return FFMPEG_CMD_HLS_VIDEO_GIF.format(

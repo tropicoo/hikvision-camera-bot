@@ -7,8 +7,6 @@ from hikcamerabot.event_engine.queue import get_result_queue
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
-    from hikcamerabot.services.alarm import AlarmService
-    from hikcamerabot.services.stream.abstract import AbstractStreamService
 
 
 class AbstractService(metaclass=abc.ABCMeta):
