@@ -26,6 +26,7 @@ class AlertNotifier:
 
     def notify(self, detection_type: Detection) -> None:
         for task_cls in self.ALARM_NOTIFICATION_TASKS:
+            self._log.debug('Notifying with %s', task_cls)
             task = task_cls(service=self._service, detection_type=detection_type)
             create_task(
                 task.run(),

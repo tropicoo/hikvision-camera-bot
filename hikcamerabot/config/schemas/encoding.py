@@ -71,7 +71,7 @@ class X264(BaseTemplate):
         maxrate = f.String(required=True, validate=non_empty_str)
         bufsize = f.String(required=True, validate=non_empty_str)
         tune = f.String(required=True, validate=non_empty_str)
-        scale = f.Nested(_Scale, required=True)
+        scale = f.Nested(_Scale(), required=True)
 
     _inner_validation_schema_cls = _X264
 
@@ -99,12 +99,12 @@ class Vp9(BaseTemplate):
         bufsize = f.String(required=True, validate=non_empty_str)
         deadline = f.String(required=True, validate=non_empty_str)
         speed = f.Integer(required=True, validate=int_min_1)
-        scale = f.Nested(_Scale, required=True)
+        scale = f.Nested(_Scale(), required=True)
 
     _inner_validation_schema_cls = _Vp9
 
 
 class Encoding(Schema):
-    direct = f.Nested(Direct, required=True)
-    x264 = f.Nested(X264, required=True)
-    vp9 = f.Nested(Vp9, required=True)
+    direct = f.Nested(Direct(), required=True)
+    x264 = f.Nested(X264(), required=True)
+    vp9 = f.Nested(Vp9(), required=True)

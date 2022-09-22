@@ -63,7 +63,7 @@ class TaskTakeSnapshot(AbstractTaskEvent):
 class TaskRecordVideoGif(AbstractTaskEvent):
     async def _handle(self, event: GetVideoEvent) -> None:
         await event.cam.start_videogif_record(
-            context=event.message, rewind=event.rewind
+            message=event.message, rewind=event.rewind
         )
 
 

@@ -27,13 +27,17 @@ FFMPEG_LOG_LEVELS = frozenset(
     ['quiet', 'panic', 'fatal', 'error', 'warning', 'info', 'verbose', 'debug', 'trace']
 )
 
+SRS_DOCKER_CONTAINER_NAME = 'hikvision_srs_server'
+
 _FFMPEG_BIN = 'ffmpeg'
 _FFMPEG_LOG_LEVEL = '-loglevel {loglevel}'
 
 FFMPEG_CAM_VIDEO_SRC = (
     '"rtsp://{user}:{pw}@{host}:{rtsp_port}/Streaming/Channels/{channel}/"'
 )
-FFMPEG_SRS_RTMP_VIDEO_SRC = '"rtmp://hikvision_srs_server/live/{livestream_name}"'
+FFMPEG_SRS_RTMP_VIDEO_SRC = (
+    f'"rtmp://{SRS_DOCKER_CONTAINER_NAME}/live/{{livestream_name}}"'
+)
 FFMPEG_SRS_HLS_VIDEO_SRC = '"http://{ip_address}:8080/hls/live/{livestream_name}.m3u8"'
 
 SRS_LIVESTREAM_NAME_TPL = 'livestream_{channel}_{cam_id}'
@@ -66,7 +70,7 @@ FFMPEG_CMD_SRS = (
     '-buffer_size 1000000 '
     '{filter} '
     '-rtsp_transport {rtsp_transport_type} '
-    '-stimeout 10000000 '
+    '-timeout 10000000 '
     f'-i {FFMPEG_CAM_VIDEO_SRC} '
     '{map} '
     '-c:v {vcodec} '

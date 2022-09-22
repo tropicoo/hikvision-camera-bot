@@ -86,14 +86,14 @@ class Icecast(BaseTemplate):
         channel = f.Integer(required=True, validate=int_min_1)
         restart_period = f.Integer(required=True, validate=int_min_1)
         restart_pause = f.Integer(required=True, validate=int_min_0)
-        ice_stream = f.Nested(_IceStream, required=True)
+        ice_stream = f.Nested(_IceStream(), required=True)
 
     _inner_validation_schema_cls = _Icecast
 
 
 class Livestream(Schema):
-    youtube = f.Nested(Youtube, required=True)
-    telegram = f.Nested(Telegram, required=True)
-    icecast = f.Nested(Icecast, required=True)
-    srs = f.Nested(Srs, required=True)
-    dvr = f.Nested(Dvr, required=True)
+    youtube = f.Nested(Youtube(), required=True)
+    telegram = f.Nested(Telegram(), required=True)
+    icecast = f.Nested(Icecast(), required=True)
+    srs = f.Nested(Srs(), required=True)
+    dvr = f.Nested(Dvr(), required=True)

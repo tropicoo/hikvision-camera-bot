@@ -65,7 +65,7 @@ class CameraBot(Client):
         for user_id in self.alert_users:
             await self._send_message(text, user_id, **kwargs)
 
-    async def _send_message(self, text: str, user_id: int, **kwargs):
+    async def _send_message(self, text: str, user_id: int, **kwargs) -> None:
         try:
             await self.send_message(user_id, text, **kwargs)
         except Exception:

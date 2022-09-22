@@ -34,5 +34,6 @@ class BotLauncher:
         await self._run_bot_forever()
 
     async def _run_bot_forever(self) -> None:
+        """That's how we roll."""
         while True:
             await asyncio.sleep(86400)

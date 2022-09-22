@@ -6,8 +6,8 @@ from tenacity import retry, retry_if_exception_type, wait_fixed
 from hikcamerabot.enums import Detection, ServiceType
 from hikcamerabot.exceptions import ChunkDetectorError, ChunkLoopError
 from hikcamerabot.services.abstract import AbstractServiceTask
+from hikcamerabot.services.alarm.chunk import ChunkDetector
 from hikcamerabot.services.alarm.notifier import AlertNotifier
-from hikcamerabot.utils.chunk import ChunkDetector
 
 
 class ServiceAlarmMonitoringTask(AbstractServiceTask):

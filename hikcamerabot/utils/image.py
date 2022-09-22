@@ -10,10 +10,7 @@ from hikcamerabot.utils.utils import Singleton
 
 
 class ImageProcessor(metaclass=Singleton):
-    """Image Processor Class.
-
-    Process raw images taken from Hikvision camera.
-    """
+    """Image Processor Class. Process raw images taken from Hikvision camera."""
 
     def __init__(self) -> None:
         """Constructor."""

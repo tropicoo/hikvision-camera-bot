@@ -29,11 +29,12 @@ class ResultWorkerManager:
         for idx in range(1, self._worker_num + 1):
             task_name = f'ResultWorkerTask_{idx}'
             self._log.debug('Starting %s', task_name)
-            worker_task = create_task(
-                ResultWorkerTask(self._outbound_dispatcher, idx).run(),
-                task_name=task_name,
-                logger=self._log,
-                exception_message='Task %s raised an exception',
-                exception_message_args=(task_name,),
+            self._workers.append(
+                create_task(
+                    ResultWorkerTask(self._outbound_dispatcher, idx).run(),
+                    task_name=task_name,
+                    logger=self._log,
+                    exception_message='Task %s raised an exception',
+                    exception_message_args=(task_name,),
+                )
             )
-            self._workers.append(worker_task)

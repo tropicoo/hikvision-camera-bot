@@ -1,4 +1,5 @@
 """Hikvision camera module."""
+
 import asyncio
 import logging
 from datetime import datetime
@@ -10,11 +11,12 @@ from pyrogram.types import Message
 
 from hikcamerabot.clients.hikvision import HikvisionAPI, HikvisionAPIClient
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
+from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
 from hikcamerabot.enums import VideoGifType
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
-from hikcamerabot.services.manager import ServiceManager
-from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
+from hikcamerabot.services.abstract import AbstractService
 from hikcamerabot.services.alarm import AlarmService
+from hikcamerabot.services.manager import ServiceManager
 from hikcamerabot.services.stream import (
     DvrStreamService,
     IcecastStreamService,
@@ -24,12 +26,13 @@ from hikcamerabot.services.stream import (
 )
 from hikcamerabot.utils.image import ImageProcessor
 
-
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
 
 
 class ServiceContainer:
+    """Container class for all services."""
+
     def __init__(
         self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot: 'CameraBot'
     ) -> None:
@@ -76,6 +79,17 @@ class ServiceContainer:
             cam=cam,
         )
 
+    def get_all(self) -> list[AbstractService]:
+        """Return list with all services."""
+        return [
+            self.alarm,
+            self.dvr_stream,
+            self.srs_stream,
+            self.stream_icecast,
+            self.stream_tg,
+            self.stream_yt,
+        ]
+
 
 class HikvisionCam:
     """Hikvision Camera Class."""
@@ -99,16 +113,7 @@ class HikvisionCam:
             bot=self.bot,
         )
         self.service_manager = ServiceManager()
-        self.service_manager.register(
-            [
-                self.services.alarm,
-                self.services.stream_yt,
-                self.services.stream_icecast,
-                self.services.srs_stream,
-                self.services.dvr_stream,
-                self.services.stream_tg,
-            ]
-        )
+        self.service_manager.register(self.services.get_all())
 
         self.snapshots_taken = 0
         self._videogif = VideoGifRecorder(cam=self)
@@ -120,9 +125,9 @@ class HikvisionCam:
         self,
         video_type: VideoGifType = VideoGifType.ON_DEMAND,
         rewind: bool = False,
-        context: Message = None,
+        message: Message = None,
     ) -> None:
-        self._videogif.start_rec(video_type=video_type, rewind=rewind, context=context)
+        self._videogif.start_rec(video_type=video_type, rewind=rewind, message=message)
 
     async def set_ircut_filter(self, filter_type: IrcutFilterType) -> None:
         await self._api.set_ircut_filter(filter_type)

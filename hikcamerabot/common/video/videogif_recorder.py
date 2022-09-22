@@ -24,20 +24,20 @@ class VideoGifRecorder:
         self._proc_task_queue = deque()
 
     def start_rec(
-        self, video_type: VideoGifType, rewind: bool = False, context: Message = None
+        self, video_type: VideoGifType, rewind: bool = False, message: Message = None
     ) -> None:
         """Start recording video-gif."""
-        self._start_rec(video_type=video_type, rewind=rewind, context=context)
+        self._start_rec(video_type=video_type, rewind=rewind, message=message)
 
     def _start_rec(
-        self, video_type: VideoGifType, rewind: bool, context: Message
+        self, video_type: VideoGifType, rewind: bool, message: Message
     ) -> None:
         """Start rtsp video stream recording to a temporary file."""
         rec_task = RecordVideoGifTask(
             rewind=rewind,
             cam=self._cam,
             video_type=video_type,
-            context=context,
+            message=message,
         )
         task = create_task(
             rec_task.run(),

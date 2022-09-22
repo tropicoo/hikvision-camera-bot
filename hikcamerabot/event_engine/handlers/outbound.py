@@ -6,7 +6,8 @@ import os
 from io import BytesIO
 from typing import Optional, TYPE_CHECKING
 
-from pyrogram.enums import ChatAction, ParseMode
+from emoji import emojize
+from pyrogram.enums import ChatAction
 from pyrogram.types import Message
 from tenacity import retry, stop_after_attempt, wait_fixed
 
@@ -57,10 +58,12 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
     async def __handle(self, event: VideoOutboundEvent) -> None:
         cam = event.cam
         caption = (
+            f'{emojize(":rotating_light:", language="alias")} '
             f'Alert video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, '
             f'/list_cams'
         )
         try:
+            # Simple for loop because video cache will be used.
             for uid in self._bot.alert_users:
                 await self._send_video(uid, event, caption)
         finally:
@@ -194,7 +197,7 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
         stream_type = event.stream_type
         switch = event.switch
         text: str = event.text or '{0} stream successfully {1}'.format(
-            stream_type.value.capitalize(), 'enabled' if switch else 'disabled'
+            stream_type.value, 'enabled' if switch else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)
@@ -220,7 +223,7 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
         switch = event.switch
 
         text: str = event.text or '{0} successfully {1}'.format(
-            service_name.value.capitalize(), 'enabled' if switch else 'disabled'
+            service_name.value, 'enabled' if switch else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)

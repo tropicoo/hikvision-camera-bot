@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   hikvision-camera-bot:
@@ -9,11 +9,14 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      # First path is real local storage path. Change to your preferred path.
+      # First path is real local storage path, e.g. "D:\Videos" in Windows. Change to your preferred one.
       - "/data/dvr:/data/dvr"
+      - "./configs:/app/configs"
     restart: unless-stopped
     depends_on:
       - hikvision-srs-server
+    command: >
+      bash -c "python ./bot.py"
 
   hikvision-srs-server:
     container_name: "hikvision_srs_server"
@@ -26,8 +29,10 @@ services:
       # Store HLS .ts files in RAM. Depending on 'hls_fragment' and 'hls_window' default size '128M' might be increased.
       # Check usage inside the container with 'df -h'.
       - /srs/trunk/objs/nginx/html/hls:mode=770,size=128M
+    volumes:
+      - "./srs_prod:/usr/local/srs/user_conf"
     command: >
-      bash -c "./objs/srs -c conf/hik-docker.conf"
+      bash -c "./objs/srs -c user_conf/hik-docker.conf"
     ports:
       # SRS RTMP port. If you comment this out, you won't be able to connect with video player like VLC.
       - "1935:1935"

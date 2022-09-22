@@ -6,8 +6,10 @@ from typing import Iterator
 
 from hikcamerabot.camera import HikvisionCam
 
-RegistryValue = dict[str, HikvisionCam | dict | str]
-CamRegistryType = dict[str, RegistryValue]
+CamRegistryValue = dict[str, HikvisionCam | dict | str]
+CamRegistryType = dict[str, CamRegistryValue]
+GroupRegistryValue = dict[str, str | list[HikvisionCam]]
+GroupRegistryType = dict[str, GroupRegistryValue]
 
 
 class CameraRegistry:
@@ -37,16 +39,14 @@ class CameraRegistry:
         try:
             key = self._group_command_alias[cam.group]
         except KeyError:
+            # Key as group command name.
             key = f'group_{len(self._group_registry) + 1}'
 
         try:
             self._group_registry[key]['cams'].append(cam)
         except KeyError:
             self._group_command_alias[cam.group] = key
-            self._group_registry[key] = {
-                'name': cam.group,
-                'cams': [cam],
-            }
+            self._group_registry[key] = {'name': cam.group, 'cams': [cam]}
 
     def get_commands(self, cam_id: str) -> dict:
         """Get camera commands."""
@@ -59,7 +59,7 @@ class CameraRegistry:
     def get_instance(self, cam_id: str) -> HikvisionCam:
         return self._cam_registry[cam_id]['cam']
 
-    def get_meta(self, cam_id: str) -> RegistryValue:
+    def get_meta(self, cam_id: str) -> CamRegistryValue:
         return self._cam_registry[cam_id]
 
     def get_instances(self) -> Iterator[HikvisionCam]:
@@ -76,8 +76,8 @@ class CameraRegistry:
     def get_instances_by_group(self, group_name: str) -> list[HikvisionCam]:
         return self._group_registry.get(group_name, [])
 
-    def get_groups_registry(self) -> dict:
+    def get_groups_registry(self) -> GroupRegistryType:
         return self._group_registry
 
-    def get_group(self, group_id: str) -> dict:
+    def get_group(self, group_id: str) -> GroupRegistryValue:
         return self._group_registry[group_id]

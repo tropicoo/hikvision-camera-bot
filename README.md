@@ -1,12 +1,12 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.4. [Release details](releases/release_1.4.md).
+Version: 1.5. [Release details](releases/release_1.5.md).
 
 ## Features
-1. Send full/resized snapshots on request
-2. Auto-send snapshots on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
-3. Send so-called Telegram video-gifs on request and alert events from paragraph #2
+1. Send full/resized pictures on request
+2. Auto-send pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**
+3. Send so-called Telegram video-gifs on request and alert events from previous paragraph
 4. YouTube, Telegram and Icecast direct or re-encoded livestreams
 5. DVR to local storage with upload to Telegram group
 6. SRS re-stream server
@@ -246,7 +246,7 @@ where:
 2. `101` is camera's configured stream channel.
 3. `cam_2` is ID of your second configured camera.
 
-SRS runs in a separate docker container. SRS config and `Dockerfile` placed
+SRS runs in a separate docker container. SRS config and `Dockerfile` are placed
 in `srs_prod` directory. Service name is `hikvision-srs-server` in `docker-compose.yml`.
 
 
@@ -313,7 +313,7 @@ file with DVR stream settings:
     from the local storage. You need to make sure your file size will be up to 2GB since
     Telegram rejects larger ones. Just experiment with segment time.
 5. Local storage (the real one, not in the container) by default is `/data/dvr` in volumes mapping (the first path string, not the last).
-   Change it to any location you need, e.g. to `- D:\Videos:/data/dvr` if you're on Windows.
+   Change it to any location you need, e.g. to `- "D:\Videos:/data/dvr"` if you're on Windows.
     ```yaml
     volumes:
       - "/data/dvr:/data/dvr"
