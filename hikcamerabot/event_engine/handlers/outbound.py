@@ -197,7 +197,7 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
         stream_type = event.stream_type
         switch = event.switch
         text: str = event.text or '{0} stream successfully {1}'.format(
-            stream_type.value, 'enabled' if switch else 'disabled'
+            stream_type.value.capitalize(), 'enabled' if switch else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)

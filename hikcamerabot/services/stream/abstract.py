@@ -79,14 +79,18 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
     async def start(self, skip_check: bool = False) -> None:
         """Start the stream."""
         if not skip_check and self.started:
-            msg = f'{self._cls_name} stream already started'
-            self._log.warning(msg)
-            raise ServiceRuntimeError(msg)
+            warn_msg = f'{self._get_cap_service_name()} stream already started'
+            self._log.warning(warn_msg)
+            raise ServiceRuntimeError(warn_msg)
 
         await self._start_ffmpeg_process()
         self._start_reader_task()
         if not skip_check:
             self._start_stream_task()
+
+    def _get_cap_service_name(self) -> str:
+        """Get capitalized service name, e.g. "TELEGRAM" -> "Telegram"."""
+        return self.name.value.capitalize()
 
     @property
     def _srs_enabled(self) -> bool:
@@ -147,7 +151,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
     async def stop(self, disable: bool = True) -> None:
         """Stop the stream."""
         if not self.started:
-            warn_msg = f'{self._cls_name} already stopped'
+            warn_msg = f'{self._get_cap_service_name()} stream already stopped'
             self._log.warning(warn_msg)
             raise ServiceRuntimeError(warn_msg)
         try:
