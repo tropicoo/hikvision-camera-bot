@@ -22,7 +22,7 @@ from hikcamerabot.event_engine.events.outbound import (
     StreamOutboundEvent,
     VideoOutboundEvent,
 )
-from hikcamerabot.utils.utils import format_ts, bold, send_text
+from hikcamerabot.utils.shared import bold, format_ts, send_text
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot

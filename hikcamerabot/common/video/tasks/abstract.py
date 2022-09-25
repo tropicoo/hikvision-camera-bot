@@ -33,11 +33,6 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
             await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
             return None
 
-    @staticmethod
-    async def _get_stdout_stderr(proc: asyncio.subprocess.Process) -> tuple[str, str]:
-        stdout, stderr = await proc.stdout.read(), await proc.stderr.read()
-        return stdout.decode().strip(), stderr.decode().strip()
-
     @abc.abstractmethod
     async def run(self) -> None:
         """Main entry point."""

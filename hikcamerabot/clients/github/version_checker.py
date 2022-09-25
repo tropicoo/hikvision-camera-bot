@@ -8,6 +8,8 @@ from hikcamerabot.version import __version__
 
 @dataclass
 class BotVersion:
+    """Bot version DTO class."""
+
     current: str
     latest: str
 
@@ -27,11 +29,12 @@ class HikCameraBotVersionChecker:
         return __version__
 
     async def get_latest_version(self) -> str:
+        """Get latest version number from latest GitHub tag URL."""
         self._log.info('Get latest hikvision-camera-bot version number')
         client: AsyncClient
         async with AsyncClient() as client:
             response = await client.head(self.LATEST_TAG_URL)
-            version = response.headers.get('location').split('/')[-1]
+            version: str = response.headers.get('location').split('/')[-1]
             self._log.info('Latest hikvision-camera-bot version number: %s', version)
             return version
 

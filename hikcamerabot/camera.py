@@ -102,7 +102,7 @@ class HikvisionCam:
         self.hashtag = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
         self.group = conf.group or 'Default group'
         self.bot = bot
-        self._log.debug('Initializing %s', self.description)
+        self._log.debug('Initializing camera %s', self.description)
         self._api = HikvisionAPI(api_client=HikvisionAPIClient(conf=conf.api))
         self._img_processor = ImageProcessor()
 
@@ -119,7 +119,7 @@ class HikvisionCam:
         self._videogif = VideoGifRecorder(cam=self)
 
     def __repr__(self) -> str:
-        return f'<HikvisionCam desc="{self.description}">'
+        return f'<HikvisionCam id="{self.id}" desc="{self.description}">'
 
     async def start_videogif_record(
         self,

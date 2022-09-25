@@ -9,7 +9,7 @@ from emoji import emojize
 from pyrogram.types import Message
 
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
-from hikcamerabot.utils.utils import get_user_info
+from hikcamerabot.utils.shared import get_user_info
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot

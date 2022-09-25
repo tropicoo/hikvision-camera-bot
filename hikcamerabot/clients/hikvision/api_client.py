@@ -1,5 +1,4 @@
 """Hikvision camera API client module."""
-import abc
 import logging
 from typing import Any
 from urllib.parse import urljoin
@@ -13,29 +12,13 @@ from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 
 
-class AbstractHikvisionAPIClient(metaclass=abc.ABCMeta):
+class HikvisionAPIClient:
+    """Hikvision API Class."""
+
     def __init__(self, conf: Dict) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
         self.host: str = self._conf.host
-
-    @abc.abstractmethod
-    async def request(
-        self,
-        endpoint: str,
-        data: Any = None,
-        headers: dict = None,
-        method: str = 'GET',
-        timeout: float = CONN_TIMEOUT,
-    ) -> Any:
-        pass
-
-
-class HikvisionAPIClient(AbstractHikvisionAPIClient):
-    """Hikvision API Class."""
-
-    def __init__(self, conf: Dict) -> None:
-        super().__init__(conf)
         self.session = httpx.AsyncClient(
             auth=DigestAuthCached(
                 username=self._conf.auth.user,

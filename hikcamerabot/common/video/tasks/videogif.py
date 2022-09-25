@@ -28,8 +28,8 @@ from hikcamerabot.event_engine.events.outbound import (
     VideoOutboundEvent,
 )
 from hikcamerabot.event_engine.queue import get_result_queue
+from hikcamerabot.utils.shared import bold, format_ts, gen_random_str
 from hikcamerabot.utils.task import wrap
-from hikcamerabot.utils.utils import format_ts, gen_random_str, bold
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -68,7 +68,7 @@ class RecordVideoGifTask:
         self._filename = self._get_filename()
         self._file_path: str = os.path.join(self._tmp_storage_path, self._filename)
         self._thumb_path: str = os.path.join(
-            self._tmp_storage_path, f'{self._filename}.jpg'
+            self._tmp_storage_path, f'{self._filename}-thumb.jpg'
         )
         self._thumb_created = False
 
@@ -93,35 +93,40 @@ class RecordVideoGifTask:
     async def _record(self) -> None:
         """Start Ffmpeg subprocess and return file path and video type."""
         self._log.debug(
-            'Recording %s video gif from %s: %s',
+            'Recording "%s" video gif from "%s": "%s"',
             self._video_type.value,
             self._cam.conf.description,
             self._ffmpeg_cmd,
         )
         await self._start_ffmpeg_subprocess()
-        is_validated = await self._validate_file()
-        if not is_validated:
-            err_msg = f'Failed to record {self._file_path} on {self._cam.description}'
-            self._log.error(err_msg)
-            await self._result_queue.put(
-                SendTextOutboundEvent(
-                    event=Event.SEND_TEXT,
-                    text=f'{err_msg}.\nEvent type: {self._event.value}\nCheck logs.',
-                    message=self._message,
-                )
+        if await self._validate_file():
+            await self._post_process_successful_record()
+        else:
+            await self._post_process_failed_record()
+
+    async def _post_process_successful_record(self):
+        await asyncio.gather(self._get_probe_ctx(), self._make_thumbnail_frame())
+        await self._send_result()
+
+    async def _post_process_failed_record(self):
+        self._post_err_cleanup()
+        err_msg = f'Failed to record {self._file_path} on {self._cam.description}'
+        self._log.error(err_msg)
+        await self._result_queue.put(
+            SendTextOutboundEvent(
+                event=Event.SEND_TEXT,
+                text=f'{err_msg}.\nEvent type: {self._event.value}\nCheck logs.',
+                message=self._message,
             )
-        if is_validated:
-            await asyncio.gather(self._get_probe_ctx(), self._make_thumbnail_frame())
-            await self._send_result()
+        )
 
     async def _make_thumbnail_frame(self) -> None:
         # TODO: Refactor duplicate code. Move to mixin.
-        if not await MakeThumbnailTask(self._thumb_path, self._file_path).run():
-            self._log.error(
-                'Error during making thumbnail context of %s', self._file_path
-            )
-            return
-        self._thumb_created = True
+        self._thumb_created = await MakeThumbnailTask(
+            self._thumb_path, self._file_path
+        ).run()
+        if not self._thumb_created:
+            self._log.error('Error during making thumbnail of %s', self._file_path)
 
     async def _get_probe_ctx(self) -> None:
         # TODO: Refactor duplicate code. Move to mixin.
@@ -140,10 +145,11 @@ class RecordVideoGifTask:
     def _post_err_cleanup(self) -> None:
         """Delete video file and thumb if they exist after exception."""
         for file_path in (self._file_path, self._thumb_path):
-            try:
-                os.remove(file_path)
-            except Exception as err:
-                self._log.warning('File path %s not deleted: %s', file_path, err)
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except Exception as err:
+                    self._log.warning('File path %s not deleted: %s', file_path, err)
 
     async def _start_ffmpeg_subprocess(self) -> None:
         proc_timeout = (
@@ -155,7 +161,8 @@ class RecordVideoGifTask:
         except asyncio.TimeoutError:
             self._log.error(
                 'Failed to record %s: FFMPEG process ran longer than '
-                'expected and was killed',
+                'expected (%ds) and was killed',
+                proc_timeout,
                 self._file_path,
             )
             await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
@@ -176,7 +183,6 @@ class RecordVideoGifTask:
 
         if is_empty:
             self._log.error('Failed to validate %s: File is empty', self._file_path)
-            self._post_err_cleanup()
         return not is_empty
 
     async def _send_result(self) -> None:

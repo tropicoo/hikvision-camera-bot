@@ -30,8 +30,8 @@ from hikcamerabot.services.tasks.livestream import (
     FfmpegStdoutReaderTask,
     ServiceStreamerTask,
 )
+from hikcamerabot.utils.shared import shallow_sleep_async
 from hikcamerabot.utils.task import create_task, wrap
-from hikcamerabot.utils.utils import shallow_sleep_async
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -133,7 +133,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         )
 
     async def _start_ffmpeg_process(self) -> None:
-        self._log.debug('%s ffmpeg command: %s', self._cls_name, self._cmd)
+        self._log.debug('%s ffmpeg command: "%s"', self._cls_name, self._cmd)
         try:
             self._proc = await asyncio.create_subprocess_shell(
                 self._cmd,

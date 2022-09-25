@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 
 from hikcamerabot.constants import Img
-from hikcamerabot.utils.utils import Singleton
+from hikcamerabot.utils.shared import Singleton
 
 
 class ImageProcessor(metaclass=Singleton):

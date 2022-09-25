@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 
+from hikcamerabot.utils.process import get_stdout_stderr
 from hikcamerabot.utils.task import wrap
 
 
@@ -22,6 +23,9 @@ class FileLockCheckTask:
         return await self._get_unlocked_files()
 
     async def _get_unlocked_files(self) -> list[str]:
+        """Return list with absolute file paths that are not locked by ffmpeg process
+        during write operation.
+        """
         proc = await asyncio.create_subprocess_shell(
             self._LOCKED_FILES_CMD,
             stdout=asyncio.subprocess.PIPE,
@@ -32,15 +36,16 @@ class FileLockCheckTask:
         except asyncio.TimeoutError:
             self._log.error(
                 'Failed to execute %s: process ran longer than '
-                'expected and was killed',
+                'expected (%ds) and was killed',
                 self._LOCKED_FILES_CMD,
+                self._PROCESS_TIMEOUT,
             )
             await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
             return []
 
-        stdout, stderr = await self._get_stdout_stderr(proc)
+        stdout, stderr = await get_stdout_stderr(proc)
         self._log.debug(
-            'Process %s returncode: %d, stdout: %s, stderr: %s',
+            'Process "%s" returncode: %d, stdout: %s, stderr: %s',
             self._LOCKED_FILES_CMD,
             proc.returncode,
             stdout,
@@ -49,8 +54,3 @@ class FileLockCheckTask:
         unlocked_files = [f for f in self._files if f not in stdout]
         unlocked_files.sort()
         return unlocked_files
-
-    @staticmethod
-    async def _get_stdout_stderr(proc: asyncio.subprocess.Process) -> tuple[str, str]:
-        stdout, stderr = await proc.stdout.read(), await proc.stderr.read()
-        return stdout.decode().strip(), stderr.decode().strip()

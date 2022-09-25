@@ -6,21 +6,27 @@ import httpx
 import xmltodict
 from addict import Dict
 
-from hikcamerabot.clients.hikvision.api_client import AbstractHikvisionAPIClient
+from hikcamerabot.clients.hikvision import HikvisionAPIClient
 from hikcamerabot.clients.hikvision.enums import Endpoint
 from hikcamerabot.exceptions import HikvisionAPIError
 
 
 class AbstractEndpoint(metaclass=abc.ABCMeta):
+    """API Endpoint class.
+
+    Used to decompose API methods since they are too complex to store in one API class.
+    """
+
     _XML_PAYLOAD_TPL: Optional[str] = None
     _XML_HEADERS = {'Content-Type': 'application/xml'}
 
-    def __init__(self, api_client: AbstractHikvisionAPIClient) -> None:
+    def __init__(self, api_client: HikvisionAPIClient) -> None:
         self._api_client = api_client
         self._log = logging.getLogger(self.__class__.__name__)
 
     @abc.abstractmethod
     async def __call__(self, *args, **kwargs) -> Any:
+        """Real API call starts here."""
         pass
 
     async def _get_channel_capabilities(self) -> Dict:

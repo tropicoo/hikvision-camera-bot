@@ -24,7 +24,7 @@ from hikcamerabot.event_engine.events.outbound import (
 )
 from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.exceptions import ServiceRuntimeError
-from hikcamerabot.utils.utils import bold
+from hikcamerabot.utils.shared import bold
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot

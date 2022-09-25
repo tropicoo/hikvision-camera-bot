@@ -5,7 +5,7 @@ from pyrogram.types import Message
 
 from hikcamerabot.camera import HikvisionCam
 from hikcamerabot.camerabot import CameraBot
-from hikcamerabot.clients.github_version.version_checker import (
+from hikcamerabot.clients.github.version_checker import (
     HikCameraBotVersionChecker,
 )
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
@@ -19,7 +19,7 @@ from hikcamerabot.event_engine.events.inbound import (
     IrcutConfEvent,
     StreamEvent,
 )
-from hikcamerabot.utils.utils import bold, send_text
+from hikcamerabot.utils.shared import bold, send_text
 
 log = logging.getLogger(__name__)
 

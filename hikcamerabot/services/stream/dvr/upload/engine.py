@@ -60,7 +60,7 @@ class DvrUploadEngine:
 
     async def start(self) -> None:
         await self._start_tasks()
-        self._log.debug('Upload Engine for %s has started', self._cam.description)
+        self._log.debug('Upload Engine for %s has started', self._cam)
 
     async def _start_tasks(self) -> None:
         await asyncio.gather(
@@ -72,7 +72,7 @@ class DvrUploadEngine:
     async def _start_storage_tasks(self) -> None:
         for storage, queue in self._storage_queues.items():
             self._log.debug(
-                'Starting %s upload task for %s storage', self._cam.description, storage
+                'Starting %s upload task for %s storage', self._cam, storage
             )
             task = self._UPLOAD_TASKS[DvrUploadType(storage)]
             create_task(
@@ -99,9 +99,7 @@ class DvrUploadEngine:
 
     async def _start_file_deletion_task_(self) -> None:
         if self._conf.upload.delete_after_upload:
-            self._log.debug(
-                'Starting DVR file deletion task for %s', self._cam.description
-            )
+            self._log.debug('Starting DVR file deletion task for %s', self._cam)
             create_task(
                 self._FILE_DELETE_TASK_CLS(
                     queue=self._delete_candidates_queue,

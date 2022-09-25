@@ -56,9 +56,7 @@ class DvrFile:
 
     async def _make_thumbnail_frame(self) -> None:
         if not await MakeThumbnailTask(self._thumbnail, self.full_path).run():
-            self._log.error(
-                'Error during making thumbnail context of %s', self.full_path
-            )
+            self._log.error('Error during making thumbnail for %s', self.full_path)
 
     async def make_context(self) -> None:
         await asyncio.gather(self._get_probe_ctx(), self._make_thumbnail_frame())

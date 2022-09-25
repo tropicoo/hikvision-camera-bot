@@ -10,7 +10,7 @@ from hikcamerabot.camera import HikvisionCam
 from hikcamerabot.camerabot import CameraBot
 from hikcamerabot.commands import setup_commands
 from hikcamerabot.config.config import get_main_config
-from hikcamerabot.utils.utils import build_command_presentation
+from hikcamerabot.utils.shared import build_command_presentation
 
 
 class BotSetup:

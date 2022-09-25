@@ -2,6 +2,7 @@ import json
 from typing import Optional
 
 from hikcamerabot.common.video.tasks.abstract import AbstractFfBinaryTask
+from hikcamerabot.utils.process import get_stdout_stderr
 
 
 class GetFfprobeContextTask(AbstractFfBinaryTask):
@@ -16,9 +17,9 @@ class GetFfprobeContextTask(AbstractFfBinaryTask):
         if not proc:
             return None
 
-        stdout, stderr = await self._get_stdout_stderr(proc)
+        stdout, stderr = await get_stdout_stderr(proc)
         self._log.debug(
-            'Process %s returncode: %d, stderr: %s', cmd, proc.returncode, stderr
+            'Process "%s" returncode: %d, stderr: %s', cmd, proc.returncode, stderr
         )
         if proc.returncode:
             self._log.error(

@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from hikcamerabot.event_engine.queue import get_result_queue
-from hikcamerabot.utils.utils import shallow_sleep_async
+from hikcamerabot.utils.shared import shallow_sleep_async
 
 if TYPE_CHECKING:
     from hikcamerabot.event_engine.dispatchers.outbound import OutboundEventDispatcher

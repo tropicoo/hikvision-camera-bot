@@ -11,7 +11,7 @@ from hikcamerabot.exceptions import APIRequestError, HikvisionAPIError
 
 
 if TYPE_CHECKING:
-    from hikcamerabot.clients.hikvision.api_client import AbstractHikvisionAPIClient
+    from hikcamerabot.clients.hikvision.api_client import HikvisionAPIClient
 
 
 class CameraConfigSwitch:
@@ -25,7 +25,7 @@ class CameraConfigSwitch:
     )
     XML_HEADERS = {'Content-Type': 'application/xml'}
 
-    def __init__(self, api: 'AbstractHikvisionAPIClient') -> None:
+    def __init__(self, api: 'HikvisionAPIClient') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._api = api
 

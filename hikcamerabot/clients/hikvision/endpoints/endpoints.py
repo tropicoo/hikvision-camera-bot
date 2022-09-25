@@ -5,6 +5,8 @@ from urllib.parse import urljoin
 import httpx
 from addict import Dict
 
+from hikcamerabot.clients.hikvision.endpoints.abstract import AbstractEndpoint
+from hikcamerabot.clients.hikvision.endpoints.config_switch import CameraConfigSwitch
 from hikcamerabot.clients.hikvision.enums import (
     Endpoint,
     ExposureType,
@@ -12,8 +14,6 @@ from hikcamerabot.clients.hikvision.enums import (
     OverexposeSuppressEnabledType,
     OverexposeSuppressType,
 )
-from hikcamerabot.clients.hikvision.endpoints.abstract import AbstractEndpoint
-from hikcamerabot.clients.hikvision.endpoints.helpers import CameraConfigSwitch
 from hikcamerabot.constants import CONN_TIMEOUT, Detection
 from hikcamerabot.exceptions import APIRequestError
 

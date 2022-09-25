@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from addict import Dict
 
 from hikcamerabot.services.stream.dvr.tasks.file_lock_check import FileLockCheckTask
-from hikcamerabot.utils.utils import shallow_sleep_async
+from hikcamerabot.utils.shared import shallow_sleep_async
 
 if TYPE_CHECKING:
     from hikcamerabot.services.stream.dvr.upload.engine import DvrUploadEngine

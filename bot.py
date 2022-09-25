@@ -4,7 +4,7 @@
 import asyncio
 
 from hikcamerabot.launcher import BotLauncher
-from hikcamerabot.utils.utils import setup_logging
+from hikcamerabot.utils.shared import setup_logging
 
 
 async def main() -> None:

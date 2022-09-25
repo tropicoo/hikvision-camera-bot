@@ -3,7 +3,7 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-from hikcamerabot.utils.utils import shallow_sleep_async
+from hikcamerabot.utils.shared import shallow_sleep_async
 
 if TYPE_CHECKING:
     from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile

@@ -59,13 +59,13 @@ class DvrStreamService(AbstractStreamService):
     async def _start_upload_engine(self) -> None:
         """Start Upload Engine only if at least one storage is enabled."""
         # TODO: Right now upload engine will start only if DVR records are set
-        # TODO: to be deleted since there is no uploaded files tracking.
+        # TODO: to be deleted since there is no tracking for uploaded files.
         for storage_settings in self._conf.upload.storage.values():
             if (
                 storage_settings.enabled
                 and self.cam.conf.livestream.dvr.upload.delete_after_upload
             ):
-                self._log.info('Starting Upload Engine for %s', self.cam.description)
+                self._log.info('Starting Upload Engine for %s', self.cam)
                 await self._upload_engine.start()
                 return
         self._log.info('Upload Engine not started.')
