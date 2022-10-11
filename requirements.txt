@@ -5,5 +5,5 @@ emoji==2.1.0
 httpx==0.23.0
 marshmallow==3.18.0
 tenacity==8.1.0
-tgcrypto==1.2.3
+tgcrypto==1.2.4
 xmltodict==0.13.0
