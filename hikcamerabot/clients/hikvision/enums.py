@@ -2,7 +2,7 @@ import enum
 
 
 @enum.unique
-class Endpoint(enum.Enum):
+class EndpointAddr(enum.Enum):
     ALERT_STREAM = 'ISAPI/Event/notification/alertStream'
     CHANNEL_CAPABILITIES = 'ISAPI/Image/channels/1/capabilities'
     EXPOSURE = 'ISAPI/Image/channels/1/exposure'
@@ -10,7 +10,7 @@ class Endpoint(enum.Enum):
     INTRUSION_DETECTION = 'ISAPI/Smart/FieldDetection/1'
     LINE_CROSSING_DETECTION = 'ISAPI/Smart/LineDetection/1'
     MOTION_DETECTION = 'ISAPI/System/Video/inputs/channels/1/motionDetection'
-    PICTURE = 'ISAPI/Streaming/channels/102/picture?snapShotImageType=JPEG'
+    PICTURE = 'ISAPI/Streaming/channels/{channel}/picture?snapShotImageType=JPEG'
 
 
 @enum.unique

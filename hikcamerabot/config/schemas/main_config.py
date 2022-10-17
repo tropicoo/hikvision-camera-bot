@@ -54,6 +54,7 @@ class Detection(Schema):
     sendpic = f.Boolean(required=True)
     fullpic = f.Boolean(required=True)
     send_videogif = f.Boolean(required=True)
+    send_text = f.Boolean(required=True)
 
 
 class VideoGifOnDemand(Schema):
@@ -74,6 +75,19 @@ class VideoGifOnAlert(VideoGifOnDemand):
 class VideoGif(Schema):
     on_alert = f.Nested(VideoGifOnAlert(), required=True)
     on_demand = f.Nested(VideoGifOnDemand(), required=True)
+
+
+class PictureOnAlert(Schema):
+    channel = f.Int(required=True)
+
+
+class PictureOnDemand(PictureOnAlert):
+    pass
+
+
+class Picture(Schema):
+    on_alert = f.Nested(PictureOnAlert(), required=True)
+    on_demand = f.Nested(PictureOnDemand(), required=True)
 
 
 class Alert(Schema):
@@ -115,6 +129,7 @@ class CameraListConfig(Schema):
         group = f.Str(required=True, allow_none=True)
         api = f.Nested(CamAPI(), required=True)
         rtsp_port = f.Int(required=True)
+        picture = f.Nested(Picture(), required=True)
         video_gif = f.Nested(VideoGif(), required=True)
         alert = f.Nested(Alert(), required=True)
         livestream = f.Nested(Livestream(), required=True)

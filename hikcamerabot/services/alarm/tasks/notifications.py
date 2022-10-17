@@ -35,6 +35,10 @@ class AbstractAlertNotificationTask(metaclass=abc.ABCMeta):
 
 class AlarmTextMessageNotificationTask(AbstractAlertNotificationTask):
     async def _run(self) -> None:
+        if self._cam.conf.alert[self._detection_type.value].send_text:
+            await self._send_alert_text()
+
+    async def _send_alert_text(self) -> None:
         detection_name: str = DETECTION_SWITCH_MAP[self._detection_type]['name'].value
         await self._result_queue.put(
             SendTextOutboundEvent(
@@ -52,10 +56,13 @@ class AlarmTextMessageNotificationTask(AbstractAlertNotificationTask):
 class AlarmVideoGifNotificationTask(AbstractAlertNotificationTask):
     async def _run(self) -> None:
         if self._cam.conf.alert[self._detection_type.value].send_videogif:
-            await self._cam.start_videogif_record(
-                video_type=VideoGifType.ON_ALERT,
-                rewind=self._cam.conf.video_gif[VideoGifType.ON_ALERT.value].rewind,
-            )
+            await self._start_videogif_record()
+
+    async def _start_videogif_record(self) -> None:
+        await self._cam.start_videogif_record(
+            video_type=VideoGifType.ON_ALERT,
+            rewind=self._cam.conf.video_gif[VideoGifType.ON_ALERT.value].rewind,
+        )
 
 
 class AlarmPicNotificationTask(AbstractAlertNotificationTask):
@@ -64,8 +71,9 @@ class AlarmPicNotificationTask(AbstractAlertNotificationTask):
             await self._send_pic()
 
     async def _send_pic(self) -> None:
+        channel: int = self._cam.conf.picture.on_alert.channel
         resize = not self._cam.conf.alert[self._detection_type.value].fullpic
-        photo, ts = await self._cam.take_snapshot(resize=resize)
+        photo, ts = await self._cam.take_snapshot(channel=channel, resize=resize)
         await self._result_queue.put(
             AlertSnapshotOutboundEvent(
                 cam=self._cam,
