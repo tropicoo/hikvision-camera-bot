@@ -136,11 +136,14 @@ class TakeSnapshotEndpoint(AbstractEndpoint):
 
 class AlertStreamEndpoint(AbstractEndpoint):
     async def __call__(self) -> AsyncGenerator[str, None]:
-        url = urljoin(self._api_client.host, Endpoint.ALERT_STREAM.value)
+        # TODO: Rewrite this.
+        method = 'GET'
+        url = urljoin(f'{self._api_client.host}:{self._api_client.port}', Endpoint.ALERT_STREAM.value)
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
         response: httpx.Response
+        self._log.debug('Alert Stream Request: %s - %s', method, url)
         async with self._api_client.session.stream(
-            'GET', url, timeout=timeout
+            method, url, timeout=timeout
         ) as response:
             chunk: str
             async for chunk in response.aiter_text():
