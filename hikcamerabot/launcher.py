@@ -25,12 +25,12 @@ class BotLauncher:
         await self._bot.start()
 
         bot_name = (await self._bot.get_me()).first_name
-        self._log.info('Starting %s bot version %s', bot_name, __version__)
+        self._log.info('Starting "%s" bot version %s', bot_name, __version__)
 
         self._bot.start_tasks()
         await self._bot.send_startup_message()
 
-        self._log.info('Bot %s has started', bot_name)
+        self._log.info('Bot "%s" has started', bot_name)
         await self._run_bot_forever()
 
     async def _run_bot_forever(self) -> None:

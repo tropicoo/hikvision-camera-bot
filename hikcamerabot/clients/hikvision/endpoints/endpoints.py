@@ -138,7 +138,10 @@ class AlertStreamEndpoint(AbstractEndpoint):
     async def __call__(self) -> AsyncGenerator[str, None]:
         # TODO: Rewrite this.
         method = 'GET'
-        url = urljoin(f'{self._api_client.host}:{self._api_client.port}', Endpoint.ALERT_STREAM.value)
+        url = urljoin(
+            f'{self._api_client.host}:{self._api_client.port}',
+            Endpoint.ALERT_STREAM.value,
+        )
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
         response: httpx.Response
         self._log.debug('Alert Stream Request: %s - %s', method, url)

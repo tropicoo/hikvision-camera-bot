@@ -23,7 +23,7 @@ class CameraBot(Client):
             bot_token=conf.telegram.token,
         )
         self._log = logging.getLogger(self.__class__.__name__)
-        self._log.info('Initializing bot')
+        self._log.info('Initializing bot client')
 
         self.chat_users: list[int] = conf.telegram.chat_users
         self.alert_users: list[int] = conf.telegram.alert_users
@@ -51,12 +51,15 @@ class CameraBot(Client):
 
     async def send_startup_message(self) -> None:
         """Send welcome message to defined telegram ids after bot launch."""
-        self._log.info('Sending welcome message')
         text = (
             f'{(await self.get_me()).first_name} bot started, see /help for '
             f'available commands'
         )
         for user_id in self.startup_message_users:
+            telegram_id_type = 'group_id' if user_id < 0 else 'user_id'
+            self._log.debug(
+                'Sending welcome message to %s "%d"', telegram_id_type, user_id
+            )
             await self._send_message(text, user_id)
 
     async def send_alert_message(self, text: str, **kwargs) -> None:

@@ -59,9 +59,10 @@ def bold(text: str) -> str:
 def get_user_info(message: Message) -> str:
     """Return user information who interacts with bot."""
     chat = message.chat
+    last_name = f' {chat.last_name}' if chat.last_name else ''
     return (
-        f'Request from user_id: {chat.id}, username: {chat.username}, '
-        f'full name: {chat.first_name} {chat.last_name}'
+        f'Request from user_id: "{chat.id}", username: "{chat.username}", '
+        f'full_name: "{chat.first_name}{last_name}"'
     )
 
 

@@ -35,7 +35,9 @@ class BotSetup:
         for cam_id, cam_conf in self._conf.camera_list.items():
             if cam_conf.hidden:
                 self._log.info(
-                    '[%s] Skipping camera config - %s', cam_id, cam_conf.description
+                    '[%s] Do not initialize camera "%s" because it is hidden',
+                    cam_id,
+                    cam_conf.description,
                 )
                 continue
 

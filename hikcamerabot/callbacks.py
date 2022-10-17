@@ -432,11 +432,10 @@ async def cmd_help(
     cam_id: str = None,
 ) -> None:
     """Send help message to telegram chat."""
-    log.info('Help message has been requested')
+    log.info('Help message has been requested from %d', message.chat.id)
     text = (
         'Use /list_cams to show cameras and their commands\n'
         'Use /groups to show camera groups\n'
         'Use /version to check the bot version'
     )
     await send_text(text=text, message=message, quote=True)
-    log.debug('Help message has been sent')
