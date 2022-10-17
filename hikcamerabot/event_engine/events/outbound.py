@@ -48,7 +48,7 @@ class SendTextOutboundEvent:
 class AlarmConfOutboundEvent(BaseOutboundEvent):
     service_type: ServiceType
     service_name: Alarm
-    switch: bool
+    state: bool
     message: Message
     text: Optional[str] = None
 
@@ -57,7 +57,7 @@ class AlarmConfOutboundEvent(BaseOutboundEvent):
 class StreamOutboundEvent(BaseOutboundEvent):
     service_type: ServiceType
     stream_type: Stream
-    switch: bool
+    state: bool
     message: Message
     text: Optional[str] = None
 
@@ -65,6 +65,6 @@ class StreamOutboundEvent(BaseOutboundEvent):
 @dataclass
 class DetectionConfOutboundEvent(BaseOutboundEvent):
     type: Detection
-    switch: bool
+    state: bool
     message: Message
     text: Optional[str] = None

@@ -26,12 +26,13 @@ class AlertNotifier:
 
     def notify(self, detection_type: Detection) -> None:
         for task_cls in self.ALARM_NOTIFICATION_TASKS:
-            self._log.debug('Notifying with %s', task_cls)
+            cls_name = task_cls.__name__
+            self._log.debug('Notifying with %s', cls_name)
             task = task_cls(service=self._service, detection_type=detection_type)
             create_task(
                 task.run(),
-                task_name=task_cls.__name__,
+                task_name=cls_name,
                 logger=self._log,
                 exception_message='Task %s raised an exception',
-                exception_message_args=(task_cls.__name__,),
+                exception_message_args=(cls_name,),
             )

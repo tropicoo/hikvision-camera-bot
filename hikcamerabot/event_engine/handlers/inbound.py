@@ -97,10 +97,10 @@ class TaskAlarmConf(AbstractTaskEvent):
         cam = event.cam
         service_type = event.service_type
         service_name = event.service_name
-        enable = event.switch
+        state = event.state
         text: Optional[str] = None
         try:
-            if enable:
+            if state:
                 await cam.service_manager.start(service_type, service_name)
             else:
                 await cam.service_manager.stop(service_type, service_name)
@@ -112,7 +112,7 @@ class TaskAlarmConf(AbstractTaskEvent):
                 event=event.event,
                 service_type=service_type,
                 service_name=service_name,
-                switch=event.switch,
+                state=event.state,
                 cam=cam,
                 message=event.message,
                 text=text,
@@ -126,10 +126,10 @@ class TaskStreamConf(AbstractTaskEvent):
         cam = event.cam
         service_type = event.service_type
         service_name = event.stream_type
-        enable = event.switch
+        state = event.state
         text: Optional[str] = None
         try:
-            if enable:
+            if state:
                 await cam.service_manager.start(service_type, service_name)
             else:
                 await cam.service_manager.stop(service_type, service_name)
@@ -141,7 +141,7 @@ class TaskStreamConf(AbstractTaskEvent):
                 event=event.event,
                 service_type=service_type,
                 stream_type=event.stream_type,
-                switch=event.switch,
+                state=event.state,
                 cam=cam,
                 message=event.message,
                 text=text,

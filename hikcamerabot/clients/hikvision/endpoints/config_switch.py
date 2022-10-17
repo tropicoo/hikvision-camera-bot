@@ -32,7 +32,7 @@ class CameraConfigSwitch:
     async def switch_enabled_state(
         self, trigger: Detection, state: bool
     ) -> Optional[str]:
-        endpoint = Endpoint[trigger.value.upper()].value
+        endpoint: Endpoint = Endpoint[trigger.value.upper()]
         full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
         try:
             is_enabled, xml = await self._get_switch_state(trigger, endpoint)
@@ -66,7 +66,7 @@ class CameraConfigSwitch:
         return None
 
     async def _get_switch_state(
-        self, name: Detection, endpoint: str
+        self, name: Detection, endpoint: Endpoint
     ) -> tuple[bool, str]:
         response = await self._api_client.request(endpoint, method='GET')
         xml = response.text

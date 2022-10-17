@@ -32,7 +32,7 @@ class AbstractEndpoint(metaclass=abc.ABCMeta):
     async def _get_channel_capabilities(self) -> Dict:
         response = await self._api_client.request(
             method='GET',
-            endpoint=Endpoint.CHANNEL_CAPABILITIES.value,
+            endpoint=Endpoint.CHANNEL_CAPABILITIES,
             headers=self._XML_HEADERS,
         )
         return Dict(xmltodict.parse(response.text))

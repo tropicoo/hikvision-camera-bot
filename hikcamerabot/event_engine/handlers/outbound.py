@@ -195,9 +195,9 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
     async def _handle(self, event: StreamOutboundEvent) -> None:
         message = event.message
         stream_type = event.stream_type
-        switch = event.switch
+        state = event.state
         text: str = event.text or '{0} stream successfully {1}'.format(
-            stream_type.value.capitalize(), 'enabled' if switch else 'disabled'
+            stream_type.value.capitalize(), 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)
@@ -220,10 +220,10 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
     async def _handle(self, event: AlarmConfOutboundEvent) -> None:
         message = event.message
         service_name = event.service_name
-        switch = event.switch
+        state = event.state
 
         text: str = event.text or '{0} successfully {1}'.format(
-            service_name.value, 'enabled' if switch else 'disabled'
+            service_name.value, 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)
@@ -233,10 +233,10 @@ class ResultDetectionConfHandler(AbstractResultEventHandler):
     async def _handle(self, event: DetectionConfOutboundEvent) -> None:
         message = event.message
         name: str = DETECTION_SWITCH_MAP[event.type]['name'].value
-        switch = event.switch
+        state = event.state
 
         text: str = event.text or '{0} successfully {1}'.format(
-            name, 'enabled' if switch else 'disabled'
+            name, 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
 

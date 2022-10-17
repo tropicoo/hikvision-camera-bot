@@ -31,7 +31,7 @@ class IrcutFilterEndpoint(AbstractEndpoint):
         current_capabilities = await self._get_channel_capabilities()
         try:
             response = await self._api_client.request(
-                endpoint=Endpoint.IRCUT_FILTER.value,
+                endpoint=Endpoint.IRCUT_FILTER,
                 headers=self._XML_HEADERS,
                 data=self._build_payload(filter_type, current_capabilities),
                 method='PUT',
@@ -92,7 +92,7 @@ class ExposureEndpoint(AbstractEndpoint):
             current_capabilities = await self._get_channel_capabilities()
         try:
             response = await self._api_client.request(
-                endpoint=Endpoint.IRCUT_FILTER.value,
+                endpoint=Endpoint.IRCUT_FILTER,
                 headers=self._XML_HEADERS,
                 data=self._build_payload(filtered_kwargs, current_capabilities),
                 method='PUT',
@@ -125,7 +125,7 @@ class ExposureEndpoint(AbstractEndpoint):
 
 class TakeSnapshotEndpoint(AbstractEndpoint):
     async def __call__(self) -> BytesIO:
-        response = await self._api_client.request(Endpoint.PICTURE.value)
+        response = await self._api_client.request(Endpoint.PICTURE)
         return self._response_to_bytes(response)
 
     def _response_to_bytes(self, response: httpx.Response) -> BytesIO:

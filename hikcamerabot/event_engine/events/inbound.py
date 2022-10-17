@@ -23,18 +23,18 @@ class GetVideoEvent(BaseInboundEvent):
 @dataclass
 class DetectionConfEvent(BaseInboundEvent):
     type: Detection
-    switch: bool
+    state: bool
 
 
 @dataclass
 class StreamEvent(BaseInboundEvent):
     service_type: ServiceType
     stream_type: Stream
-    switch: bool
+    state: bool
 
 
 @dataclass
 class AlertConfEvent(BaseInboundEvent):
     service_type: ServiceType
     service_name: Alarm
-    switch: bool
+    state: bool

@@ -208,7 +208,7 @@ async def cmd_intrusion_detection_on(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.INTRUSION,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -224,7 +224,7 @@ async def cmd_intrusion_detection_off(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.INTRUSION,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -240,7 +240,7 @@ async def cmd_motion_detection_on(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.MOTION,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -256,7 +256,7 @@ async def cmd_motion_detection_off(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.MOTION,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -272,7 +272,7 @@ async def cmd_line_detection_on(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.LINE,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -288,7 +288,7 @@ async def cmd_line_detection_off(
         event=Event.CONFIGURE_DETECTION,
         type=Detection.LINE,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -303,7 +303,7 @@ async def cmd_stream_yt_on(bot: CameraBot, message: Message, cam: HikvisionCam) 
         service_type=ServiceType.STREAM,
         stream_type=Stream.YOUTUBE,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -320,7 +320,7 @@ async def cmd_stream_yt_off(
         service_type=ServiceType.STREAM,
         stream_type=Stream.YOUTUBE,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -335,7 +335,7 @@ async def cmd_stream_tg_on(bot: CameraBot, message: Message, cam: HikvisionCam) 
         service_type=ServiceType.STREAM,
         stream_type=Stream.TELEGRAM,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -352,7 +352,7 @@ async def cmd_stream_tg_off(
         service_type=ServiceType.STREAM,
         stream_type=Stream.TELEGRAM,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -369,7 +369,7 @@ async def cmd_stream_icecast_on(
         service_type=ServiceType.STREAM,
         stream_type=Stream.ICECAST,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -386,7 +386,7 @@ async def cmd_stream_icecast_off(
         service_type=ServiceType.STREAM,
         stream_type=Stream.ICECAST,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -402,7 +402,7 @@ async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
         service_type=ServiceType.ALARM,
         service_name=Alarm.ALARM,
         message=message,
-        switch=True,
+        state=True,
     )
     await bot.inbound_dispatcher.dispatch(event)
 
@@ -418,7 +418,7 @@ async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
         service_type=ServiceType.ALARM,
         service_name=Alarm.ALARM,
         message=message,
-        switch=False,
+        state=False,
     )
     await bot.inbound_dispatcher.dispatch(event)
 

@@ -8,6 +8,7 @@ from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
+from hikcamerabot.clients.hikvision.enums import Endpoint
 from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 
@@ -31,13 +32,13 @@ class HikvisionAPIClient:
     @retry(wait=wait_fixed(0.5))
     async def request(
         self,
-        endpoint: str,
+        endpoint: Endpoint,
         data: Any = None,
         headers: dict = None,
         method: str = 'GET',
         timeout: float = CONN_TIMEOUT,
     ) -> httpx.Response:
-        url = urljoin(f'{self.host}:{self.port}', endpoint)
+        url = urljoin(f'{self.host}:{self.port}', endpoint.value)
         self._log.debug('Request: %s - %s - %s', method, url, data)
         try:
             response = await self.session.request(
