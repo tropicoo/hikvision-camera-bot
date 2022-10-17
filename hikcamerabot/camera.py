@@ -132,11 +132,13 @@ class HikvisionCam:
     async def set_ircut_filter(self, filter_type: IrcutFilterType) -> None:
         await self._api.set_ircut_filter(filter_type)
 
-    async def take_snapshot(self, resize: bool = False) -> tuple[BytesIO, int]:
+    async def take_snapshot(
+        self, channel: int, resize: bool = False
+    ) -> tuple[BytesIO, int]:
         """Take and return full or resized snapshot from the camera."""
         self._log.debug('Taking snapshot from %s', self.description)
         try:
-            image_obj = await self._api.take_snapshot()
+            image_obj = await self._api.take_snapshot(channel=channel)
         except HikvisionAPIError as err:
             err_msg = f'Failed to take snapshot from {self.description}'
             self._log.error(err_msg)

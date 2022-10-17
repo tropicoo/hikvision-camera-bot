@@ -181,7 +181,7 @@ async def cmd_list_groups(bot: CameraBot, message: Message) -> None:
 @authorization_check
 async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
     """List user's cameras."""
-    log.debug('Camera list has been requested')
+    log.debug('Camera list has been requested from %s', message.chat.id)
     count = bot.cam_registry.count()
     plural = '' if count == 1 else 's'
     msg = [bold(f'You have {count} camera{plural}')]
@@ -194,7 +194,6 @@ async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
         )
     msg.append('/groups, /help')
     await send_text(text='\n\n'.join(msg), message=message, quote=True)
-    log.debug('Camera list has been sent')
 
 
 @authorization_check

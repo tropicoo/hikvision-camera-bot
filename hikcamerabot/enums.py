@@ -23,6 +23,11 @@ class ConfigFile(_BaseUniqueEnum):
     ENCODING = 'encoding_templates.json'
 
 
+class PictureType(_BaseUniqueEnum):
+    ON_ALERT = 'on_alert'
+    ON_DEMAND = 'on_demand'
+
+
 class VideoGifType(_BaseUniqueEnum):
     ON_ALERT = 'on_alert'
     ON_DEMAND = 'on_demand'

@@ -8,7 +8,7 @@ from addict import Dict
 from hikcamerabot.clients.hikvision.endpoints.abstract import AbstractEndpoint
 from hikcamerabot.clients.hikvision.endpoints.config_switch import CameraConfigSwitch
 from hikcamerabot.clients.hikvision.enums import (
-    Endpoint,
+    EndpointAddr,
     ExposureType,
     IrcutFilterType,
     OverexposeSuppressEnabledType,
@@ -31,7 +31,7 @@ class IrcutFilterEndpoint(AbstractEndpoint):
         current_capabilities = await self._get_channel_capabilities()
         try:
             response = await self._api_client.request(
-                endpoint=Endpoint.IRCUT_FILTER,
+                endpoint=EndpointAddr.IRCUT_FILTER,
                 headers=self._XML_HEADERS,
                 data=self._build_payload(filter_type, current_capabilities),
                 method='PUT',
@@ -92,7 +92,7 @@ class ExposureEndpoint(AbstractEndpoint):
             current_capabilities = await self._get_channel_capabilities()
         try:
             response = await self._api_client.request(
-                endpoint=Endpoint.IRCUT_FILTER,
+                endpoint=EndpointAddr.IRCUT_FILTER,
                 headers=self._XML_HEADERS,
                 data=self._build_payload(filtered_kwargs, current_capabilities),
                 method='PUT',
@@ -124,8 +124,9 @@ class ExposureEndpoint(AbstractEndpoint):
 
 
 class TakeSnapshotEndpoint(AbstractEndpoint):
-    async def __call__(self) -> BytesIO:
-        response = await self._api_client.request(Endpoint.PICTURE)
+    async def __call__(self, channel: int) -> BytesIO:
+        endpoint_str: str = EndpointAddr.PICTURE.value.format(channel=channel)
+        response = await self._api_client.request(endpoint=endpoint_str)
         return self._response_to_bytes(response)
 
     def _response_to_bytes(self, response: httpx.Response) -> BytesIO:
@@ -140,7 +141,7 @@ class AlertStreamEndpoint(AbstractEndpoint):
         method = 'GET'
         url = urljoin(
             f'{self._api_client.host}:{self._api_client.port}',
-            Endpoint.ALERT_STREAM.value,
+            EndpointAddr.ALERT_STREAM.value,
         )
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
         response: httpx.Response

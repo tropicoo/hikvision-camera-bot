@@ -119,19 +119,22 @@ Configuration files are stored in JSON format and can be found in the `configs` 
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         },
         "line_crossing_detection": {
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         },
         "intrusion_detection": {
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         }
       },
       "livestream": {

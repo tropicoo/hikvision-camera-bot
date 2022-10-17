@@ -7,7 +7,7 @@ import xmltodict
 from addict import Dict
 
 from hikcamerabot.clients.hikvision import HikvisionAPIClient
-from hikcamerabot.clients.hikvision.enums import Endpoint
+from hikcamerabot.clients.hikvision.enums import EndpointAddr
 from hikcamerabot.exceptions import HikvisionAPIError
 
 
@@ -32,7 +32,7 @@ class AbstractEndpoint(metaclass=abc.ABCMeta):
     async def _get_channel_capabilities(self) -> Dict:
         response = await self._api_client.request(
             method='GET',
-            endpoint=Endpoint.CHANNEL_CAPABILITIES,
+            endpoint=EndpointAddr.CHANNEL_CAPABILITIES,
             headers=self._XML_HEADERS,
         )
         return Dict(xmltodict.parse(response.text))
