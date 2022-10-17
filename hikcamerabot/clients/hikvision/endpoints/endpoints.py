@@ -138,6 +138,7 @@ class AlertStreamEndpoint(AbstractEndpoint):
     async def __call__(self) -> AsyncGenerator[str, None]:
         url = urljoin(self._api_client.host, Endpoint.ALERT_STREAM.value)
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
+        response: httpx.Response
         async with self._api_client.session.stream(
             'GET', url, timeout=timeout
         ) as response:
@@ -149,8 +150,11 @@ class AlertStreamEndpoint(AbstractEndpoint):
 class SwitchEndpoint(AbstractEndpoint):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._switch = CameraConfigSwitch(api=self._api_client)
+        self._switch = CameraConfigSwitch(api_client=self._api_client)
 
-    async def __call__(self, trigger: Detection, enable: bool) -> Optional[str]:
-        """Switch method to enable/disable Hikvision functions."""
-        return await self._switch.switch_enabled_state(trigger, enable)
+    async def __call__(self, trigger: Detection, state: bool) -> Optional[str]:
+        """Switch method to enable/disable Hikvision functions.
+
+        :param state: Boolean value indicating on/off switch state.
+        """
+        return await self._switch.switch_enabled_state(trigger, state)

@@ -90,6 +90,7 @@ class CamAPIAuth(Schema):
 
 class CamAPI(Schema):
     host = f.Str(required=True, validate=non_empty_str)
+    port = f.Int(required=True, validate=int_min_1)
     auth = f.Nested(CamAPIAuth(), required=True)
     stream_timeout = f.Int(required=True, validate=int_min_1)
 

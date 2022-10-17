@@ -1,7 +1,7 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.5. [Release details](releases/release_1.5.md).
+Version: 1.5.2. [Release details](releases/release_1.5.2.md).
 
 ## Features
 1. Send full/resized pictures on request.
@@ -86,6 +86,7 @@ Configuration files are stored in JSON format and can be found in the `configs` 
       "group": "Default group",
       "api": {
         "host": "http://192.168.1.1",
+        "port": 80,
         "auth": {
           "user": "dummy-user",
           "password": "dummy-password"
@@ -195,8 +196,17 @@ If you want to use the default UTC time format, set Greenwich Mean Time timezone
 
 2. Build an image and run a container in a detached mode
     ```bash
+    # Build container and start
     sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
+   
+    # Stop running containers while you're in the bot directory
+    sudo docker-compose stop
+   
+    # Check whether any containers are running
+    sudo docker ps
     ```
+   
+
 
 # Commands
 | Command | Description |

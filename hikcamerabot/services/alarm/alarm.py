@@ -82,7 +82,7 @@ class AlarmService(AbstractService):
     async def _enable_triggers_on_camera(self) -> None:
         for trigger in self.ALARM_TRIGGERS:
             if self._conf[trigger].enabled:
-                await self.trigger_switch(enable=True, trigger=Detection(trigger))
+                await self.trigger_switch(trigger=Detection(trigger), state=True)
 
     async def stop(self) -> None:
         """Disable alarm."""
@@ -95,12 +95,12 @@ class AlarmService(AbstractService):
         async for chunk in self._api.alert_stream():
             yield chunk
 
-    async def trigger_switch(self, enable: bool, trigger: Detection) -> Optional[str]:
+    async def trigger_switch(self, trigger: Detection, state: bool) -> Optional[str]:
         """Trigger switch."""
         full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
-        self._log.debug('%s %s', 'Enabling' if enable else 'Disabling', full_name)
+        self._log.debug('%s %s', 'Enabling' if state else 'Disabling', full_name)
         try:
-            return await self._api.switch(enable=enable, trigger=trigger)
+            return await self._api.switch(trigger=trigger, state=state)
         except HikvisionAPIError as err:
             err_msg = f'{full_name} Switch encountered an error: {err}'
             self._log.error(err_msg)

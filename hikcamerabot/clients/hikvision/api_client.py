@@ -19,6 +19,7 @@ class HikvisionAPIClient:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
         self.host: str = self._conf.host
+        self.port: int = self._conf.port
         self.session = httpx.AsyncClient(
             auth=DigestAuthCached(
                 username=self._conf.auth.user,
@@ -36,8 +37,8 @@ class HikvisionAPIClient:
         method: str = 'GET',
         timeout: float = CONN_TIMEOUT,
     ) -> httpx.Response:
-        url = urljoin(self.host, endpoint)
-        self._log.debug('Request: %s - %s - %s', method, endpoint, data)
+        url = urljoin(f'{self.host}:{self.port}', endpoint)
+        self._log.debug('Request: %s - %s - %s', method, url, data)
         try:
             response = await self.session.request(
                 method,

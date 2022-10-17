@@ -25,12 +25,12 @@ class CameraConfigSwitch:
     )
     XML_HEADERS = {'Content-Type': 'application/xml'}
 
-    def __init__(self, api: 'HikvisionAPIClient') -> None:
+    def __init__(self, api_client: 'HikvisionAPIClient') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
-        self._api = api
+        self._api_client = api_client
 
     async def switch_enabled_state(
-        self, trigger: Detection, enable: bool
+        self, trigger: Detection, state: bool
     ) -> Optional[str]:
         endpoint = Endpoint[trigger.value.upper()].value
         full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
@@ -45,19 +45,19 @@ class CameraConfigSwitch:
             self._log.error(err_msg)
             raise HikvisionAPIError(err_msg)
 
-        if is_enabled and enable:
+        if is_enabled and state:
             return f'{full_name} already enabled'
-        if not is_enabled and not enable:
+        if not is_enabled and not state:
             return f'{full_name} already disabled'
 
-        xml_payload = self._prepare_xml_payload(xml, enable)
+        xml_payload = self._prepare_xml_payload(xml, state)
         try:
-            response = await self._api.request(
+            response = await self._api_client.request(
                 endpoint, headers=self.XML_HEADERS, data=xml_payload, method='PUT'
             )
             response = response.text
         except APIRequestError:
-            action = 'enable' if enable else 'disable'
+            action = 'enable' if state else 'disable'
             err_msg = f'Failed to {action} {full_name}.'
             self._log.error(err_msg)
             raise
@@ -68,7 +68,7 @@ class CameraConfigSwitch:
     async def _get_switch_state(
         self, name: Detection, endpoint: str
     ) -> tuple[bool, str]:
-        response = await self._api.request(endpoint, method='GET')
+        response = await self._api_client.request(endpoint, method='GET')
         xml = response.text
         xml_dict = xmltodict.parse(xml)
         state: str = xml_dict[DETECTION_SWITCH_MAP[name]['method'].value]['enabled']

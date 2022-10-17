@@ -72,19 +72,19 @@ class TaskDetectionConf(AbstractTaskEvent):
         cam = event.cam
         trigger = event.type
         name = DETECTION_SWITCH_MAP[trigger]['name'].value
-        enable = event.switch
+        state = event.state
 
         self._log.info(
             '%s camera\'s %s has been requested',
-            'Enabling' if enable else 'Disabling',
+            'Enabling' if state else 'Disabling',
             name,
         )
-        text = await cam.services.alarm.trigger_switch(enable, trigger)
+        text = await cam.services.alarm.trigger_switch(trigger=trigger, state=state)
         await self._result_queue.put(
             DetectionConfOutboundEvent(
                 event=event.event,
                 type=event.type,
-                switch=event.switch,
+                state=state,
                 cam=cam,
                 message=event.message,
                 text=text,
@@ -156,6 +156,6 @@ class TaskIrcutFilterConf(AbstractTaskEvent):
             SendTextOutboundEvent(
                 event=Event.SEND_TEXT,
                 message=event.message,
-                text=bold('OK'),
+                text=bold(f'IrcutFilter set to "{event.filter_type.value}"'),
             )
         )

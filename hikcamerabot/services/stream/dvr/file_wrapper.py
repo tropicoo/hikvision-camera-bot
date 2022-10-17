@@ -25,7 +25,7 @@ class DvrFile:
 
         self._storage_path: str = self._cam.conf.livestream.dvr.local_storage_path
         self._full_path = os.path.join(self._storage_path, self._filename)
-        self._thumbnail = os.path.join(self._storage_path, f'{self.name}.jpg')
+        self._thumbnail = os.path.join(self._storage_path, f'{self.name}-thumb.jpg')
 
         self._duration: Optional[int] = None
         self._width: Optional[int] = None

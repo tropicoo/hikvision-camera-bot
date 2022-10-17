@@ -26,6 +26,7 @@
       "group": "Default group",
       "api": {
         "host": "http://192.168.1.1",
+        "port": 80,
         "auth": {
           "user": "dummy-user",
           "password": "dummy-password"
@@ -129,6 +130,7 @@
       "group": "Default group",
       "api": {
         "host": "http://192.168.1.2",
+        "port": 80,
         "auth": {
           "user": "dummy-user",
           "password": "dummy-password"
