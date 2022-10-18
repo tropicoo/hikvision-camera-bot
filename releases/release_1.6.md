@@ -27,7 +27,7 @@ Release date: October 18, 2022
       },
 ...
 ```
-2. Added new config section `picture` to control which channel use for taking pictures. Useful when several cameras are accessible through on IP address or host. 
+2. Added new camera config section `picture` to control which channel to use for taking pictures. Useful when several cameras are accessible through one IP address or host. 
 ```json
 ...
       "picture": {
