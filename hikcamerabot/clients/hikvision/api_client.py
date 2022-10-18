@@ -8,7 +8,7 @@ from addict import Dict
 from tenacity import retry, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
-from hikcamerabot.clients.hikvision.enums import EndpointAddr
+from hikcamerabot.clients.hikvision.enums import AuthType, EndpointAddr
 from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 
@@ -16,13 +16,19 @@ from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
 class HikvisionAPIClient:
     """Hikvision API Class."""
 
+    AUTH_CLS = {
+        AuthType.BASIC: httpx.BasicAuth,
+        AuthType.DIGEST: httpx.DigestAuth,
+        AuthType.DIGEST_CACHED: DigestAuthCached,
+    }
+
     def __init__(self, conf: Dict) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
         self.host: str = self._conf.host
         self.port: int = self._conf.port
         self.session = httpx.AsyncClient(
-            auth=DigestAuthCached(
+            auth=self.AUTH_CLS[AuthType(self._conf.auth.type)](
                 username=self._conf.auth.user,
                 password=self._conf.auth.password,
             ),

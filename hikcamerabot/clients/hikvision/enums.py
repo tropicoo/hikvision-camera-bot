@@ -1,6 +1,16 @@
 import enum
 
 
+class AuthType(enum.Enum):
+    BASIC = 'basic'
+    DIGEST = 'digest'
+    DIGEST_CACHED = 'digest_cached'
+
+    @classmethod
+    def choices(cls) -> frozenset[str]:
+        return frozenset(member.value for member in cls)
+
+
 @enum.unique
 class EndpointAddr(enum.Enum):
     ALERT_STREAM = 'ISAPI/Event/notification/alertStream'

@@ -1,7 +1,7 @@
 # Hikvision Telegram Camera Bot
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.6. [Release details](releases/release_1.6.md).
+Version: 1.7. [Release details](releases/release_1.7.md).
 
 ## Features
 1. Send full/resized pictures on request.
@@ -50,8 +50,10 @@ Configuration files are stored in JSON format and can be found in the `configs` 
         digit suffix**: `cam_1`, `cam_2`, `cam_<digit>` with any description.
 
     5. Write authentication credentials in `user` and `password` keys for every camera
-    6. Same for `host`, which should include protocol e.g., `http://192.168.1.1`
-    7. In the `alert` section you can enable sending pictures on alert (Motion, 
+    6. Choose authentication type from `basic`, `digest` or `digest_cached`. Default is `digest_cached`. 
+       Check your camera security settings before choosing/changing one.
+    7. Write `host`, which should include protocol e.g., `http://192.168.1.1`
+    8. In the `alert` section you can enable sending pictures on alert (Motion, 
     Line Crossing and Intrusion (Field) Detection). Configure the `delay` setting 
     in seconds between pushing alert pictures. To send resized picture change 
     `fullpic` to `false`
@@ -89,7 +91,8 @@ Configuration files are stored in JSON format and can be found in the `configs` 
         "port": 80,
         "auth": {
           "user": "dummy-user",
-          "password": "dummy-password"
+          "password": "dummy-password",
+          "type": "digest_cached"
         },
         "stream_timeout": 10
       },

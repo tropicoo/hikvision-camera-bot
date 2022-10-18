@@ -29,7 +29,8 @@
         "port": 80,
         "auth": {
           "user": "dummy-user",
-          "password": "dummy-password"
+          "password": "dummy-password",
+          "type": "digest_cached"
         },
         "stream_timeout": 10
       },
@@ -144,7 +145,8 @@
         "port": 80,
         "auth": {
           "user": "dummy-user",
-          "password": "dummy-password"
+          "password": "dummy-password",
+          "type": "digest_cached"
         },
         "stream_timeout": 10
       },

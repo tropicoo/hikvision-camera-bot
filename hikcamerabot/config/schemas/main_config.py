@@ -8,6 +8,7 @@ from marshmallow import (
     validates_schema,
 )
 
+from hikcamerabot.clients.hikvision.enums import AuthType
 from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
 from hikcamerabot.constants import (
     CMD_CAM_ID_REGEX,
@@ -100,6 +101,7 @@ class Alert(Schema):
 class CamAPIAuth(Schema):
     user = f.Str(required=True, validate=non_empty_str)
     password = f.Str(required=True, validate=non_empty_str)
+    type = f.Str(required=True, validate=v.OneOf(AuthType.choices()))
 
 
 class CamAPI(Schema):
