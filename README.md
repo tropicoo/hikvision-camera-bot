@@ -97,7 +97,7 @@ Configuration files are stored in JSON format and can be found in the `configs` 
         "stream_timeout": 10
       },
       "rtsp_port": 554,
-       "picture": {
+      "picture": {
         "on_demand": {
           "channel": 101
         },
@@ -210,8 +210,13 @@ If you want to use the default UTC time format, set Greenwich Mean Time timezone
 
 2. Build an image and run a container in a detached mode
     ```bash
-    # Build container and start
-    sudo docker-compose build && sudo docker-compose up -d && sudo docker-compose logs -f --tail=1000
+    # Build containers and start
+    sudo docker-compose build && sudo docker-compose up -d
+   
+   # Tail logs per container or from all at once
+   sudo docker-compose logs -f --tail 500 hikvision-camera-bot
+   sudo docker-compose logs -f --tail 500 hik-hikvision-srs-server
+   sudo docker-compose logs -f --tail 500
    
     # Stop running containers while you're in the bot directory
     sudo docker-compose stop
