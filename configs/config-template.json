@@ -151,6 +151,14 @@
         "stream_timeout": 10
       },
       "rtsp_port": 554,
+      "picture": {
+        "on_demand": {
+          "channel": 101
+        },
+        "on_alert": {
+          "channel": 101
+        }
+      },
       "video_gif": {
         "on_demand": {
           "channel": 101,
@@ -176,19 +184,22 @@
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         },
         "line_crossing_detection": {
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         },
         "intrusion_detection": {
           "enabled": false,
           "sendpic": true,
           "fullpic": false,
-          "send_videogif": true
+          "send_videogif": true,
+          "send_text": true
         }
       },
       "livestream": {

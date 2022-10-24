@@ -58,15 +58,18 @@ class HikvisionAPIClient:
         except Exception as err:
             err_msg = (
                 f'API encountered an unknown error for method {method}, '
-                f'endpoint {endpoint_}, data {data}'
+                f'url {url}, data {data}'
             )
             self._log.exception(err_msg)
             raise APIRequestError(f'{err_msg}: {err}') from err
-        self._verify_status_code(response.status_code)
+        self._validate_response(response)
         return response
 
-    def _verify_status_code(self, status_code: int) -> None:
-        if httpx.codes.is_error(status_code):
-            err_msg = f'Error during API call: Bad response code {status_code}'
+    def _validate_response(self, response: httpx.Response) -> None:
+        if httpx.codes.is_error(response.status_code):
+            err_msg = f'Error during API call: Bad response code {response.status_code}'
             self._log.error(err_msg)
+            self._log.debug(
+                'Errored response data: %s - %s', response.headers, response.text
+            )
             raise APIBadResponseCodeError(err_msg)
