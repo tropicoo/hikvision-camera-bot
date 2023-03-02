@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.11-alpine
 
 RUN apk add --no-cache \
         ffmpeg \
@@ -17,8 +17,7 @@ RUN apk add --no-cache --virtual .build-deps \
         zlib-dev \
         build-base \
     && pip install --upgrade pip setuptools wheel \
-    && MAKEFLAGS="-j$(nproc)" \
-    && pip install --no-cache-dir -r requirements.txt \
+    && MAKEFLAGS="-j$(nproc)" pip install --no-cache-dir -r requirements.txt \
     && apk --purge del .build-deps
 
 COPY . /app

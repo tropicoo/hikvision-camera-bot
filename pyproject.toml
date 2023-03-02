@@ -1,3 +1,8 @@
 [tool.black]
 line-length = 88
 skip-string-normalization = 1
+
+[tool.ruff]
+line-length = 88
+select = ["F", "E", "W", "I001"]
+ignore = ["E501"]  # Skip line length violations

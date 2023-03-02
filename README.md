@@ -1,18 +1,32 @@
 # Hikvision Telegram Camera Bot
+
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
 Version: 1.7. [Release details](releases/release_1.7.md).
 
 ## Features
+
 1. Send full/resized pictures on request.
 2. Auto-send pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**.
-3. Send so-called Telegram video-gifs on request and alert events from the previous paragraph.
+3. Send so-called Telegram video-gifs on request and alert events from the previous
+   paragraph.
 4. YouTube, Telegram, and Icecast direct or re-encoded livestreams.
 5. DVR to local storage with upload to Telegram group.
 6. SRS re-stream server.
 
+![frames](.assets/screenshot-1.png)
 
-![frames](img/screenshot-1.png)
+### Support my work
+
+- PayPal [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MA6RKYAZH9DSA)
+- Bitcoin wallet `14kMRS8SvfD2ydMSMEyAmefHV3Yynf9kAd`
+
+
+### Development supported by JetBrains and Syntevo
+
+<a href="https://jetbrains.com" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_square.svg" alt="JetBrains" width="100"></a>
+<p><a href="https://www.syntevo.com" target="_blank"><img src="https://www.syntevo.com/assets/images/logos/syntevo-0b0da4ee.svg" alt="Syntevo" width="200"></a></p>
+
 
 # Installation
 To install Hikvision Telegram Camera Bot, simply `clone` the repo.
