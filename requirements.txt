@@ -1,5 +1,5 @@
 Pillow==9.3.0
-Pyrogram==2.0.59
+Pyrogram==2.0.100
 addict==2.4.0
 emoji==2.2.0
 httpx==0.23.0
