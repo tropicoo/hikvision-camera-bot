@@ -3,7 +3,7 @@ import asyncio
 import os
 import signal
 import time
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 from urllib.parse import urlsplit
 
 from addict import Dict
@@ -119,7 +119,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             FfmpegStdoutReaderTask(self._proc, self._cmd).run(),
             task_name=FfmpegStdoutReaderTask.__name__,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(FfmpegStdoutReaderTask.__name__,),
         )
 
@@ -128,7 +128,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             ServiceStreamerTask(service=self).run(),
             task_name=ServiceStreamerTask.__name__,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(ServiceStreamerTask.__name__,),
         )
 

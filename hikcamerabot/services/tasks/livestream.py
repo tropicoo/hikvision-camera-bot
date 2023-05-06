@@ -32,14 +32,15 @@ class ServiceStreamerTask(AbstractServiceTask):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._exit_msg = (
-            f'Exiting {self.service.name.value} stream task '
+            f'[{self._cam.id}] Exiting {self.service.name.value} stream task '
             f'for "{self._cam.description}"'
         )
 
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(0.1))
     async def run(self) -> None:
         self._log.debug(
-            'Starting %s stream task for "%s"',
+            '[%s] Starting %s stream task for "%s"',
+            self._cam.id,
             self.service.name.value,
             self._cam.description,
         )
@@ -52,15 +53,22 @@ class ServiceStreamerTask(AbstractServiceTask):
                 else:
                     if not self._run_forever and self._should_exit():
                         break
-                    self._log.info('Restarting %s stream', self.service.name.value)
+                    self._log.info(
+                        '[%s] Restarting %s stream',
+                        self._cam.id,
+                        self.service.name.value,
+                    )
                     await self.service.restart()
                 await shallow_sleep_async(1)
         except HikvisionCamError as err:
             self._log.error(err)
             raise
         except Exception:
-            err_msg = f'Unknown error in {self.service.name.value} stream task'
-            self._log.exception(err_msg)
+            self._log.exception(
+                '[%s] Unknown error in %s stream task',
+                self._cam.id,
+                self.service.name.value,
+            )
             raise
         self._log.info(self._exit_msg)
 

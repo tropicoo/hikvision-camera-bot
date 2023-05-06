@@ -1,10 +1,10 @@
 from marshmallow import (
-    fields as f,
     INCLUDE,
     Schema,
-    validate as v,
     validates_schema,
 )
+from marshmallow import fields as f
+from marshmallow import validate as v
 
 from hikcamerabot.config.schemas.validators import (
     int_min_1,

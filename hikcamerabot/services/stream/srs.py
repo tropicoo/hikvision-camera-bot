@@ -45,7 +45,7 @@ class SrsStreamService(AbstractStreamService):
             ServiceStreamerTask(service=self, run_forever=True).run(),
             task_name=ServiceStreamerTask.__name__,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(ServiceStreamerTask.__name__,),
         )
 

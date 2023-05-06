@@ -48,7 +48,8 @@ class ServiceManager:
                     await service.stop()
                 except Exception as err:
                     self._log.warning(
-                        'Warning while stopping service "%s": %s',
+                        '[%s] Warning while stopping service "%s": %s',
+                        service.cam.id,
                         service.name.value,
                         err,
                     )

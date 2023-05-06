@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import xmltodict
 
@@ -8,7 +8,6 @@ from hikcamerabot.clients.hikvision.enums import EndpointAddr
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import Detection
 from hikcamerabot.exceptions import APIRequestError, HikvisionAPIError
-
 
 if TYPE_CHECKING:
     from hikcamerabot.clients.hikvision.api_client import HikvisionAPIClient

@@ -41,7 +41,7 @@ class ServiceConfigError(ServiceError):
     pass
 
 
-class ChunkDetectorError(CameraBotError):
+class AlarmEventChunkDetectorError(CameraBotError):
     pass
 
 

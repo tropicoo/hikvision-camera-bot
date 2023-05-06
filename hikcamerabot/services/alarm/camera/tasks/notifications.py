@@ -2,8 +2,9 @@ import abc
 import logging
 from typing import TYPE_CHECKING
 
-from pyrogram.enums import ParseMode
 from emoji import emojize
+from pyrogram.enums import ParseMode
+
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import Detection, Event, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
@@ -13,15 +14,17 @@ from hikcamerabot.event_engine.events.outbound import (
 from hikcamerabot.event_engine.queue import get_result_queue
 
 if TYPE_CHECKING:
-    from hikcamerabot.services.alarm import AlarmService
+    from hikcamerabot.camera import HikvisionCam
 
 
 class AbstractAlertNotificationTask(metaclass=abc.ABCMeta):
-    def __init__(self, service: 'AlarmService', detection_type: Detection) -> None:
+    def __init__(
+        self, detection_type: Detection, cam: 'HikvisionCam', alert_count: int
+    ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
-        self._service = service
         self._detection_type = detection_type
-        self._cam = service.cam
+        self._cam = cam
+        self._alert_count = alert_count
         self._result_queue = get_result_queue()
 
     async def run(self) -> None:
@@ -82,7 +85,7 @@ class AlarmPicNotificationTask(AbstractAlertNotificationTask):
                 ts=ts,
                 resized=resize,
                 detection_type=self._detection_type,
-                alert_count=self._service.alert_count,
+                alert_count=self._alert_count,
                 message=None,
             )
         )

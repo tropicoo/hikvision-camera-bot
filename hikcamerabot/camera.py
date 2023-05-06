@@ -94,15 +94,21 @@ class ServiceContainer:
 class HikvisionCam:
     """Hikvision Camera Class."""
 
+    _DEFAULT_GROUP_NAME = 'Default group'
+
     def __init__(self, id: str, conf: Dict, bot: 'CameraBot') -> None:
-        self._log = logging.getLogger(self.__class__.__name__)
         self.id = id
         self.conf = conf
-        self.description: str = conf.description
-        self.hashtag = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
-        self.group = conf.group or 'Default group'
         self.bot = bot
-        self._log.debug('Initializing camera "%s"', self.description)
+        self._log = logging.getLogger(self.__class__.__name__)
+
+        self.description: str = conf.description
+        self.host: str = conf.api.host
+        self.hashtag = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
+        self.group = conf.group or self._DEFAULT_GROUP_NAME
+        self.is_behind_nvr: bool = conf.nvr.is_behind
+        self.nvr_channel_name: str | None = conf.nvr.channel_name
+
         self._api = HikvisionAPI(api_client=HikvisionAPIClient(conf=conf.api))
         self._img_processor = ImageProcessor()
 
@@ -117,6 +123,8 @@ class HikvisionCam:
 
         self.snapshots_taken = 0
         self._videogif = VideoGifRecorder(cam=self)
+
+        self._log.debug('[%s] Initializing camera "%s"', self.id, self.description)
 
     def __repr__(self) -> str:
         return f'<HikvisionCam id="{self.id}" desc="{self.description}">'
@@ -136,11 +144,11 @@ class HikvisionCam:
         self, channel: int, resize: bool = False
     ) -> tuple[BytesIO, int]:
         """Take and return full or resized snapshot from the camera."""
-        self._log.debug('Taking snapshot from %s', self.description)
+        self._log.debug('[%s] Taking snapshot', self.id)
         try:
             image_obj = await self._api.take_snapshot(channel=channel)
         except HikvisionAPIError as err:
-            err_msg = f'Failed to take snapshot from {self.description}'
+            err_msg = f'[{self.id}] Failed to take snapshot from {self.description}'
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg) from err
 
@@ -157,7 +165,9 @@ class HikvisionCam:
                 taken_at,
             )
         except Exception as err:
-            err_msg = f'Failed to resize snapshot taken from {self.description}'
+            err_msg = (
+                f'[{self.id}] Failed to resize snapshot taken from {self.description}'
+            )
             self._log.exception(err_msg)
             raise HikvisionCamError(err_msg) from err
 

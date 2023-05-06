@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from hikcamerabot.common.video.tasks.ffprobe_context import GetFfprobeContextTask
 from hikcamerabot.common.video.tasks.thumbnail import MakeThumbnailTask

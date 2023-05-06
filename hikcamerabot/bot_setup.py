@@ -20,12 +20,14 @@ class BotSetup:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = get_main_config()
         self._bot = CameraBot()
+
+    def perform_setup(self) -> None:
         self._create_and_setup_cameras()
 
     def _create_and_setup_cameras(self) -> None:
         """Create cameras and setup for the dispatcher.
 
-        Iterate trough the config, create event queues per camera,
+        Iterate through the config, create event queues per camera,
         setup camera registry and command callbacks (handlers).
 
         Hidden (undesirable) cameras will be excluded from the setup.

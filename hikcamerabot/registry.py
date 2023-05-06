@@ -2,11 +2,13 @@
 
 import logging
 from collections import defaultdict
-from typing import Iterator
+from typing import Iterator, Literal
 
 from hikcamerabot.camera import HikvisionCam
 
-CamRegistryValue = dict[str, HikvisionCam | dict | str]
+CamRegistryValue = dict[
+    Literal['cam', 'cmds', 'cmds_presentation'], HikvisionCam | dict | str
+]
 CamRegistryType = dict[str, CamRegistryValue]
 GroupRegistryValue = dict[str, str | list[HikvisionCam]]
 GroupRegistryType = dict[str, GroupRegistryValue]
@@ -72,6 +74,15 @@ class CameraRegistry:
     def count(self) -> int:
         """Get cameras count."""
         return len(self._cam_registry)
+
+    def get_nvr_cameras(self) -> defaultdict[str, list[HikvisionCam]]:
+        nvr_cameras: defaultdict[str, list[HikvisionCam]] = defaultdict(list)
+        cam: HikvisionCam
+        for cam_dict in self._cam_registry.values():
+            cam = cam_dict['cam']
+            if cam.is_behind_nvr:
+                nvr_cameras[cam.host].append(cam)
+        return nvr_cameras
 
     def get_instances_by_group(self, group_name: str) -> list[HikvisionCam]:
         return self._group_registry.get(group_name, [])

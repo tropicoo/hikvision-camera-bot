@@ -4,7 +4,7 @@ import abc
 import logging
 import os
 from io import BytesIO
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from emoji import emojize
 from pyrogram.enums import ChatAction
@@ -161,7 +161,7 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
         trigger_name: str = DETECTION_SWITCH_MAP[detection_type]['name'].value
 
         caption = (
-            f'[{cam.description}] {trigger_name} at {datetime_str} '
+            f'[{cam.description}] {trigger_name} on {datetime_str} '
             f'(alert #{alert_count}) {cam.hashtag}\n/cmds_{cam.id}, /list_cams'
         )
 
@@ -274,7 +274,7 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         datetime_str = format_ts(event.create_ts)
         filename = f'Full snapshot {datetime_str}.jpg'
         caption = (
-            f'[{cam.description}] Full snapshot at {datetime_str} '
+            f'[{cam.description}] Full snapshot on {datetime_str} '
             f'(snapshot #{event.taken_count}) {cam.hashtag}'
         )
         caption = f'{caption}\n/cmds_{cam.id}, /list_cams'

@@ -43,7 +43,7 @@ class VideoGifRecorder:
             rec_task.run(),
             task_name=RecordVideoGifTask.__name__,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(RecordVideoGifTask.__name__,),
         )
         self._proc_task_queue.appendleft(task)

@@ -81,7 +81,7 @@ class DvrUploadEngine:
                 ).run(),
                 task_name=task.__name__,
                 logger=self._log,
-                exception_message='Task %s raised an exception',
+                exception_message='Task "%s" raised an exception',
                 exception_message_args=(task.__name__,),
             )
 
@@ -93,7 +93,7 @@ class DvrUploadEngine:
             DvrFileMonitoringTask(engine=self, conf=self._cam.conf).run(),
             task_name=DvrFileMonitoringTask.__name__,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(DvrFileMonitoringTask.__name__,),
         )
 
@@ -106,6 +106,6 @@ class DvrUploadEngine:
                 ).run(),
                 task_name=self._FILE_DELETE_TASK_CLS.__name__,
                 logger=self._log,
-                exception_message='Task %s raised an exception',
+                exception_message='Task "%s" raised an exception',
                 exception_message_args=(self._FILE_DELETE_TASK_CLS.__name__,),
             )

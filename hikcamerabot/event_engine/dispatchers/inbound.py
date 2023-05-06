@@ -1,6 +1,7 @@
 """Event dispatcher module."""
 from hikcamerabot.enums import Event
 from hikcamerabot.event_engine.dispatchers.abstract import AbstractDispatcher
+from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 from hikcamerabot.event_engine.handlers.inbound import (
     TaskAlarmConf,
     TaskDetectionConf,
@@ -9,7 +10,6 @@ from hikcamerabot.event_engine.handlers.inbound import (
     TaskStreamConf,
     TaskTakeSnapshot,
 )
-from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 
 
 class InboundEventDispatcher(AbstractDispatcher):
