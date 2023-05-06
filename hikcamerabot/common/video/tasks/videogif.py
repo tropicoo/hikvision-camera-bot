@@ -205,7 +205,7 @@ class RecordVideoGifTask:
 
     async def _send_confirmation_message(self) -> None:
         if self._video_type is VideoGifType.ON_DEMAND:
-            text = f'Recording video gif for {self._rec_time} seconds'
+            text = f'📹 Recording video gif for {self._rec_time} seconds'
             await self._result_queue.put(
                 SendTextOutboundEvent(
                     event=Event.SEND_TEXT,
