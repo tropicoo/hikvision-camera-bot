@@ -127,8 +127,11 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
             cam = event.cam
             message = event.message
             caption = (
-                f'Video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, '
-                f'/list_cams'
+                f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
+                f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
+                f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
+                f'📏 {bold("Size:")} {event.file_size_human()}\n'
+                f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
             )
             await self._bot.send_chat_action(
                 message.chat.id, action=ChatAction.UPLOAD_VIDEO
@@ -251,13 +254,14 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
     async def _send_resized_photo(self, event: SnapshotOutboundEvent) -> None:
         cam = event.cam
         message = event.message
-
         caption = (
-            f'[{cam.conf.description}] '
-            f'Snapshot taken on {format_ts(event.create_ts)} '
-            f'(snapshot #{event.taken_count}) {cam.hashtag}'
+            f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
+            f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
+            f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
+            f'🔢 {bold("Count:")} {event.taken_count}\n'
+            f'📏 {bold("Size:")} {event.file_size_human()}\n'
+            f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
         )
-        caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending resized cam snapshot')
         await self._bot.send_chat_action(
@@ -274,10 +278,13 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         datetime_str = format_ts(event.create_ts)
         filename = f'Full snapshot {datetime_str}.jpg'
         caption = (
-            f'[{cam.description}] Full snapshot on {datetime_str} '
-            f'(snapshot #{event.taken_count}) {cam.hashtag}'
+            f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
+            f'🗓️ {bold("Date:")} {datetime_str}\n'
+            f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
+            f'🔢 {bold("Count:")} {event.taken_count}\n'
+            f'📏 {bold("Size:")} {event.file_size_human()}\n'
+            f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
         )
-        caption = f'{caption}\n/cmds_{cam.id}, /list_cams'
 
         self._log.info('Sending full cam snapshot')
         await self._bot.send_chat_action(

@@ -59,6 +59,7 @@ class TaskTakeSnapshot(AbstractTaskEvent):
                 resized=event.resize,
                 message=event.message,
                 cam=event.cam,
+                file_size=img.getbuffer().nbytes,
             )
         )
 

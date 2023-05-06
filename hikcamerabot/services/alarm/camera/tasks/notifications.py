@@ -87,5 +87,6 @@ class AlarmPicNotificationTask(AbstractAlertNotificationTask):
                 detection_type=self._detection_type,
                 alert_count=self._alert_count,
                 message=None,
+                file_size=photo.getbuffer().nbytes,
             )
         )

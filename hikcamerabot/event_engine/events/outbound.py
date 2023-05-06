@@ -7,19 +7,29 @@ from pyrogram.types import Message
 
 from hikcamerabot.enums import Alarm, Detection, Event, ServiceType, Stream
 from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
+from hikcamerabot.utils.file import format_bytes
 
 
 @dataclass
-class VideoOutboundEvent(BaseOutboundEvent):
+class FileSizeMixin:
+    file_size: int
+
+    def file_size_human(self) -> str:
+        return format_bytes(num=self.file_size)
+
+
+@dataclass
+class VideoOutboundEvent(BaseOutboundEvent, FileSizeMixin):
     thumb_path: Optional[str]
     video_path: str
     video_duration: int
     video_height: int
     video_width: int
+    create_ts: int
 
 
 @dataclass
-class AlertSnapshotOutboundEvent(BaseOutboundEvent):
+class AlertSnapshotOutboundEvent(BaseOutboundEvent, FileSizeMixin):
     img: BytesIO
     ts: int
     resized: bool
@@ -28,7 +38,7 @@ class AlertSnapshotOutboundEvent(BaseOutboundEvent):
 
 
 @dataclass
-class SnapshotOutboundEvent(BaseOutboundEvent):
+class SnapshotOutboundEvent(BaseOutboundEvent, FileSizeMixin):
     img: BytesIO
     create_ts: int
     taken_count: int

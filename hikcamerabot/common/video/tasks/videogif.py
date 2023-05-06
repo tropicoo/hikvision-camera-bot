@@ -4,6 +4,7 @@ import os
 import signal
 import socket
 import time
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlsplit
 
@@ -28,6 +29,7 @@ from hikcamerabot.event_engine.events.outbound import (
     VideoOutboundEvent,
 )
 from hikcamerabot.event_engine.queue import get_result_queue
+from hikcamerabot.utils.file import file_size
 from hikcamerabot.utils.shared import bold, format_ts, gen_random_str
 from hikcamerabot.utils.task import wrap
 
@@ -196,6 +198,8 @@ class RecordVideoGifTask:
                 thumb_path=self._thumb_path if self._thumb_created else None,
                 cam=self._cam,
                 message=self._message,
+                file_size=file_size(self._file_path),
+                create_ts=int(datetime.now().timestamp()),
             )
         )
 
