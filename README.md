@@ -111,6 +111,10 @@ Configuration files are stored in JSON format and can be found in the `configs` 
         "stream_timeout": 10
       },
       "rtsp_port": 554,
+      "nvr": {
+        "is_behind": false,
+        "channel_name": ""
+      },
       "picture": {
         "on_demand": {
           "channel": 101
