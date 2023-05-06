@@ -4,10 +4,10 @@ from httpx import ConnectError
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from hikcamerabot.enums import Detection, ServiceType
-from hikcamerabot.exceptions import ChunkDetectorError, ChunkLoopError
+from hikcamerabot.exceptions import AlarmEventChunkDetectorError, ChunkLoopError
 from hikcamerabot.services.abstract import AbstractServiceTask
-from hikcamerabot.services.alarm.chunk import ChunkDetector
-from hikcamerabot.services.alarm.notifier import AlertNotifier
+from hikcamerabot.services.alarm.camera.chunk import AlarmEventChunkDetector
+from hikcamerabot.services.alarm.camera.notifier import AlarmNotifier
 
 
 class ServiceAlarmMonitoringTask(AbstractServiceTask):
@@ -19,34 +19,38 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._alert_notifier = AlertNotifier(service=self.service)
+        self._alert_notifier = AlarmNotifier(
+            cam=self._cam,
+            alert_count=self.service.alert_count,
+        )
 
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(RETRY_WAIT))
     async def run(self) -> None:
         """Monitor and process alarm/alert chunks from Hikvision Camera."""
-        self._log.info(
-            'Starting alert pusher task for camera: "%s"', self._cam.description
-        )
+        self._log.info('[%s] Starting alert pusher task', self._cam.id)
         try:
             await self._process_chunks()
         except ChunkLoopError:
-            err_msg = (
-                'Unexpectedly exited from stream chunk processing loop for '
-                f'{self._cam.id}. Retrying in {self.RETRY_WAIT} seconds...'
+            self._log.error(
+                '[%s] Unexpectedly exited from stream chunk processing loop. '
+                'Retrying in %s seconds...',
+                self._cam.id,
+                self.RETRY_WAIT,
             )
-            self._log.error(err_msg)
             raise
         except ConnectError:
             self._log.error(
-                'Failed to connect to %s alert stream. Retrying in %s seconds...',
+                '[%s] Failed to connect to Alert Stream. Retrying in %s seconds...',
                 self._cam.id,
                 self.RETRY_WAIT,
             )
             raise
         except Exception:
             self._log.exception(
-                f'Unknown exception in {self.__class__.__name__} for {self._cam.id}. '
-                f'Retrying in {self.RETRY_WAIT} seconds...'
+                '[%s] Unknown exception in %s. Retrying in %s seconds...',
+                self._cam.id,
+                self.__class__.__name__,
+                self.RETRY_WAIT,
             )
             raise
 
@@ -54,18 +58,17 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
         """Process chunks received from Hikvision camera alert stream."""
         wait_before = 0
         async for chunk in self.service.alert_stream():
+            self._log.debug('Alert chunk for cam "%s": %s', self._cam.id, chunk)
             if not self.service.started:
-                self._log.info(
-                    'Exiting alert pusher task for %s', self._cam.description
-                )
+                self._log.info('[%s] Exiting alert pusher task', self._cam.id)
                 break
 
             if int(time.time()) < wait_before or not chunk:
                 continue
 
             try:
-                detection_type = ChunkDetector.detect_chunk(chunk)
-            except ChunkDetectorError as err:
+                detection_type = AlarmEventChunkDetector.detect_chunk(chunk)
+            except AlarmEventChunkDetectorError as err:
                 self._log.error(err)
                 continue
 
@@ -77,6 +80,6 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             raise ChunkLoopError
 
     def _send_alerts(self, detection_type: Detection) -> None:
-        self._log.info('Sending alerts for %s', detection_type)
+        self._log.info('[%s] Sending %s alerts', self._cam.id, detection_type)
         # TODO: Put to queue and await everything, don't schedule tasks.
         self._alert_notifier.notify(detection_type)

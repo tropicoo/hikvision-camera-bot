@@ -4,7 +4,7 @@ import os
 import signal
 import socket
 import time
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlsplit
 
 from addict import Dict
@@ -241,7 +241,7 @@ class RecordVideoGifTask:
             video_source = FFMPEG_CAM_VIDEO_SRC.format(
                 user=self._cam.conf.api.auth.user,
                 pw=self._cam.conf.api.auth.password,
-                host=urlsplit(self._cam.conf.api.host).netloc,
+                host=urlsplit(self._cam.host).netloc,
                 rtsp_port=self._cam.conf.rtsp_port,
                 channel=self._gif_conf.channel,
             )

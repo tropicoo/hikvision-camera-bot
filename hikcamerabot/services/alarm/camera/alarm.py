@@ -1,7 +1,7 @@
 """Alarm module."""
 
 import asyncio
-from typing import AsyncGenerator, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, AsyncGenerator, Optional
 
 from addict import Dict
 
@@ -10,11 +10,10 @@ from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import Alarm, Detection, ServiceType
 from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
-from hikcamerabot.services.alarm.tasks.alarm_monitoring_task import (
+from hikcamerabot.services.alarm.camera.tasks.alarm_monitoring_task import (
     ServiceAlarmMonitoringTask,
 )
 from hikcamerabot.utils.task import create_task
-
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -63,6 +62,12 @@ class AlarmService(AbstractService):
 
     async def start(self) -> None:
         """Enable alarm service and enable triggers on physical camera."""
+        if self.cam.is_behind_nvr:
+            self._log.info(
+                '[%s] Do not start Alarm Service - camera is behind NVR', self.cam.id
+            )
+            return
+
         if self.started:
             raise ServiceRuntimeError('Alarm (alert) mode already started')
         await self._enable_triggers_on_camera()
@@ -75,7 +80,7 @@ class AlarmService(AbstractService):
             ServiceAlarmMonitoringTask(service=self).run(),
             task_name=task_name,
             logger=self._log,
-            exception_message='Task %s raised an exception',
+            exception_message='Task "%s" raised an exception',
             exception_message_args=(task_name,),
         )
 

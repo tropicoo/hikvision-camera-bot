@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import Event

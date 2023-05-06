@@ -14,7 +14,6 @@ from hikcamerabot.exceptions import ConfigError
 
 
 class ConfigLoader:
-
     _CONFIGS_DIR = 'configs'
 
     def __init__(self) -> None:

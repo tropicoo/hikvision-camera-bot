@@ -1,6 +1,7 @@
 """Result dispatcher module."""
 from hikcamerabot.enums import Event
 from hikcamerabot.event_engine.dispatchers.abstract import AbstractDispatcher
+from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 from hikcamerabot.event_engine.handlers.outbound import (
     ResultAlarmConfHandler,
     ResultAlertSnapshotHandler,
@@ -11,7 +12,6 @@ from hikcamerabot.event_engine.handlers.outbound import (
     ResultStreamConfHandler,
     ResultTakeSnapshotHandler,
 )
-from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 
 
 class OutboundEventDispatcher(AbstractDispatcher):

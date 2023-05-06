@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      # First path is real local storage path, e.g. "D:\Videos" in Windows. Change to your preferred one.
+      # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
       - "/data/dvr:/data/dvr"
       - "./configs:/app/configs"
     restart: unless-stopped

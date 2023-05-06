@@ -1,6 +1,7 @@
 from typing import Optional, Type
 
-from marshmallow import INCLUDE, Schema, fields as f, validates_schema
+from marshmallow import INCLUDE, Schema, validates_schema
+from marshmallow import fields as f
 
 from hikcamerabot.config.schemas.validators import (
     int_min_0,

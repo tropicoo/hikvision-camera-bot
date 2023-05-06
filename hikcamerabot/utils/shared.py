@@ -4,7 +4,7 @@ import logging
 import random
 import string
 from datetime import datetime
-from typing import Any, Generator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generator
 from uuid import uuid4
 
 from pyrogram.enums import ParseMode

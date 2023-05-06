@@ -34,7 +34,7 @@ class ResultWorkerManager:
                     ResultWorkerTask(self._outbound_dispatcher, idx).run(),
                     task_name=task_name,
                     logger=self._log,
-                    exception_message='Task %s raised an exception',
+                    exception_message='Task "%s" raised an exception',
                     exception_message_args=(task_name,),
                 )
             )

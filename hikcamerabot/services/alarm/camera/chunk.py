@@ -5,10 +5,10 @@ from hikcamerabot.constants import (
     DETECTION_SWITCH_MAP,
 )
 from hikcamerabot.enums import Detection, DetectionEventName
-from hikcamerabot.exceptions import ChunkDetectorError
+from hikcamerabot.exceptions import AlarmEventChunkDetectorError
 
 
-class ChunkDetector:
+class AlarmEventChunkDetector:
     """Detect trigger chunk from alarm/alert stream."""
 
     DETECTION_REGEX = re.compile(
@@ -36,4 +36,19 @@ class ChunkDetector:
             if inner_map['event_name'].value == event_name:
                 return key
         else:
-            raise ChunkDetectorError(f'Unknown alert stream event {event_name}')
+            raise AlarmEventChunkDetectorError(
+                f'Unknown alert stream event {event_name}'
+            )
+
+
+class CameraNvrChannelNameDetector:
+    DETECTION_REGEX = re.compile(
+        r'<channelName>(.*)</channelName>',
+        re.MULTILINE,
+    )
+    DETECTION_KEY_GROUP = 1
+
+    @classmethod
+    def detect_channel_name(cls, chunk: str) -> str | None:
+        match = cls.DETECTION_REGEX.search(chunk)
+        return match.group(cls.DETECTION_KEY_GROUP) if match else None

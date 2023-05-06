@@ -3,17 +3,19 @@
 from marshmallow import (
     INCLUDE,
     Schema,
-    fields as f,
-    validate as v,
+    ValidationError,
     validates_schema,
+)
+from marshmallow import (
+    fields as f,
+)
+from marshmallow import (
+    validate as v,
 )
 
 from hikcamerabot.clients.hikvision.enums import AuthType
 from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
-from hikcamerabot.constants import (
-    CMD_CAM_ID_REGEX,
-    FFMPEG_LOG_LEVELS,
-)
+from hikcamerabot.constants import CMD_CAM_ID_REGEX, FFMPEG_LOG_LEVELS
 from hikcamerabot.enums import RtspTransportType
 
 
@@ -123,6 +125,18 @@ class CmdSectionsVisibility(Schema):
     stream_icecast = f.Boolean(required=True)
 
 
+class Nvr(Schema):
+    is_behind = f.Boolean(required=True)
+    channel_name = f.Str(required=True, allow_none=True)
+
+    @validates_schema
+    def validate_all(self, data: dict[str, dict], **kwargs) -> None:
+        if data['is_behind'] and not data['channel_name']:
+            raise ValidationError(
+                'When camera is behind NVR, channel name should be set'
+            )
+
+
 class CameraListConfig(Schema):
     class _CameraListConfig(Schema):
         hidden = f.Boolean(required=True)
@@ -131,6 +145,7 @@ class CameraListConfig(Schema):
         group = f.Str(required=True, allow_none=True)
         api = f.Nested(CamAPI(), required=True)
         rtsp_port = f.Int(required=True)
+        nvr = f.Nested(Nvr(), required=True)
         picture = f.Nested(Picture(), required=True)
         video_gif = f.Nested(VideoGif(), required=True)
         alert = f.Nested(Alert(), required=True)

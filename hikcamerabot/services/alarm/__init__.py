@@ -1,4 +1,4 @@
-from hikcamerabot.services.alarm.alarm import AlarmService
+from hikcamerabot.services.alarm.camera.alarm import AlarmService
 
 __all__ = [
     'AlarmService',

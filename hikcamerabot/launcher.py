@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from hikcamerabot.bot_setup import BotSetup
@@ -13,8 +12,9 @@ class BotLauncher:
     def __init__(self) -> None:
         """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
-        self._setup = BotSetup()
-        self._bot = self._setup.get_bot()
+        bot_setup = BotSetup()
+        bot_setup.perform_setup()
+        self._bot = bot_setup.get_bot()
 
     async def launch(self) -> None:
         """Launch bot."""
@@ -31,9 +31,4 @@ class BotLauncher:
         await self._bot.send_startup_message()
 
         self._log.info('Bot "%s" has started', bot_name)
-        await self._run_bot_forever()
-
-    async def _run_bot_forever(self) -> None:
-        """That's how we roll."""
-        while True:
-            await asyncio.sleep(86400)
+        await self._bot.run_forever()
