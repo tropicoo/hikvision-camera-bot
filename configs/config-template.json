@@ -17,7 +17,7 @@
       2020202020
     ]
   },
-  "log_level": "DEBUG",
+  "log_level": "INFO",
   "camera_list": {
     "cam_1": {
       "hidden": false,

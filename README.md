@@ -6,23 +6,25 @@ Version: 1.8. [Release details](releases/release_1.8.md).
 
 ## Features
 
-1. Send full/resized pictures on request.
+1. Send full/resized pictures on request (NVR is supported).
 2. Auto-send pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**.
 3. Send so-called Telegram video-gifs on request and alert events from the previous
    paragraph.
 4. YouTube, Telegram, and Icecast direct or re-encoded livestreams.
 5. DVR to local storage with upload to Telegram group.
 6. SRS re-stream server.
+7. Theoretically, Hikvision doorbells also should be supported, but I don't have one.
 
 ![frames](.assets/screenshot-1.png)
 
-### Support my work
+## Support my work
 
+- [Buy me a coffee](https://www.buymeacoffee.com/terletsky)
 - PayPal [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MA6RKYAZH9DSA)
 - Bitcoin wallet `14kMRS8SvfD2ydMSMEyAmefHV3Yynf9kAd`
 
 
-### Development supported by JetBrains and Syntevo
+## Development supported by JetBrains and Syntevo by providing free licenses
 
 <a href="https://jetbrains.com" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_square.svg" alt="JetBrains" width="100"></a>
 <p><a href="https://www.syntevo.com" target="_blank"><img src="https://www.syntevo.com/assets/images/logos/syntevo-0b0da4ee.svg" alt="Syntevo" width="200"></a></p>
@@ -93,7 +95,7 @@ Configuration files are stored in JSON format and can be found in the `configs` 
       2020202020
     ]
   },
-  "log_level": "DEBUG",
+  "log_level": "INFO",
   "camera_list": {
     "cam_1": {
       "hidden": false,
@@ -221,7 +223,7 @@ Configuration files are stored in JSON format and can be found in the `configs` 
 
 # Usage
 ## Launch by using Docker and Docker Compose
-1. Set your timezone by editing the `.env` file (`TZ=Europe/Kiev`).
+1. Set your timezone by editing the `.env` file (`TZ=Europe/Kyiv`).
 Currently, there is a Ukrainian timezone because I live there.
 Look for your timezone here [http://www.timezoneconverter.com/cgi-bin/zoneinfo](http://www.timezoneconverter.com/cgi-bin/zoneinfo).
 If you want to use the default UTC time format, set Greenwich Mean Time timezone `TZ=GMT`

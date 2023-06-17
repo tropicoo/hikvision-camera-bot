@@ -7,3 +7,4 @@ marshmallow==3.19.0
 tenacity==8.2.2
 tgcrypto==1.2.5
 xmltodict==0.13.0
+uvloop==0.17.0

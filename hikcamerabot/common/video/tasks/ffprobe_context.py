@@ -23,7 +23,8 @@ class GetFfprobeContextTask(AbstractFfBinaryTask):
         )
         if proc.returncode:
             self._log.error(
-                'Failed to make video context. Is file broken? %s?', self._file_path
+                'Failed to make video context. Is file broken? File: "%s"',
+                self._file_path,
             )
             return None
         try:

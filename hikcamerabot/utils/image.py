@@ -3,7 +3,7 @@
 import logging
 from io import BytesIO
 
-from PIL import Image
+from PIL import Image, ImageFile
 
 from hikcamerabot.constants import Img
 from hikcamerabot.utils.shared import Singleton
@@ -19,6 +19,7 @@ class ImageProcessor(metaclass=Singleton):
     def resize(self, raw_snapshot: BytesIO) -> BytesIO:
         """Return resized JPEG snapshot."""
         self._log.debug('Resizing snapshot')
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         raw_snapshot = Image.open(raw_snapshot)
         resized_snapshot = BytesIO()
 
