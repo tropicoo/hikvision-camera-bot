@@ -154,18 +154,16 @@ class RecordVideoGifTask:
                     self._log.warning('File path %s not deleted: %s', file_path, err)
 
     async def _start_ffmpeg_subprocess(self) -> None:
-        proc_timeout = (
-            self._cam.conf.alert.video_gif.record_time + self._PROCESS_TIMEOUT
-        )
+        proc_timeout = self._rec_time + self._PROCESS_TIMEOUT
         proc = await asyncio.create_subprocess_shell(self._ffmpeg_cmd)
         try:
             await asyncio.wait_for(proc.wait(), timeout=proc_timeout)
         except asyncio.TimeoutError:
             self._log.error(
-                'Failed to record %s: FFMPEG process ran longer than '
+                'Failed to record "%s": FFMPEG process ran longer than '
                 'expected (%ds) and was killed',
-                proc_timeout,
                 self._file_path,
+                proc_timeout,
             )
             await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
             self._post_err_cleanup()
