@@ -2,7 +2,7 @@ Pillow==10.0.0
 Pyrogram==2.0.106
 addict==2.4.0
 emoji==2.8.0
-httpx==0.24.1
+httpx==0.25.0
 marshmallow==3.20.1
 tenacity==8.2.3
 tgcrypto==1.2.5
