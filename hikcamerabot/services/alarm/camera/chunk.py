@@ -43,10 +43,12 @@ class AlarmEventChunkDetector:
 
 class CameraNvrChannelNameDetector:
     DETECTION_REGEX = re.compile(
-        r'<channelName>(.*)</channelName>',
+        r'<(channelName|channelID|dynChannelID)>'
+        r'(.*)'
+        r'</(channelName|channelID|dynChannelID)>',
         re.MULTILINE,
     )
-    DETECTION_KEY_GROUP = 1
+    DETECTION_KEY_GROUP = 2
 
     @classmethod
     def detect_channel_name(cls, chunk: str) -> str | None:
