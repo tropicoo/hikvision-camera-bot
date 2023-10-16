@@ -1,4 +1,4 @@
-Pillow==10.0.1
+Pillow==10.1.0
 Pyrogram==2.0.106
 addict==2.4.0
 emoji==2.8.0
