@@ -23,7 +23,7 @@ class ImageProcessor(metaclass=Singleton):
         raw_snapshot = Image.open(raw_snapshot)
         resized_snapshot = BytesIO()
 
-        snapshot: Image.Image = raw_snapshot.resize(Img.SIZE, Image.ANTIALIAS)
+        snapshot: Image.Image = raw_snapshot.resize(Img.SIZE, Image.LANCZOS)
         snapshot.save(
             resized_snapshot,
             Img.FORMAT,
