@@ -32,6 +32,8 @@ class DvrFile:
         self._height: Optional[int] = None
         self._probe_ctx: Optional[dict] = None
 
+        self._is_broken = False
+
     def __str__(self) -> str:
         return self._filename
 
@@ -44,6 +46,7 @@ class DvrFile:
     async def _get_probe_ctx(self) -> None:
         self._probe_ctx = await GetFfprobeContextTask(self.full_path).run()
         if not self._probe_ctx:
+            self._is_broken = True
             return
         video_streams = [
             stream
@@ -64,6 +67,14 @@ class DvrFile:
     def decrement_lock_count(self) -> None:
         if self._lock_count > 0:
             self._lock_count -= 1
+
+    @property
+    def is_broken(self) -> bool:
+        return self._is_broken
+
+    @property
+    def is_empty(self) -> bool:
+        return Path(self.full_path).stat().st_size == 0
 
     @property
     def exists(self) -> bool:

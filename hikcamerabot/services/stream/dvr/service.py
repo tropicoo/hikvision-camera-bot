@@ -65,10 +65,14 @@ class DvrStreamService(AbstractStreamService):
                 storage_settings.enabled
                 and self.cam.conf.livestream.dvr.upload.delete_after_upload
             ):
-                self._log.info('Starting Upload Engine for %s', self.cam)
+                self._log.info(
+                    '[%s] Starting DVR Upload Engine for "%s"',
+                    self.cam.id,
+                    self.cam.description,
+                )
                 await self._upload_engine.start()
                 return
-        self._log.info('Upload Engine not started.')
+        self._log.info('DVR Upload Engine not started.')
 
     def _start_stream_task(self) -> None:
         create_task(

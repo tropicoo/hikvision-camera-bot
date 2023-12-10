@@ -37,7 +37,7 @@ class DvrUploadEngine:
             if settings.enabled:
                 storage_queues[storage] = asyncio.Queue()
 
-        self._log.debug('Created storage queues: %s', storage_queues)
+        self._log.debug('[%s] Created storage queues: %s', self._cam.id, storage_queues)
         return storage_queues
 
     async def upload_files(self, files: list[str]) -> None:
@@ -60,19 +60,23 @@ class DvrUploadEngine:
 
     async def start(self) -> None:
         await self._start_tasks()
-        self._log.debug('Upload Engine for %s has started', self._cam)
+        self._log.debug(
+            '[%s] Upload Engine for "%s" has started',
+            self._cam.id,
+            self._cam.description,
+        )
 
     async def _start_tasks(self) -> None:
         await asyncio.gather(
             self._start_storage_tasks(),
-            self._start_file_monitoring_task_(),
-            self._start_file_deletion_task_(),
+            self._start_file_monitoring_task(),
+            self._start_file_deletion_task(),
         )
 
     async def _start_storage_tasks(self) -> None:
         for storage, queue in self._storage_queues.items():
             self._log.debug(
-                'Starting %s upload task for %s storage', self._cam, storage
+                '[%s] Starting upload task for "%s" storage', self._cam.id, storage
             )
             task = self._UPLOAD_TASKS[DvrUploadType(storage)]
             create_task(
@@ -85,21 +89,29 @@ class DvrUploadEngine:
                 exception_message_args=(task.__name__,),
             )
 
-    async def _start_file_monitoring_task_(self) -> None:
+    async def _start_file_monitoring_task(self) -> None:
         self._log.debug(
-            'Starting DVR file monitoring task for %s', self._cam.description
+            '[%s] Starting DVR file monitoring task for "%s"',
+            self._cam.id,
+            self._cam.description,
         )
         create_task(
-            DvrFileMonitoringTask(engine=self, conf=self._cam.conf).run(),
+            DvrFileMonitoringTask(
+                engine=self, conf=self._cam.conf, cam_id=self._cam.id
+            ).run(),
             task_name=DvrFileMonitoringTask.__name__,
             logger=self._log,
             exception_message='Task "%s" raised an exception',
             exception_message_args=(DvrFileMonitoringTask.__name__,),
         )
 
-    async def _start_file_deletion_task_(self) -> None:
+    async def _start_file_deletion_task(self) -> None:
         if self._conf.upload.delete_after_upload:
-            self._log.debug('Starting DVR file deletion task for %s', self._cam)
+            self._log.debug(
+                '[%s] Starting DVR file deletion task for "%s"',
+                self._cam.id,
+                self._cam.description,
+            )
             create_task(
                 self._FILE_DELETE_TASK_CLS(
                     queue=self._delete_candidates_queue,

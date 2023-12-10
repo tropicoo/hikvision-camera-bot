@@ -40,7 +40,10 @@ class TelegramDvrUploadTask(AbstractDvrUploadTask):
         if not file_.exists:
             self._log.error('File %s does not exist, cannot upload', file_.full_path)
             return False
-        if Path(file_.full_path).stat().st_size == 0:
+        if file_.is_broken:
+            self._log.error('File %s is broken, cannot upload', file_.full_path)
+            return False
+        if file_.is_empty:
             self._log.error('File %s empty, cannot upload', file_.full_path)
             return False
         return True
