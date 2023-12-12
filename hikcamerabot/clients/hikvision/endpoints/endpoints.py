@@ -38,7 +38,7 @@ class IrcutFilterEndpoint(AbstractEndpoint):
             )
         except APIRequestError:
             self._log.error(
-                'Failed to set \'%s\' IrcutFilterType (Day/Night)', filter_type.value
+                "Failed to set '%s' IrcutFilterType (Day/Night)", filter_type.value
             )
             raise
         self._validate_xml_response(response)

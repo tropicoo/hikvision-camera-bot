@@ -12,10 +12,10 @@ class AlarmEventChunkDetector:
     """Detect trigger chunk from alarm/alert stream."""
 
     DETECTION_REGEX = re.compile(
-        fr'^<eventType>('
-        fr'{DetectionEventName.MOTION.value}|'
-        fr'{DetectionEventName.LINE.value}|'
-        fr'{DetectionEventName.INTRUSION.value})<',
+        rf'^<eventType>('
+        rf'{DetectionEventName.MOTION.value}|'
+        rf'{DetectionEventName.LINE.value}|'
+        rf'{DetectionEventName.INTRUSION.value})<',
         re.MULTILINE,
     )
     DETECTION_KEY_GROUP = 1

@@ -394,7 +394,7 @@ async def cmd_stream_icecast_off(
 @camera_selection
 async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Enable camera's Alert Mode."""
-    log.info('Enabling camera\'s alert mode requested')
+    log.info("Enabling camera's alert mode requested")
     event = AlertConfEvent(
         cam=cam,
         event=Event.CONFIGURE_ALARM,
@@ -410,7 +410,7 @@ async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
 @camera_selection
 async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Disable camera's Alert Mode."""
-    log.info('Disabling camera\'s alert mode requested')
+    log.info("Disabling camera's alert mode requested")
     event = AlertConfEvent(
         cam=cam,
         event=Event.CONFIGURE_ALARM,

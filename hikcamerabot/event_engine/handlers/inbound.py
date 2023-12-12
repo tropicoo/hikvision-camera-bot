@@ -46,19 +46,34 @@ class AbstractTaskEvent(metaclass=abc.ABCMeta):
 
 class TaskTakeSnapshot(AbstractTaskEvent):
     async def _handle(self, event: GetPicEvent) -> None:
-        channel: int = event.cam.conf.picture.on_demand.channel
-        img, create_ts = await event.cam.take_snapshot(
-            channel=channel, resize=event.resize
-        )
+        cam = event.cam
+        channel: int = cam.conf.picture.on_demand.channel
+        try:
+            img, create_ts = await cam.take_snapshot(
+                channel=channel, resize=event.resize
+            )
+        except Exception as err:
+            await self._result_queue.put(
+                SendTextOutboundEvent(
+                    event=Event.SEND_TEXT,
+                    text=(
+                        f'🛑 {bold(f"Failed to take picture on [{cam.id}] {cam.description}")}\n\n'
+                        f'{bold(f"👀 Details: {err}")}'
+                    ),
+                    message=event.message,
+                )
+            )
+            return
+
         await self._result_queue.put(
             SnapshotOutboundEvent(
                 event=event.event,
                 img=img,
                 create_ts=create_ts,
-                taken_count=event.cam.snapshots_taken,
+                taken_count=cam.snapshots_taken,
                 resized=event.resize,
                 message=event.message,
-                cam=event.cam,
+                cam=cam,
                 file_size=img.getbuffer().nbytes,
             )
         )
@@ -79,7 +94,7 @@ class TaskDetectionConf(AbstractTaskEvent):
         state = event.state
 
         self._log.info(
-            '%s camera\'s %s has been requested',
+            "%s camera's %s has been requested",
             'Enabling' if state else 'Disabling',
             name,
         )

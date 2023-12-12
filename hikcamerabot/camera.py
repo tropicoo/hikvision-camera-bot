@@ -148,7 +148,7 @@ class HikvisionCam:
         try:
             image_obj = await self._api.take_snapshot(channel=channel)
         except HikvisionAPIError as err:
-            err_msg = f'[{self.id}] Failed to take snapshot from {self.description}'
+            err_msg = f'[{self.id}] Failed to take snapshot from "{self.description}"'
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg) from err
 

@@ -6,3 +6,8 @@ skip-string-normalization = 1
 line-length = 88
 select = ["F", "E", "W", "I001"]
 ignore = ["E501"]  # Skip line length violations
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "single"
+line-ending = "lf"

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pyrogram.types import Message
 
@@ -20,4 +20,4 @@ class BaseInboundEvent:
 class BaseOutboundEvent:
     cam: 'HikvisionCam'
     event: Event
-    message: Optional[Message]
+    message: Message | None

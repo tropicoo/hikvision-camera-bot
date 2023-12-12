@@ -5,12 +5,15 @@ from urllib.parse import urljoin
 
 import httpx
 from addict import Dict
-from tenacity import retry, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
 from hikcamerabot.clients.hikvision.enums import AuthType, EndpointAddr
 from hikcamerabot.constants import CONN_TIMEOUT
 from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
+
+_RETRY_WAIT = 0.5
+_RETRY_STOP_AFTER_ATTEMPT = 3
 
 
 class HikvisionAPIClient:
@@ -35,7 +38,11 @@ class HikvisionAPIClient:
             transport=httpx.AsyncHTTPTransport(verify=False, retries=3),
         )
 
-    @retry(wait=wait_fixed(0.5))
+    @retry(
+        wait=wait_fixed(_RETRY_WAIT),
+        stop=stop_after_attempt(_RETRY_STOP_AFTER_ATTEMPT),
+        reraise=True,
+    )
     async def request(
         self,
         endpoint: EndpointAddr | str,
@@ -61,7 +68,7 @@ class HikvisionAPIClient:
                 f'url {url}, data {data}'
             )
             self._log.exception(err_msg)
-            raise APIRequestError(f'{err_msg}: {err}') from err
+            raise APIRequestError(f'{err_msg}: {err}')
         self._validate_response(response)
         return response
 
