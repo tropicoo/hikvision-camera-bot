@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from hikcamerabot.constants import (
     DETECTION_SWITCH_MAP,
@@ -21,7 +20,7 @@ class AlarmEventChunkDetector:
     DETECTION_KEY_GROUP = 1
 
     @classmethod
-    def detect_chunk(cls, chunk: str) -> Optional[Detection]:
+    def detect_chunk(cls, chunk: str) -> Detection | None:
         """Detect chunk in regard of `DETECTION_REGEX` string and return
         detection key.
 

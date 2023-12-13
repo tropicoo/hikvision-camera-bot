@@ -4,7 +4,7 @@ import abc
 import logging
 import os
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from emoji import emojize
 from pyrogram.enums import ChatAction
@@ -181,7 +181,7 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
                 chat_id=uid, photo=photo_, caption=caption
             )
 
-        cached_id: Optional[str] = None
+        cached_id: str | None = None
         for uid in self._bot.alert_users:
             try:
                 if resized:

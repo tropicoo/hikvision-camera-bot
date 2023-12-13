@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Optional
 
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
@@ -20,7 +19,7 @@ class FileSizeMixin:
 
 @dataclass
 class VideoOutboundEvent(BaseOutboundEvent, FileSizeMixin):
-    thumb_path: Optional[str]
+    thumb_path: str | None
     video_path: str
     video_duration: int
     video_height: int
@@ -51,7 +50,7 @@ class SendTextOutboundEvent:
     event: Event
     text: str
     parse_mode: ParseMode = ParseMode.HTML
-    message: Optional[Message] = None
+    message: Message | None = None
 
 
 @dataclass
@@ -60,7 +59,7 @@ class AlarmConfOutboundEvent(BaseOutboundEvent):
     service_name: Alarm
     state: bool
     message: Message
-    text: Optional[str] = None
+    text: str | None = None
 
 
 @dataclass
@@ -69,7 +68,7 @@ class StreamOutboundEvent(BaseOutboundEvent):
     stream_type: Stream
     state: bool
     message: Message
-    text: Optional[str] = None
+    text: str | None = None
 
 
 @dataclass
@@ -77,4 +76,4 @@ class DetectionConfOutboundEvent(BaseOutboundEvent):
     type: Detection
     state: bool
     message: Message
-    text: Optional[str] = None
+    text: str | None = None

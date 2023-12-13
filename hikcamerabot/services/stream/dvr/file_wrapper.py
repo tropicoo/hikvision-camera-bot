@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from hikcamerabot.common.video.tasks.ffprobe_context import GetFfprobeContextTask
 from hikcamerabot.common.video.tasks.thumbnail import MakeThumbnailTask
@@ -27,10 +27,10 @@ class DvrFile:
         self._full_path = os.path.join(self._storage_path, self._filename)
         self._thumbnail = os.path.join(self._storage_path, f'{self.name}-thumb.jpg')
 
-        self._duration: Optional[int] = None
-        self._width: Optional[int] = None
-        self._height: Optional[int] = None
-        self._probe_ctx: Optional[dict] = None
+        self._duration: int | None = None
+        self._width: int | None = None
+        self._height: int | None = None
+        self._probe_ctx: dict | None = None
 
         self._is_broken = False
 
@@ -85,21 +85,21 @@ class DvrFile:
         return self._filename
 
     @property
-    def thumbnail(self) -> Optional[str]:
+    def thumbnail(self) -> str | None:
         if Path(self._thumbnail).is_file():
             return self._thumbnail
         return None
 
     @property
-    def height(self) -> Optional[int]:
+    def height(self) -> int | None:
         return self._height
 
     @property
-    def width(self) -> Optional[int]:
+    def width(self) -> int | None:
         return self._width
 
     @property
-    def duration(self) -> Optional[int]:
+    def duration(self) -> int | None:
         return self._duration
 
     @property

@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import Event
@@ -117,7 +117,7 @@ class TaskAlarmConf(AbstractTaskEvent):
         service_type = event.service_type
         service_name = event.service_name
         state = event.state
-        text: Optional[str] = None
+        text: str | None = None
         try:
             if state:
                 await cam.service_manager.start(service_type, service_name)
@@ -146,7 +146,7 @@ class TaskStreamConf(AbstractTaskEvent):
         service_type = event.service_type
         service_name = event.stream_type
         state = event.state
-        text: Optional[str] = None
+        text: str | None = None
         try:
             if state:
                 await cam.service_manager.start(service_type, service_name)

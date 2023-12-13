@@ -1,5 +1,3 @@
-from typing import Optional, Type
-
 from marshmallow import INCLUDE, Schema, validates_schema
 from marshmallow import fields as f
 
@@ -12,7 +10,7 @@ from hikcamerabot.config.schemas.validators import (
 
 
 class BaseTemplate(Schema):
-    _inner_validation_schema_cls: Optional[Type[Schema]] = None
+    _inner_validation_schema_cls: type[Schema] | None = None
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

@@ -30,5 +30,5 @@ class BotLauncher:
         self._bot.start_tasks()
         await self._bot.send_startup_message()
 
-        self._log.info('Bot "%s" has started', bot_name)
+        self._log.info('Telegram bot "%s" has started', bot_name)
         await self._bot.run_forever()

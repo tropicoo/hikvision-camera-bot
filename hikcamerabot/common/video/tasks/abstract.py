@@ -3,13 +3,12 @@ import asyncio
 import logging
 import os
 import signal
-from typing import Optional
 
 from hikcamerabot.utils.task import wrap
 
 
 class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
-    _CMD: Optional[str] = None
+    _CMD: str | None = None
     _CMD_TIMEOUT = 10
 
     def __init__(self, file_path: str) -> None:
@@ -17,7 +16,7 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
         self._file_path = file_path
         self._killpg = wrap(os.killpg)
 
-    async def _run_proc(self, cmd: str) -> Optional[asyncio.subprocess.Process]:
+    async def _run_proc(self, cmd: str) -> asyncio.subprocess.Process | None:
         proc = await asyncio.create_subprocess_shell(
             cmd=cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )

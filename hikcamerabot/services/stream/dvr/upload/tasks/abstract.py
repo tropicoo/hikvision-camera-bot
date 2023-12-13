@@ -1,7 +1,7 @@
 import abc
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from addict import Dict
 
@@ -15,7 +15,7 @@ _UPLOAD_RETRY_WAIT = 5
 
 
 class AbstractDvrUploadTask(metaclass=abc.ABCMeta):
-    UPLOAD_TYPE: Optional[DvrUploadType] = None
+    UPLOAD_TYPE: DvrUploadType | None = None
 
     def __init__(
         self, cam: 'HikvisionCam', conf: Dict, queue: asyncio.Queue['DvrFile']

@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 import xmltodict
@@ -17,7 +17,7 @@ class AbstractEndpoint(metaclass=abc.ABCMeta):
     Used to decompose API methods since they are too complex to store in one API class.
     """
 
-    _XML_PAYLOAD_TPL: Optional[str] = None
+    _XML_PAYLOAD_TPL: str | None = None
     _XML_HEADERS = {'Content-Type': 'application/xml'}
 
     def __init__(self, api_client: HikvisionAPIClient) -> None:

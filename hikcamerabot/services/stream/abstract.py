@@ -3,7 +3,7 @@ import asyncio
 import os
 import signal
 import time
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 from urllib.parse import urlsplit
 
 from addict import Dict
@@ -40,10 +40,10 @@ if TYPE_CHECKING:
 class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
     """livestream Service Base Class."""
 
-    name: Optional[Stream] = None
+    name: Stream | None = None
     type = ServiceType.STREAM
 
-    _FFMPEG_CMD_TPL: Optional[str] = None
+    _FFMPEG_CMD_TPL: str | None = None
     _IGNORE_RESTART_CHECK = -1
 
     def __init__(
@@ -66,11 +66,11 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         self._hik_password = hik_password
         self._hik_host = hik_host
 
-        self._proc: Optional[asyncio.subprocess.Process] = None
-        self._start_ts: Optional[int] = None
-        self._stream_conf: Optional[Dict] = None
-        self._enc_conf: Optional[Dict] = None
-        self._cmd: Optional[str] = None
+        self._proc: asyncio.subprocess.Process | None = None
+        self._start_ts: int | None = None
+        self._stream_conf: Dict | None = None
+        self._enc_conf: Dict | None = None
+        self._cmd: str | None = None
         self._generate_cmd()
 
         self._started = asyncio.Event()

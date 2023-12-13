@@ -2,7 +2,7 @@ import asyncio
 import functools
 import logging
 from functools import partial, wraps
-from typing import Any, Awaitable, Tuple, TypeVar
+from typing import Any, Awaitable, TypeVar
 
 T = TypeVar('T')
 
@@ -13,7 +13,7 @@ def create_task(
     loop: asyncio.AbstractEventLoop = None,
     task_name: str = None,
     exception_message: str = 'Task raised an exception',
-    exception_message_args: Tuple[Any, ...] = (),
+    exception_message_args: tuple[Any, ...] = (),
     thread_safe: bool = False,
 ) -> asyncio.Task[T]:
     if loop is None:
@@ -43,7 +43,7 @@ def _handle_task_result(
     task: asyncio.Task,
     logger: logging.Logger,
     exception_message: str,
-    exception_message_args: Tuple[Any, ...] = (),
+    exception_message_args: tuple[Any, ...] = (),
 ) -> None:
     try:
         task.result()

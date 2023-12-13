@@ -5,7 +5,7 @@ import signal
 import socket
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from addict import Dict
@@ -84,10 +84,10 @@ class RecordVideoGifTask:
         self._killpg = wrap(os.killpg)
         self._ffmpeg_cmd = self._build_ffmpeg_cmd()
 
-        self._duration: Optional[int] = None
-        self._width: Optional[int] = None
-        self._height: Optional[int] = None
-        self._probe_ctx: Optional[dict] = None
+        self._duration: int | None = None
+        self._width: int | None = None
+        self._height: int | None = None
+        self._probe_ctx: dict | None = None
 
     async def run(self) -> None:
         await asyncio.gather(self._record(), self._send_confirmation_message())

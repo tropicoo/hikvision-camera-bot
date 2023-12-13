@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 from hikcamerabot.enums import Alarm, Detection, Stream
 from hikcamerabot.event_engine.queue import get_result_queue
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 class AbstractService(metaclass=abc.ABCMeta):
     """Base Service Class."""
 
-    name: Optional[Detection] = None
-    type: Optional[Alarm | Stream] = None
+    name: Detection | None = None
+    type: Alarm | Stream | None = None
 
     def __init__(self, cam: 'HikvisionCam') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -45,7 +45,7 @@ class AbstractService(metaclass=abc.ABCMeta):
 
 
 class AbstractServiceTask(abc.ABC):
-    type: Optional[str] = None
+    type: str | None = None
     _event_manager_cls = None
 
     def __init__(

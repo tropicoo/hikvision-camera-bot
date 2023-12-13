@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import xmltodict
 
@@ -28,9 +28,7 @@ class CameraConfigSwitch:
         self._log = logging.getLogger(self.__class__.__name__)
         self._api_client = api_client
 
-    async def switch_enabled_state(
-        self, trigger: Detection, state: bool
-    ) -> Optional[str]:
+    async def switch_enabled_state(self, trigger: Detection, state: bool) -> str | None:
         endpoint: EndpointAddr = EndpointAddr[trigger.value.upper()]
         full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
         try:

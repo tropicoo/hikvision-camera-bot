@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator
 from urllib.parse import urljoin
 
 import httpx
@@ -102,7 +102,7 @@ class ExposureEndpoint(AbstractEndpoint):
             raise
         self._validate_xml_response(response)
 
-    def _build_payload(self, kwargs: Dict, current_capabilities: Optional[Dict]) -> str:
+    def _build_payload(self, kwargs: Dict, current_capabilities: Dict | None) -> str:
         return self._XML_PAYLOAD_TPL.format(
             exposure_type=kwargs.get(
                 'exposure_type',
@@ -160,7 +160,7 @@ class SwitchEndpoint(AbstractEndpoint):
         super().__init__(*args, **kwargs)
         self._switch = CameraConfigSwitch(api_client=self._api_client)
 
-    async def __call__(self, trigger: Detection, state: bool) -> Optional[str]:
+    async def __call__(self, trigger: Detection, state: bool) -> str | None:
         """Switch method to enable/disable Hikvision functions.
 
         :param state: Boolean value indicating on/off switch state.

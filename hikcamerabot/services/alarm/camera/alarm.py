@@ -1,7 +1,7 @@
 """Alarm module."""
 
 import asyncio
-from typing import TYPE_CHECKING, AsyncGenerator, Optional
+from typing import TYPE_CHECKING, AsyncGenerator
 
 from addict import Dict
 
@@ -100,7 +100,7 @@ class AlarmService(AbstractService):
         async for chunk in self._api.alert_stream():
             yield chunk
 
-    async def trigger_switch(self, trigger: Detection, state: bool) -> Optional[str]:
+    async def trigger_switch(self, trigger: Detection, state: bool) -> str | None:
         """Trigger switch."""
         full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
         self._log.debug('%s %s', 'Enabling' if state else 'Disabling', full_name)
