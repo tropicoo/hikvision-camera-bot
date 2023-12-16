@@ -1,10 +1,8 @@
 import asyncio
 import logging
-import os
 import signal
 
-from hikcamerabot.utils.process import get_stdout_stderr
-from hikcamerabot.utils.task import wrap
+from hikcamerabot.utils.process import get_stdout_stderr, kill_proc
 
 
 class FileLockCheckTask:
@@ -14,7 +12,6 @@ class FileLockCheckTask:
     def __init__(self, files: list[str]) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._files = files
-        self._killpg = wrap(os.killpg)
 
     async def run(self) -> list[str]:
         self._log.debug(
@@ -40,7 +37,7 @@ class FileLockCheckTask:
                 self._LOCKED_FILES_CMD,
                 self._PROCESS_TIMEOUT,
             )
-            await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
+            await kill_proc(process=proc, signal_=signal.SIGINT, reraise=False)
             return []
 
         stdout, stderr = await get_stdout_stderr(proc)

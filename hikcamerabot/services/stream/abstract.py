@@ -30,8 +30,9 @@ from hikcamerabot.services.tasks.livestream import (
     FfmpegStdoutReaderTask,
     ServiceStreamerTask,
 )
+from hikcamerabot.utils.process import kill_proc
 from hikcamerabot.utils.shared import shallow_sleep_async
-from hikcamerabot.utils.task import create_task, wrap
+from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -74,7 +75,6 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         self._generate_cmd()
 
         self._started = asyncio.Event()
-        self._killpg = wrap(os.killpg)
 
     async def start(self, skip_check: bool = False) -> None:
         """Start the stream."""
@@ -156,7 +156,7 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             raise ServiceRuntimeError(warn_msg)
         try:
             self._log.info('Killing proc')
-            await self._killpg(os.getpgid(self._proc.pid), signal.SIGINT)
+            await kill_proc(process=self._proc, signal_=signal.SIGINT, reraise=True)
         except ProcessLookupError as err:
             self._log.error('Failed to kill process: %s', err)
         except Exception:

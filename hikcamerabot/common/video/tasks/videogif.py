@@ -30,8 +30,8 @@ from hikcamerabot.event_engine.events.outbound import (
 )
 from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.utils.file import file_size
+from hikcamerabot.utils.process import kill_proc
 from hikcamerabot.utils.shared import bold, format_ts, gen_random_str
-from hikcamerabot.utils.task import wrap
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -81,7 +81,6 @@ class RecordVideoGifTask:
         self._message = message
         self._event = self._VIDEO_TYPE_TO_EVENT[self._video_type]
         self._result_queue = get_result_queue()
-        self._killpg = wrap(os.killpg)
         self._ffmpeg_cmd = self._build_ffmpeg_cmd()
 
         self._duration: int | None = None
@@ -165,7 +164,7 @@ class RecordVideoGifTask:
                 self._file_path,
                 proc_timeout,
             )
-            await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
+            await kill_proc(process=proc, signal_=signal.SIGINT, reraise=False)
             self._post_err_cleanup()
 
     async def _validate_file(self) -> bool:

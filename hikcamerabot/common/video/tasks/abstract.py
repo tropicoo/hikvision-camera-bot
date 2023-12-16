@@ -1,10 +1,9 @@
 import abc
 import asyncio
 import logging
-import os
 import signal
 
-from hikcamerabot.utils.task import wrap
+from hikcamerabot.utils.process import kill_proc
 
 
 class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
@@ -14,7 +13,6 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
     def __init__(self, file_path: str) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._file_path = file_path
-        self._killpg = wrap(os.killpg)
 
     async def _run_proc(self, cmd: str) -> asyncio.subprocess.Process | None:
         proc = await asyncio.create_subprocess_shell(
@@ -29,7 +27,7 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
                 'expected and was killed',
                 cmd,
             )
-            await self._killpg(os.getpgid(proc.pid), signal.SIGINT)
+            await kill_proc(process=proc, signal_=signal.SIGINT, reraise=False)
             return None
 
     @abc.abstractmethod
