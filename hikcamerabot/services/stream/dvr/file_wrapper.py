@@ -43,19 +43,29 @@ class DvrFile:
     def __hash__(self) -> int:
         return hash(self._filename)
 
+    def _mark_as_broken(self) -> None:
+        self._log.warning('Marking file "%s" as broken', self._full_path)
+        self._is_broken = True
+
     async def _get_probe_ctx(self) -> None:
         self._probe_ctx = await GetFfprobeContextTask(self.full_path).run()
         if not self._probe_ctx:
-            self._is_broken = True
+            self._mark_as_broken()
             return
         video_streams = [
             stream
             for stream in self._probe_ctx['streams']
             if stream['codec_type'] == 'video'
         ]
-        self._duration = int(float(self._probe_ctx['format']['duration']))
-        self._height = video_streams[0]['height']
-        self._width = video_streams[0]['width']
+        try:
+            self._duration = int(float(self._probe_ctx['format']['duration']))
+            self._height = video_streams[0]['height']
+            self._width = video_streams[0]['width']
+        except KeyError:
+            self._log.exception(
+                'Failed to gather video stream metadata: %s', self._probe_ctx
+            )
+            self._mark_as_broken()
 
     async def _make_thumbnail_frame(self) -> None:
         if not await MakeThumbnailTask(self._thumbnail, self.full_path).run():
