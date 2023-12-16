@@ -9,7 +9,7 @@ from hikcamerabot.utils.task import wrap
 
 class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
     _CMD: str | None = None
-    _CMD_TIMEOUT = 10
+    _CMD_TIMEOUT = 60
 
     def __init__(self, file_path: str) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
