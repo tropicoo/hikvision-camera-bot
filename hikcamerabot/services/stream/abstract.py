@@ -178,7 +178,12 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         """Restart the stream."""
         if self.started:
             await self.stop(disable=False)
-        self._log.debug('Sleeping for %ss', self._stream_conf.restart_pause)
+        self._log.debug(
+            '[%s] Restarting service %s. Sleeping for %ss',
+            self.cam.id,
+            self._cls_name,
+            self._stream_conf.restart_pause,
+        )
         await shallow_sleep_async(self._stream_conf.restart_pause)
         await self.start(skip_check=True)
 

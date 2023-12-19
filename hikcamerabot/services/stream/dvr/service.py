@@ -24,6 +24,7 @@ class DvrStreamService(AbstractStreamService):
         self._upload_engine = DvrUploadEngine(
             conf=self.cam.conf.livestream.dvr, cam=self.cam
         )
+        self._upload_engine_started = False
 
     def _format_ffmpeg_cmd_tpl(self) -> str:
         null_audio = (
@@ -51,10 +52,12 @@ class DvrStreamService(AbstractStreamService):
         )
 
     async def start(self, *args, **kwargs) -> None:
-        await asyncio.gather(
-            super().start(*args, **kwargs),
-            self._start_upload_engine(),
-        )
+        coros = [super().start(*args, **kwargs)]
+        if not self._upload_engine_started:
+            coros.append(self._start_upload_engine())
+            self._upload_engine_started = True
+
+        await asyncio.gather(*coros)
 
     async def _start_upload_engine(self) -> None:
         """Start Upload Engine only if at least one storage is enabled."""
@@ -72,7 +75,7 @@ class DvrStreamService(AbstractStreamService):
                 )
                 await self._upload_engine.start()
                 return
-        self._log.info('DVR Upload Engine not started.')
+        self._log.info('[%s] DVR Upload Engine not started', self.cam.id)
 
     def _start_stream_task(self) -> None:
         create_task(

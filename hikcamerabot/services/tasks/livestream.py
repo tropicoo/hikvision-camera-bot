@@ -54,9 +54,11 @@ class ServiceStreamerTask(AbstractServiceTask):
                     if not self._run_forever and self._should_exit():
                         break
                     self._log.info(
-                        '[%s] Restarting %s stream',
+                        '[%s] Restarting %s stream [need restart: %s] [is alive: %s]',
                         self._cam.id,
                         self.service.name.value,
+                        self.service.need_restart,
+                        self.service.alive,
                     )
                     await self.service.restart()
                 await shallow_sleep_async(1)
