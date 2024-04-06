@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   hikvision-camera-bot:
     container_name: "hikvision_camera_bot"

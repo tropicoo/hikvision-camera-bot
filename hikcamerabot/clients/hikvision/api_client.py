@@ -1,4 +1,5 @@
 """Hikvision camera API client module."""
+
 import logging
 from typing import Any
 from urllib.parse import urljoin

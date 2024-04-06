@@ -1,4 +1,5 @@
 """Telegram Livestream module."""
+
 from hikcamerabot.enums import Stream, VideoEncoder
 from hikcamerabot.services.stream.abstract import (
     AbstractExternalLivestreamService,

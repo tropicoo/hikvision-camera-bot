@@ -1,6 +1,11 @@
 [tool.ruff]
 line-length = 88
-select = ["F", "E", "W", "I001"]
+indent-width = 4
+target-version = "py312"
+required-version = ">=0.3.5"
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I001", "RET", "SLF001"]
 ignore = ["E501"]  # Skip line length violations
 
 [tool.ruff.format]

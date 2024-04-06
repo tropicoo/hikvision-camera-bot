@@ -1,4 +1,5 @@
 """Utils module."""
+
 import asyncio
 import logging
 import random

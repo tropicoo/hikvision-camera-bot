@@ -1,4 +1,5 @@
 """Camera callbacks module."""
+
 import logging
 
 from pyrogram.types import Message

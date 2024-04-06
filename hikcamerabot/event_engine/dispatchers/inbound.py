@@ -1,4 +1,5 @@
 """Event dispatcher module."""
+
 from hikcamerabot.enums import Event
 from hikcamerabot.event_engine.dispatchers.abstract import AbstractDispatcher
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent

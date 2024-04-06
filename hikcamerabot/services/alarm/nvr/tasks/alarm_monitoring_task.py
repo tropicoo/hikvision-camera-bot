@@ -40,7 +40,7 @@ class NvrAlarmMonitoringTask:
 
         # Each camera connects to the same NVR with the same credentials.
         # We need Hikvision API instance just to get the NVR Alert Stream.
-        self._api = cameras[0]._api
+        self._api = cameras[0]._api  # noqa: SLF001
 
         self._run_forever = run_forever
         self._cls_name = self.__class__.__name__

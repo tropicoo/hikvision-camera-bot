@@ -67,6 +67,7 @@ def authorization_check(func):
 
         log.error('User authorization error: %s', message.chat.id)
         await message.reply_text(emojize(':stop_sign: Not authorized'), quote=True)
+        return None
 
     return wrapper
 

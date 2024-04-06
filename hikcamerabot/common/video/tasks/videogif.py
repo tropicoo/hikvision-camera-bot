@@ -234,10 +234,9 @@ class RecordVideoGifTask:
                     loglevel=self._gif_conf.loglevel,
                     filepath=self._file_path,
                 )
-            else:
-                video_source = FFMPEG_SRS_RTMP_VIDEO_SRC.format(
-                    livestream_name=livestream_name
-                )
+            video_source = FFMPEG_SRS_RTMP_VIDEO_SRC.format(
+                livestream_name=livestream_name
+            )
         else:
             video_source = FFMPEG_CAM_VIDEO_SRC.format(
                 user=self._cam.conf.api.auth.user,

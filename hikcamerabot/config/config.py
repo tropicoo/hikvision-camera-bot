@@ -1,4 +1,5 @@
 """Config module."""
+
 import json
 import logging
 import re

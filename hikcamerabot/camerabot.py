@@ -1,4 +1,5 @@
 """Camera Bot Module."""
+
 import asyncio
 import logging
 
