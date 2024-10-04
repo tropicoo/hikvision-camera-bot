@@ -1,6 +1,6 @@
 Pillow==10.4.0
 addict==2.4.0
-emoji==2.12.1
+emoji==2.14.0
 httpx==0.27.2
 marshmallow==3.22.0
 pyrofork==2.3.43
