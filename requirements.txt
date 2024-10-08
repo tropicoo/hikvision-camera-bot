@@ -5,6 +5,6 @@ httpx==0.27.2
 marshmallow==3.22.0
 pyrofork==2.3.47
 tenacity==9.0.0
-tgcrypto-pyrofork==1.2.6
+tgcrypto-pyrofork==1.2.7
 xmltodict==0.13.0
 uvloop==0.20.0
