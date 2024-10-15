@@ -137,7 +137,6 @@ async def cmd_stop(bot: CameraBot, message: Message) -> None:
     """Terminate the bot."""
     # log.info(f'Stopping {(await bot.first_name)} bot')
     # TODO: Is this even needed?
-    pass
 
 
 @authorization_check

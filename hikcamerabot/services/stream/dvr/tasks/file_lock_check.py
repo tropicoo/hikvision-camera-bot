@@ -30,7 +30,7 @@ class FileLockCheckTask:
         )
         try:
             await asyncio.wait_for(proc.wait(), timeout=self._PROCESS_TIMEOUT)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._log.error(
                 'Failed to execute %s: process ran longer than '
                 'expected (%ds) and was killed',

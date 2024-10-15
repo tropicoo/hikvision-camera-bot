@@ -2,7 +2,8 @@
 
 import logging
 from collections import defaultdict
-from typing import Any, DefaultDict, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from hikcamerabot.services.abstract import AbstractService
 
@@ -12,7 +13,7 @@ class ServiceManager:
 
     def __init__(self) -> None:
         # service type as key e.g. {'stream': {'youtube': <instance>}}
-        self._services: DefaultDict[Any, dict[Any, AbstractService]] = defaultdict(dict)
+        self._services: defaultdict[Any, dict[Any, AbstractService]] = defaultdict(dict)
         self._log = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self) -> str:

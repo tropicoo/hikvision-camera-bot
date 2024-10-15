@@ -1,6 +1,6 @@
 """Telegram bot commands module."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import hikcamerabot.callbacks as cb
 from hikcamerabot.enums import CmdSectionType

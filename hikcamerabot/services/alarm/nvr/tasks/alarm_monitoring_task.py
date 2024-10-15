@@ -93,8 +93,7 @@ class NvrAlarmMonitoringTask:
                     continue
                 self._send_alerts(cam=cam, detection_type=detection_type)
                 self._cam_delays[cam] = int(time.time()) + 15
-        else:
-            raise ChunkLoopError
+        raise ChunkLoopError
 
     def _parse_cam(self, chunk: str) -> HikvisionCam:
         channel_name = CameraNvrChannelNameDetector.detect_channel_name(chunk)

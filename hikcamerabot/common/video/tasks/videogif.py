@@ -157,7 +157,7 @@ class RecordVideoGifTask:
         proc = await asyncio.create_subprocess_shell(self._ffmpeg_cmd)
         try:
             await asyncio.wait_for(proc.wait(), timeout=proc_timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._log.error(
                 'Failed to record "%s": FFMPEG process ran longer than '
                 'expected (%ds) and was killed',

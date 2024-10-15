@@ -1,8 +1,9 @@
 import asyncio
 import functools
 import logging
+from collections.abc import Awaitable
 from functools import partial, wraps
-from typing import Any, Awaitable, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar('T')
 

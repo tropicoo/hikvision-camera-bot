@@ -1,5 +1,5 @@
+from collections.abc import AsyncGenerator
 from io import BytesIO
-from typing import AsyncGenerator
 from urllib.parse import urljoin
 
 import httpx

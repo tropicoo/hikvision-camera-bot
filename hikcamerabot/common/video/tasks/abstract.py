@@ -21,7 +21,7 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
         try:
             await asyncio.wait_for(proc.wait(), timeout=self._CMD_TIMEOUT)
             return proc
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._log.error(
                 'Failed to execute %s: process ran longer than '
                 'expected and was killed',
@@ -33,4 +33,3 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def run(self) -> None:
         """Main entry point."""
-        pass

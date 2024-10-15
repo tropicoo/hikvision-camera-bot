@@ -64,4 +64,3 @@ class AbstractServiceTask(abc.ABC):
     @abc.abstractmethod
     async def run(self) -> None:
         """Main async task entry point."""
-        pass

@@ -2,7 +2,8 @@
 
 import logging
 from collections import defaultdict
-from typing import Iterator, Literal
+from collections.abc import Iterator
+from typing import Literal
 
 from hikcamerabot.camera import HikvisionCam
 

@@ -36,7 +36,7 @@ class ConfigLoader:
             self._check_path_existence(conf_file_path)
 
             self._log.info('Reading config file %s', conf_file_path)
-            with open(conf_file_path, 'r') as fd_in:
+            with open(conf_file_path) as fd_in:
                 try:
                     config = schema().load(json.load(fd_in))
                 except ValidationError as err:

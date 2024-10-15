@@ -3,7 +3,8 @@ import asyncio
 import os
 import signal
 import time
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from addict import Dict

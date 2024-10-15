@@ -4,8 +4,9 @@ import asyncio
 import logging
 import random
 import string
+from collections.abc import Generator
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from pyrogram.enums import ParseMode

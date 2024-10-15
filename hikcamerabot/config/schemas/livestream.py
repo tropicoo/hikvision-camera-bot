@@ -21,7 +21,7 @@ class BaseTemplate(Schema):
     def validate_all(self, data: dict, **kwargs) -> None:
         for tpl_name, tpl_conf in data.items():
             self._template_validator.validate(tpl_name)
-            self._inner_validation_schema.load(tpl_conf)  # noqa
+            self._inner_validation_schema.load(tpl_conf)
 
     class Meta:
         unknown = INCLUDE

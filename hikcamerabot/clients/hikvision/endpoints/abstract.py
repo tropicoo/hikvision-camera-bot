@@ -27,7 +27,6 @@ class AbstractEndpoint(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def __call__(self, *args, **kwargs) -> Any:
         """Real API call starts here."""
-        pass
 
     async def _get_channel_capabilities(self) -> Dict:
         response = await self._api_client.request(

@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler

@@ -34,10 +34,7 @@ class AlarmEventChunkDetector:
         for key, inner_map in DETECTION_SWITCH_MAP.items():
             if inner_map['event_name'].value == event_name:
                 return key
-        else:
-            raise AlarmEventChunkDetectorError(
-                f'Unknown alert stream event {event_name}'
-            )
+        raise AlarmEventChunkDetectorError(f'Unknown alert stream event {event_name}')
 
 
 class CameraNvrChannelNameDetector:

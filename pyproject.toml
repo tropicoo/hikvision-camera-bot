@@ -2,13 +2,71 @@
 line-length = 88
 indent-width = 4
 target-version = "py312"
-required-version = ">=0.3.5"
+required-version = ">=0.6.9"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
 
 [tool.ruff.lint]
-select = ["F", "E", "W", "I001", "RET", "SLF001"]
-ignore = ["E501"]  # Skip line length violations
+select = [
+    "A",
+    "ANN",
+    "ASYNC",
+    "C4",
+    "C90",
+    "COM",
+    "E",
+    "EM103",
+    "EXE",
+    "F",
+    "FA",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "ISC",
+    "LOG",
+    "N",
+    "PERF",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLF001",
+    "SLOT",
+    "T20",
+    "TID",
+    "TRY",
+    "UP",
+    "W",
+]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+    "ASYNC110",
+    "COM812",
+    "E501",
+    "ISC001",
+    "PERF401",
+    "PTH123",
+    "RUF012",
+    "S110",
+    "TRY003",
+]
 
 [tool.ruff.format]
 indent-style = "space"
 quote-style = "single"
 line-ending = "lf"
+docstring-code-format = true
