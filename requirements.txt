@@ -7,4 +7,4 @@ pyrofork==2.3.47
 tenacity==9.0.0
 tgcrypto-pyrofork==1.2.6
 xmltodict==0.13.0
-uvloop==0.20.0
+uvloop==0.21.0
