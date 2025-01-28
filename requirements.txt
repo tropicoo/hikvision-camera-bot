@@ -1,4 +1,4 @@
-Pillow==11.0.0
+Pillow==11.1.0
 addict==2.4.0
 emoji==2.14.1
 httpx==0.27.2
