@@ -3,7 +3,7 @@ addict==2.4.0
 emoji==2.14.1
 httpx==0.27.2
 marshmallow==3.26.0
-pyrofork==2.3.57
+pyrofork==2.3.58
 tenacity==9.0.0
 tgcrypto-pyrofork==1.2.7
 xmltodict==0.14.2
