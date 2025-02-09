@@ -1,16 +1,17 @@
-import abc
 import asyncio
 import logging
 import signal
+from abc import ABC, abstractmethod
+from pathlib import Path
 
 from hikcamerabot.utils.process import kill_proc
 
 
-class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
+class AbstractFfBinaryTask(ABC):
     _CMD: str | None = None
-    _CMD_TIMEOUT = 60
+    _CMD_TIMEOUT: int = 60
 
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: Path) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._file_path = file_path
 
@@ -20,16 +21,15 @@ class AbstractFfBinaryTask(metaclass=abc.ABCMeta):
         )
         try:
             await asyncio.wait_for(proc.wait(), timeout=self._CMD_TIMEOUT)
-            return proc
         except TimeoutError:
             self._log.error(
-                'Failed to execute %s: process ran longer than '
-                'expected and was killed',
+                'Failed to execute %s: process ran longer than expected and was killed',
                 cmd,
             )
             await kill_proc(process=proc, signal_=signal.SIGINT, reraise=False)
             return None
+        return proc
 
-    @abc.abstractmethod
+    @abstractmethod
     async def run(self) -> None:
         """Main entry point."""

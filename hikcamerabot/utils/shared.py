@@ -6,13 +6,13 @@ import random
 import string
 from collections.abc import Generator
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 from uuid import uuid4
 
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from hikcamerabot.config.config import get_main_config
+from hikcamerabot.config.config import main_conf
 from hikcamerabot.constants import TG_MAX_MSG_SIZE
 from hikcamerabot.enums import CmdSectionType
 
@@ -23,12 +23,13 @@ if TYPE_CHECKING:
 class Singleton(type):
     """Singleton class."""
 
-    _instances = {}
+    _instances: ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs) -> Any:
         """Check whether instance already exists.
 
-        Return existing or create new instance and save it to dict."""
+        Return existing or create new instance and save it to dict.
+        """
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -42,7 +43,7 @@ def gen_uuid() -> str:
     return uuid4().hex
 
 
-def gen_random_str(length=4) -> str:
+def gen_random_str(length: int = 4) -> str:
     return ''.join(
         random.SystemRandom().choice(string.ascii_lowercase + string.digits)
         for _ in range(length)
@@ -71,23 +72,23 @@ def get_user_info(message: Message) -> str:
 def build_command_presentation(
     commands: dict[str, list[str]], cam: 'HikvisionCam'
 ) -> str:
-    groups = []
-    visibility_opts: dict[str, bool] = cam.conf.command_sections_visibility
+    groups: list[str] = []
+    visibility_opts = cam.conf.command_sections_visibility
     for section_desc, cmds in commands.items():
-        if visibility_opts[CmdSectionType(section_desc).name]:
+        if getattr(visibility_opts, CmdSectionType(section_desc).name):
             rendered_cmds = '\n'.join([f'/{cmd}' for cmd in cmds])
             groups.append(f'{section_desc}\n{rendered_cmds}')
     return '\n\n'.join(groups)
 
 
 def setup_logging() -> None:
-    logging.getLogger().setLevel(get_main_config().log_level)
+    logging.getLogger().setLevel(main_conf.log_level)
     logging.getLogger('pyrogram').setLevel(logging.WARNING)
     log_format = '%(asctime)s - [%(levelname)s] - [%(name)s:%(lineno)s] - %(message)s'
     logging.basicConfig(format=log_format)
 
 
-def split_telegram_message(text: str) -> Generator[str, None, None]:
+def split_telegram_message(text: str) -> Generator[str]:
     text_len = len(text)
     if text_len > TG_MAX_MSG_SIZE:
         for x in range(0, text_len, TG_MAX_MSG_SIZE):

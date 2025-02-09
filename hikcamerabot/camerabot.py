@@ -5,7 +5,7 @@ import logging
 
 from pyrogram import Client
 
-from hikcamerabot.config.config import get_main_config
+from hikcamerabot.config.config import main_conf
 from hikcamerabot.event_engine.dispatchers.inbound import InboundEventDispatcher
 from hikcamerabot.event_engine.dispatchers.outbound import OutboundEventDispatcher
 from hikcamerabot.event_engine.workers.manager import ResultWorkerManager
@@ -20,19 +20,18 @@ class CameraBot(Client):
     """Extended pyrogram 'Client' class."""
 
     def __init__(self) -> None:
-        conf = get_main_config()
         super().__init__(
             name='default_client',
-            api_id=conf.telegram.api_id,
-            api_hash=conf.telegram.api_hash,
-            bot_token=conf.telegram.token,
+            api_id=main_conf.telegram.api_id,
+            api_hash=main_conf.telegram.api_hash,
+            bot_token=main_conf.telegram.token,
         )
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.info('Initializing bot client')
 
-        self.chat_users: list[int] = conf.telegram.chat_users
-        self.alert_users: list[int] = conf.telegram.alert_users
-        self.startup_message_users: list[int] = conf.telegram.startup_message_users
+        self.chat_users = main_conf.telegram.chat_users
+        self.alert_users = main_conf.telegram.alert_users
+        self.startup_message_users = main_conf.telegram.startup_message_users
 
         self.cam_registry = CameraRegistry()
         self.inbound_dispatcher = InboundEventDispatcher(bot=self)

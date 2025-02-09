@@ -1,110 +1,85 @@
-from marshmallow import (
-    INCLUDE,
-    Schema,
-    validates_schema,
-)
-from marshmallow import fields as f
-from marshmallow import validate as v
+from typing import Literal
 
-from hikcamerabot.config.schemas.validators import (
-    int_min_1,
-    int_min_minus_1,
-    non_empty_str,
+from hikcamerabot.config.schemas._types import (
+    FfmpegLogLevel,
+    IntMin1,
+    IntMinus1,
 )
-from hikcamerabot.constants import FFMPEG_LOG_LEVELS
+from hikcamerabot.config.schemas.abstract import StrictBaseModel
 from hikcamerabot.enums import RtspTransportType
 
 
-class BaseTemplate(Schema):
-    _inner_validation_schema_cls = None
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._inner_validation_schema = self._inner_validation_schema_cls()
-        self._template_validator = f.String(required=True, validate=non_empty_str)
-
-    @validates_schema
-    def validate_all(self, data: dict, **kwargs) -> None:
-        for tpl_name, tpl_conf in data.items():
-            self._template_validator.validate(tpl_name)
-            self._inner_validation_schema.load(tpl_conf)
-
-    class Meta:
-        unknown = INCLUDE
+class DirectSchema(StrictBaseModel):
+    null_audio: bool
+    loglevel: FfmpegLogLevel
+    vcodec: str
+    acodec: str
+    asample_rate: IntMinus1
+    format: str
+    rtsp_transport_type: RtspTransportType
 
 
-class Direct(BaseTemplate):
-    class _Direct(Schema):
-        null_audio = f.Boolean(required=True)
-        loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
-        vcodec = f.String(required=True, validate=non_empty_str)
-        acodec = f.String(required=True, validate=non_empty_str)
-        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
-        format = f.String(required=True, validate=non_empty_str)
-        rtsp_transport_type = f.String(
-            required=True, validate=v.OneOf(RtspTransportType.choices())
-        )
-
-    _inner_validation_schema_cls = _Direct
+class X264ScaleSchema(StrictBaseModel):
+    enabled: bool
+    width: int
+    height: int
+    format: str
 
 
-class X264(BaseTemplate):
-    class _X264(Schema):
-        class _Scale(Schema):
-            enabled = f.Boolean(required=True)
-            width = f.Integer(required=True)
-            height = f.Integer(required=True)
-            format = f.String(required=True, validate=non_empty_str)
-
-        null_audio = f.Boolean(required=True)
-        loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
-        vcodec = f.String(required=True, validate=non_empty_str)
-        acodec = f.String(required=True, validate=non_empty_str)
-        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
-        format = f.String(required=True, validate=non_empty_str)
-        rtsp_transport_type = f.String(required=True, validate=non_empty_str)
-        pix_fmt = f.String(required=True, validate=non_empty_str)
-        pass_mode = f.Integer(required=True, validate=int_min_1)
-        framerate = f.Integer(required=True, validate=int_min_1)
-        preset = f.String(required=True, validate=non_empty_str)
-        average_bitrate = f.String(required=True, validate=non_empty_str)
-        maxrate = f.String(required=True, validate=non_empty_str)
-        bufsize = f.String(required=True, validate=non_empty_str)
-        tune = f.String(required=True, validate=non_empty_str)
-        scale = f.Nested(_Scale(), required=True)
-
-    _inner_validation_schema_cls = _X264
+class X264Schema(StrictBaseModel):
+    null_audio: bool
+    loglevel: FfmpegLogLevel
+    vcodec: str
+    acodec: str
+    asample_rate: IntMinus1
+    format: str
+    rtsp_transport_type: str
+    pix_fmt: str
+    pass_mode: IntMin1
+    framerate: IntMin1
+    preset: str
+    average_bitrate: str
+    maxrate: str
+    bufsize: str
+    tune: str
+    scale: X264ScaleSchema
 
 
-class Vp9(BaseTemplate):
-    class _Vp9(Schema):
-        class _Scale(Schema):
-            enabled = f.Boolean(required=True)
-            width = f.Integer(required=True, validate=int_min_1)
-            height = f.Integer(required=True)
-            format = f.String(required=True, validate=non_empty_str)
-
-        null_audio = f.Boolean(required=True)
-        loglevel = f.String(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
-        vcodec = f.String(required=True, validate=non_empty_str)
-        acodec = f.String(required=True, validate=non_empty_str)
-        asample_rate = f.Integer(required=True, validate=int_min_minus_1)
-        format = f.String(required=True, validate=non_empty_str)
-        rtsp_transport_type = f.String(required=True, validate=non_empty_str)
-        pix_fmt = f.String(required=True, validate=non_empty_str)
-        pass_mode = f.Integer(required=True, validate=int_min_1)
-        framerate = f.Integer(required=True, validate=int_min_1)
-        average_bitrate = f.String(required=True, validate=non_empty_str)
-        maxrate = f.String(required=True, validate=non_empty_str)
-        bufsize = f.String(required=True, validate=non_empty_str)
-        deadline = f.String(required=True, validate=non_empty_str)
-        speed = f.Integer(required=True, validate=int_min_1)
-        scale = f.Nested(_Scale(), required=True)
-
-    _inner_validation_schema_cls = _Vp9
+class Vp9ScaleSchema(StrictBaseModel):
+    enabled: bool
+    width: IntMin1
+    height: int
+    format: str
 
 
-class Encoding(Schema):
-    direct = f.Nested(Direct(), required=True)
-    x264 = f.Nested(X264(), required=True)
-    vp9 = f.Nested(Vp9(), required=True)
+class Vp9Schema(StrictBaseModel):
+    null_audio: bool
+    loglevel: FfmpegLogLevel
+    vcodec: str
+    acodec: str
+    asample_rate: IntMinus1
+    format: str
+    rtsp_transport_type: str
+    pix_fmt: str
+    pass_mode: IntMin1
+    framerate: IntMin1
+    average_bitrate: str
+    maxrate: str
+    bufsize: str
+    deadline: str
+    speed: IntMin1
+    scale: Vp9ScaleSchema
+
+
+class EncodingTemplatesSchema(StrictBaseModel):
+    direct: dict[str, DirectSchema]
+    x264: dict[str, X264Schema]
+    vp9: dict[str, Vp9Schema]
+
+    def get_by_template_name(
+        self, name: Literal['direct', 'x264', 'vp9']
+    ) -> dict[str, DirectSchema | X264Schema | Vp9Schema]:
+        try:
+            return getattr(self, name)
+        except AttributeError:
+            raise ValueError(f'Invalid template name: {name}') from None

@@ -11,7 +11,13 @@ from hikcamerabot.clients.github.version_checker import (
 )
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
 from hikcamerabot.decorators import authorization_check, camera_selection
-from hikcamerabot.enums import Alarm, Detection, Event, ServiceType, Stream
+from hikcamerabot.enums import (
+    AlarmType,
+    DetectionType,
+    EventType,
+    ServiceType,
+    StreamType,
+)
 from hikcamerabot.event_engine.events.inbound import (
     AlertConfEvent,
     DetectionConfEvent,
@@ -41,7 +47,7 @@ async def cmd_ir_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None
     log.info('Resized cam snapshot from %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_IRCUT_FILTER,
+        event=EventType.CONFIGURE_IRCUT_FILTER,
         message=message,
         filter_type=IrcutFilterType.NIGHT,
     )
@@ -55,7 +61,7 @@ async def cmd_ir_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> Non
     log.info('Resized cam snapshot from %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_IRCUT_FILTER,
+        event=EventType.CONFIGURE_IRCUT_FILTER,
         message=message,
         filter_type=IrcutFilterType.DAY,
     )
@@ -69,7 +75,7 @@ async def cmd_ir_auto(bot: CameraBot, message: Message, cam: HikvisionCam) -> No
     log.info('Resized cam snapshot from %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_IRCUT_FILTER,
+        event=EventType.CONFIGURE_IRCUT_FILTER,
         message=message,
         filter_type=IrcutFilterType.AUTO,
     )
@@ -83,7 +89,7 @@ async def cmd_getpic(bot: CameraBot, message: Message, cam: HikvisionCam) -> Non
     log.info('Resized cam snapshot from %s requested', cam.description)
     event = GetPicEvent(
         cam=cam,
-        event=Event.TAKE_SNAPSHOT,
+        event=EventType.TAKE_SNAPSHOT,
         message=message,
         resize=True,
     )
@@ -97,7 +103,7 @@ async def cmd_getfullpic(bot: CameraBot, message: Message, cam: HikvisionCam) ->
     log.info('Full cam snapshot requested')
     event = GetPicEvent(
         cam=cam,
-        event=Event.TAKE_SNAPSHOT,
+        event=EventType.TAKE_SNAPSHOT,
         message=message,
         resize=False,
     )
@@ -111,7 +117,7 @@ async def cmd_getvideo(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
     log.info('Get video gif requested')
     event = GetVideoEvent(
         cam=cam,
-        event=Event.RECORD_VIDEOGIF,
+        event=EventType.RECORD_VIDEOGIF,
         message=message,
         rewind=False,
     )
@@ -125,7 +131,7 @@ async def cmd_getvideor(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
     log.info('Get rewound video gif requested')
     event = GetVideoEvent(
         cam=cam,
-        event=Event.RECORD_VIDEOGIF,
+        event=EventType.RECORD_VIDEOGIF,
         message=message,
         rewind=True,
     )
@@ -140,7 +146,7 @@ async def cmd_stop(bot: CameraBot, message: Message) -> None:
 
 
 @authorization_check
-async def cmd_app_version(bot: CameraBot, message: Message) -> None:
+async def cmd_app_version(bot: CameraBot, message: Message) -> None:  # noqa: ARG001
     version = await HikCameraBotVersionChecker().get_version()
     text = f'Latest {version.latest}\nCurrent {version.current}'
     await send_text(text=text, message=message, quote=True)
@@ -201,11 +207,11 @@ async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
 async def cmd_intrusion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Intrusion Detection."""
+    """Enable camera's Intrusion DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.INTRUSION,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.INTRUSION,
         message=message,
         state=True,
     )
@@ -217,11 +223,11 @@ async def cmd_intrusion_detection_on(
 async def cmd_intrusion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Intrusion Detection."""
+    """Disable camera's Intrusion DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.INTRUSION,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.INTRUSION,
         message=message,
         state=False,
     )
@@ -233,11 +239,11 @@ async def cmd_intrusion_detection_off(
 async def cmd_motion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Motion Detection."""
+    """Enable camera's Motion DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.MOTION,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.MOTION,
         message=message,
         state=True,
     )
@@ -249,11 +255,11 @@ async def cmd_motion_detection_on(
 async def cmd_motion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Motion Detection."""
+    """Disable camera's Motion DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.MOTION,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.MOTION,
         message=message,
         state=False,
     )
@@ -265,11 +271,11 @@ async def cmd_motion_detection_off(
 async def cmd_line_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Line Crossing Detection."""
+    """Enable camera's Line Crossing DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.LINE,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.LINE,
         message=message,
         state=True,
     )
@@ -281,11 +287,11 @@ async def cmd_line_detection_on(
 async def cmd_line_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Line Crossing Detection."""
+    """Disable camera's Line Crossing DetectionType."""
     event = DetectionConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_DETECTION,
-        type=Detection.LINE,
+        event=EventType.CONFIGURE_DETECTION,
+        type=DetectionType.LINE,
         message=message,
         state=False,
     )
@@ -298,9 +304,9 @@ async def cmd_stream_yt_on(bot: CameraBot, message: Message, cam: HikvisionCam) 
     """Start YouTube stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.YOUTUBE,
+        stream_type=StreamType.YOUTUBE,
         message=message,
         state=True,
     )
@@ -315,9 +321,9 @@ async def cmd_stream_yt_off(
     """Stop YouTube stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.YOUTUBE,
+        stream_type=StreamType.YOUTUBE,
         message=message,
         state=False,
     )
@@ -330,9 +336,9 @@ async def cmd_stream_tg_on(bot: CameraBot, message: Message, cam: HikvisionCam) 
     """Start Telegram stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.TELEGRAM,
+        stream_type=StreamType.TELEGRAM,
         message=message,
         state=True,
     )
@@ -347,9 +353,9 @@ async def cmd_stream_tg_off(
     """Stop Telegram stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.TELEGRAM,
+        stream_type=StreamType.TELEGRAM,
         message=message,
         state=False,
     )
@@ -364,9 +370,9 @@ async def cmd_stream_icecast_on(
     """Start Icecast stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.ICECAST,
+        stream_type=StreamType.ICECAST,
         message=message,
         state=True,
     )
@@ -381,9 +387,9 @@ async def cmd_stream_icecast_off(
     """Stop Icecast stream."""
     event = StreamEvent(
         cam=cam,
-        event=Event.STREAM,
+        event=EventType.STREAM,
         service_type=ServiceType.STREAM,
-        stream_type=Stream.ICECAST,
+        stream_type=StreamType.ICECAST,
         message=message,
         state=False,
     )
@@ -397,9 +403,9 @@ async def cmd_alert_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
     log.info("Enabling camera's alert mode requested")
     event = AlertConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_ALARM,
+        event=EventType.CONFIGURE_ALARM,
         service_type=ServiceType.ALARM,
-        service_name=Alarm.ALARM,
+        service_name=AlarmType.ALARM,
         message=message,
         state=True,
     )
@@ -413,9 +419,9 @@ async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
     log.info("Disabling camera's alert mode requested")
     event = AlertConfEvent(
         cam=cam,
-        event=Event.CONFIGURE_ALARM,
+        event=EventType.CONFIGURE_ALARM,
         service_type=ServiceType.ALARM,
-        service_name=Alarm.ALARM,
+        service_name=AlarmType.ALARM,
         message=message,
         state=False,
     )
@@ -424,11 +430,11 @@ async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
 
 @authorization_check
 async def cmd_help(
-    bot: CameraBot,
+    bot: CameraBot,  # noqa: ARG001
     message: Message,
-    append: bool = False,
-    requested: bool = True,
-    cam_id: str = None,
+    append: bool = False,  # noqa: ARG001
+    requested: bool = True,  # noqa: ARG001
+    cam_id: str | None = None,  # noqa: ARG001
 ) -> None:
     """Send help message to telegram chat."""
     log.info('Help message has been requested from %d', message.chat.id)

@@ -2,7 +2,7 @@
 
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.8. [Release details](releases/release_1.8.md).
+Version: 1.9. [Release details](releases/release_1.9.md).
 
 ## Features
 

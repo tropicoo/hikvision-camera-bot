@@ -1,4 +1,11 @@
-FROM python:3.12-alpine
+FROM python:3.13-alpine3.20
+
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV UV_PYTHON_DOWNLOADS=never
 
 RUN apk add --no-cache \
         ffmpeg \
@@ -7,17 +14,12 @@ RUN apk add --no-cache \
         htop \
         bash
 
-COPY ./requirements.txt /app/requirements.txt
-
 WORKDIR /app
 
-RUN apk add --no-cache --virtual .build-deps \
-        linux-headers \
-        libffi-dev \
-        zlib-dev \
-        build-base \
-    && pip install --upgrade pip setuptools wheel \
-    && MAKEFLAGS="-j$(nproc)" pip install --no-cache-dir -r requirements.txt \
-    && apk --purge del .build-deps
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+    --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv venv /opt/venv && uv sync --frozen
 
 COPY . /app

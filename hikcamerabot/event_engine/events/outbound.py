@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 from io import BytesIO
+from pathlib import Path
 
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from hikcamerabot.enums import Alarm, Detection, Event, ServiceType, Stream
+from hikcamerabot.enums import (
+    AlarmType,
+    DetectionType,
+    EventType,
+    ServiceType,
+    StreamType,
+)
 from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 from hikcamerabot.utils.file import format_bytes
 
@@ -19,8 +26,8 @@ class FileSizeMixin:
 
 @dataclass
 class VideoOutboundEvent(BaseOutboundEvent, FileSizeMixin):
-    thumb_path: str | None
-    video_path: str
+    thumb_path: Path | None
+    video_path: Path
     video_duration: int
     video_height: int
     video_width: int
@@ -32,7 +39,7 @@ class AlertSnapshotOutboundEvent(BaseOutboundEvent, FileSizeMixin):
     img: BytesIO
     ts: int
     resized: bool
-    detection_type: Detection
+    detection_type: DetectionType
     alert_count: int
 
 
@@ -47,7 +54,7 @@ class SnapshotOutboundEvent(BaseOutboundEvent, FileSizeMixin):
 
 @dataclass
 class SendTextOutboundEvent:
-    event: Event
+    event: EventType
     text: str
     parse_mode: ParseMode = ParseMode.HTML
     message: Message | None = None
@@ -56,7 +63,7 @@ class SendTextOutboundEvent:
 @dataclass
 class AlarmConfOutboundEvent(BaseOutboundEvent):
     service_type: ServiceType
-    service_name: Alarm
+    service_name: AlarmType
     state: bool
     message: Message
     text: str | None = None
@@ -65,7 +72,7 @@ class AlarmConfOutboundEvent(BaseOutboundEvent):
 @dataclass
 class StreamOutboundEvent(BaseOutboundEvent):
     service_type: ServiceType
-    stream_type: Stream
+    stream_type: StreamType
     state: bool
     message: Message
     text: str | None = None
@@ -73,7 +80,7 @@ class StreamOutboundEvent(BaseOutboundEvent):
 
 @dataclass
 class DetectionConfOutboundEvent(BaseOutboundEvent):
-    type: Detection
+    type: DetectionType
     state: bool
     message: Message
     text: str | None = None

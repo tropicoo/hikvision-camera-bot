@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from pyrogram.types import Message
 
-from hikcamerabot.enums import Event
+from hikcamerabot.enums import EventType
 
 if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
@@ -12,12 +12,12 @@ if TYPE_CHECKING:
 @dataclass
 class BaseInboundEvent:
     cam: 'HikvisionCam'
-    event: Event
+    event: EventType
     message: Message
 
 
 @dataclass
 class BaseOutboundEvent:
     cam: 'HikvisionCam'
-    event: Event
+    event: EventType
     message: Message | None

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pyrogram.enums import ChatAction
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -11,8 +11,8 @@ from hikcamerabot.services.stream.dvr.upload.tasks.abstract import (
 if TYPE_CHECKING:
     from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile
 
-_UPLOAD_RETRY_WAIT = 5
-_UPLOAD_RETRY_STOP_AFTER = 5
+_UPLOAD_RETRY_WAIT: Final[int] = 5
+_UPLOAD_RETRY_STOP_AFTER: Final[int] = 5
 
 
 class TelegramDvrUploadTask(AbstractDvrUploadTask):
@@ -63,7 +63,7 @@ class TelegramDvrUploadTask(AbstractDvrUploadTask):
         await self._bot.send_video(
             self._conf.group_id,
             caption=caption,
-            video=file_.full_path,
+            video=file_.full_path.as_posix(),
             file_name=file_.name,
             duration=file_.duration or 0,
             height=file_.height or 0,

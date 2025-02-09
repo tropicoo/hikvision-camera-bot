@@ -1,13 +1,16 @@
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
-from addict import Dict
-
+from hikcamerabot.config.schemas.main_config import (
+    BaseDVRStorageUploadConfSchema,
+    DvrLivestreamConfSchema,
+)
 from hikcamerabot.enums import DvrUploadType
 from hikcamerabot.services.stream.dvr.file_wrapper import DvrFile
 from hikcamerabot.services.stream.dvr.tasks.file_delete import DvrFileDeleteTask
 from hikcamerabot.services.stream.dvr.tasks.file_monitoring import DvrFileMonitoringTask
+from hikcamerabot.services.stream.dvr.upload.tasks.abstract import AbstractDvrUploadTask
 from hikcamerabot.services.stream.dvr.upload.tasks.telegram import TelegramDvrUploadTask
 from hikcamerabot.utils.task import create_task
 
@@ -16,24 +19,26 @@ if TYPE_CHECKING:
 
 
 class DvrUploadEngine:
-    _UPLOAD_TASKS = {
+    _UPLOAD_TASKS: ClassVar[dict[DvrUploadType, AbstractDvrUploadTask]] = {
         DvrUploadType.TELEGRAM: TelegramDvrUploadTask,
     }
 
     _FILE_DELETE_TASK_CLS = DvrFileDeleteTask
 
-    def __init__(self, conf: Dict, cam: 'HikvisionCam') -> None:
+    def __init__(self, conf: DvrLivestreamConfSchema, cam: 'HikvisionCam') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._conf = conf
         self._cam = cam
         self._storage_queues = self._create_storage_queues()
-        self._delete_after_upload: bool = self._conf.upload.delete_after_upload
+        self._delete_after_upload = self._conf.upload.delete_after_upload
         self._delete_candidates_queue: asyncio.Queue[DvrFile] = asyncio.Queue()
         self._upload_cache: set[str] = set()
 
     def _create_storage_queues(self) -> dict[str, asyncio.Queue]:
-        storage_queues = {}
-        for storage, settings in self._conf.upload.storage.items():
+        storage_queues: dict[str, asyncio.Queue] = {}
+
+        settings: BaseDVRStorageUploadConfSchema
+        for storage, settings in dict(self._conf.upload.storage).items():
             if settings.enabled:
                 storage_queues[storage] = asyncio.Queue()
 
@@ -81,7 +86,11 @@ class DvrUploadEngine:
             task = self._UPLOAD_TASKS[DvrUploadType(storage)]
             create_task(
                 task(
-                    cam=self._cam, conf=self._conf.upload.storage[storage], queue=queue
+                    cam=self._cam,
+                    conf=self._conf.upload.storage.get_storage_conf_by_type(
+                        type_=storage
+                    ),
+                    queue=queue,
                 ).run(),
                 task_name=task.__name__,
                 logger=self._log,

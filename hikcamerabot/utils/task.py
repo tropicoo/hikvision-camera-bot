@@ -11,8 +11,8 @@ T = TypeVar('T')
 def create_task(
     coroutine: Awaitable[T],
     logger: logging.Logger,
-    loop: asyncio.AbstractEventLoop = None,
-    task_name: str = None,
+    loop: asyncio.AbstractEventLoop | None = None,
+    task_name: str | None = None,
     exception_message: str = 'Task raised an exception',
     exception_message_args: tuple[Any, ...] = (),
     thread_safe: bool = False,

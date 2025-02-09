@@ -15,7 +15,7 @@ class ResultWorkerManager:
         self,
         dispatcher: 'OutboundEventDispatcher',
         worker_num: int = _DEFAULT_WORKER_NUM,
-    ):
+    ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._outbound_dispatcher = dispatcher
         self._workers = []

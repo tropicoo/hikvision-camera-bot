@@ -5,12 +5,9 @@ from hikcamerabot.version import __version__
 
 
 class BotLauncher:
-    """Bot launcher which parses configuration file, creates bot with
-    camera instances and finally starts the bot.
-    """
+    """Bot launcher which parses configuration file, creates bot with camera instances and finally starts the bot."""
 
     def __init__(self) -> None:
-        """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
         bot_setup = BotSetup()
         bot_setup.perform_setup()

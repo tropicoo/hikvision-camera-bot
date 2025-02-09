@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
-from hikcamerabot.enums import Alarm, Detection, ServiceType, Stream
+from hikcamerabot.enums import AlarmType, DetectionType, ServiceType, StreamType
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 
 
@@ -22,19 +22,19 @@ class GetVideoEvent(BaseInboundEvent):
 
 @dataclass
 class DetectionConfEvent(BaseInboundEvent):
-    type: Detection
+    type: DetectionType
     state: bool
 
 
 @dataclass
 class StreamEvent(BaseInboundEvent):
     service_type: ServiceType
-    stream_type: Stream
+    stream_type: StreamType
     state: bool
 
 
 @dataclass
 class AlertConfEvent(BaseInboundEvent):
     service_type: ServiceType
-    service_name: Alarm
+    service_name: AlarmType
     state: bool

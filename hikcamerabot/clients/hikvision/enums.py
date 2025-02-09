@@ -1,19 +1,14 @@
-import enum
+from hikcamerabot.enums import BaseUniqueChoiceStrEnum
 
 
-class AuthType(enum.Enum):
+class AuthType(BaseUniqueChoiceStrEnum):
     BASIC = 'basic'
     DIGEST = 'digest'
     DIGEST_CACHED = 'digest_cached'
 
-    @classmethod
-    def choices(cls) -> frozenset[str]:
-        return frozenset(member.value for member in cls)
 
-
-@enum.unique
-class EndpointAddr(enum.Enum):
-    ALERT_STREAM = 'ISAPI/Event/notification/alertStream'
+class EndpointAddr(BaseUniqueChoiceStrEnum):
+    ALERT_STREAM = 'ISAPI/EventType/notification/alertStream'
     CHANNEL_CAPABILITIES = 'ISAPI/Image/channels/1/capabilities'
     EXPOSURE = 'ISAPI/Image/channels/1/exposure'
     IRCUT_FILTER = 'ISAPI/Image/channels/1/ircutFilter'
@@ -23,27 +18,21 @@ class EndpointAddr(enum.Enum):
     PICTURE = 'ISAPI/Streaming/channels/{channel}/picture?snapShotImageType=JPEG'
 
 
-@enum.unique
-class _BaseEndpointEnum(enum.Enum):
-    def __str__(self) -> str:
-        return str(self.value)
-
-
-class IrcutFilterType(_BaseEndpointEnum):
+class IrcutFilterType(BaseUniqueChoiceStrEnum):
     AUTO = 'auto'
     DAY = 'day'
     NIGHT = 'night'
 
 
-class ExposureType(_BaseEndpointEnum):
+class ExposureType(BaseUniqueChoiceStrEnum):
     MANUAL = 'manual'
 
 
-class OverexposeSuppressType(_BaseEndpointEnum):
+class OverexposeSuppressType(BaseUniqueChoiceStrEnum):
     AUTO = 'AUTO'
     MANUAL = 'MANUAL'
 
 
-class OverexposeSuppressEnabledType(_BaseEndpointEnum):
+class OverexposeSuppressEnabledType(BaseUniqueChoiceStrEnum):
     TRUE = 'true'
     FALSE = 'false'

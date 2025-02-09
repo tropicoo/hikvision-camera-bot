@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from hikcamerabot.enums import Detection
+from hikcamerabot.enums import DetectionType
 from hikcamerabot.services.alarm.camera.tasks.notifications import (
     AlarmPicNotificationTask,
     AlarmTextMessageNotificationTask,
@@ -25,7 +25,7 @@ class AlarmNotifier:
         self._cam = cam
         self._alert_count = alert_count
 
-    def notify(self, detection_type: Detection) -> None:
+    def notify(self, detection_type: DetectionType) -> None:
         for task_cls in self.ALARM_NOTIFICATION_TASKS:
             cls_name = task_cls.__name__
             self._log.info(

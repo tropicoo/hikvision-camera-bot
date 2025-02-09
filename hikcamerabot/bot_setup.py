@@ -9,7 +9,7 @@ from hikcamerabot.callbacks import cmd_list_group_cams
 from hikcamerabot.camera import HikvisionCam
 from hikcamerabot.camerabot import CameraBot
 from hikcamerabot.commands import setup_commands
-from hikcamerabot.config.config import get_main_config
+from hikcamerabot.config.config import main_conf
 from hikcamerabot.utils.shared import build_command_presentation
 
 
@@ -18,7 +18,6 @@ class BotSetup:
 
     def __init__(self) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
-        self._conf = get_main_config()
         self._bot = CameraBot()
 
     def perform_setup(self) -> None:
@@ -34,7 +33,7 @@ class BotSetup:
         """
         tpl_cmds, global_cmds = setup_commands()
 
-        for cam_id, cam_conf in self._conf.camera_list.items():
+        for cam_id, cam_conf in main_conf.camera_list.items():
             if cam_conf.hidden:
                 self._log.info(
                     '[%s] Do not initialize camera "%s" because it is hidden',
@@ -45,12 +44,12 @@ class BotSetup:
 
             cam_cmds = defaultdict(list)
             for description, group in tpl_cmds.items():
-                for cmd, callback in group['commands'].items():
-                    cmd = cmd.format(cam_id)
+                for cmd_, callback in group['commands'].items():
+                    cmd = cmd_.format(cam_id)
                     cam_cmds[description].append(cmd)
                     self._setup_message_handler(callback, cmd)
 
-            cam = HikvisionCam(id=cam_id, conf=cam_conf, bot=self._bot)
+            cam = HikvisionCam(id_=cam_id, conf=cam_conf, bot=self._bot)
             self._bot.cam_registry.add(
                 cam=cam,
                 commands=cam_cmds,

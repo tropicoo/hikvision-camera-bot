@@ -1,14 +1,16 @@
-from marshmallow import Schema
+from typing import Final
 
-from hikcamerabot.config.schemas.encoding import Encoding
-from hikcamerabot.config.schemas.livestream import Livestream
-from hikcamerabot.config.schemas.main_config import MainConfig
+from pydantic import BaseModel
+
+from hikcamerabot.config.schemas.encoding import EncodingTemplatesSchema
+from hikcamerabot.config.schemas.livestream import LivestreamTemplatesSchema
+from hikcamerabot.config.schemas.main_config import MainConfigSchema
 from hikcamerabot.enums import ConfigFile
 
-CONFIG_SCHEMA_MAPPING: dict[ConfigFile, type[Schema]] = {
-    ConfigFile.MAIN: MainConfig,
-    ConfigFile.LIVESTREAM: Livestream,
-    ConfigFile.ENCODING: Encoding,
+CONFIG_SCHEMA_MAPPING: Final[dict[ConfigFile, type[BaseModel]]] = {
+    ConfigFile.MAIN: MainConfigSchema,
+    ConfigFile.LIVESTREAM: LivestreamTemplatesSchema,
+    ConfigFile.ENCODING: EncodingTemplatesSchema,
 }
 
 __all__ = [

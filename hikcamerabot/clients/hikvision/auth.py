@@ -10,7 +10,7 @@ class DigestAuthCached(httpx.DigestAuth):
 
     def auth_flow(
         self, request: httpx.Request
-    ) -> Generator[httpx.Request, httpx.Response, None]:
+    ) -> Generator[httpx.Request, httpx.Response]:
         if self.__challenge:
             request.headers['Authorization'] = self._build_auth_header(
                 request, self.__challenge

@@ -1,12 +1,12 @@
-import abc
 import logging
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from emoji import emojize
 from pyrogram.enums import ParseMode
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
-from hikcamerabot.enums import Detection, Event, VideoGifType
+from hikcamerabot.enums import DetectionType, EventType, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
     AlertSnapshotOutboundEvent,
     SendTextOutboundEvent,
@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from hikcamerabot.camera import HikvisionCam
 
 
-class AbstractAlertNotificationTask(metaclass=abc.ABCMeta):
+class AbstractAlertNotificationTask(ABC):
     def __init__(
-        self, detection_type: Detection, cam: 'HikvisionCam', alert_count: int
+        self, detection_type: DetectionType, cam: 'HikvisionCam', alert_count: int
     ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._detection_type = detection_type
@@ -31,21 +31,23 @@ class AbstractAlertNotificationTask(metaclass=abc.ABCMeta):
         self._log.info('Starting %s', self.__class__.__name__)
         await self._run()
 
-    @abc.abstractmethod
+    @abstractmethod
     async def _run(self) -> None:
         pass
 
 
 class AlarmTextMessageNotificationTask(AbstractAlertNotificationTask):
     async def _run(self) -> None:
-        if self._cam.conf.alert[self._detection_type.value].send_text:
+        if self._cam.conf.alert.get_detection_schema_by_type(
+            type_=self._detection_type.value
+        ).send_text:
             await self._send_alert_text()
 
     async def _send_alert_text(self) -> None:
-        detection_name: str = DETECTION_SWITCH_MAP[self._detection_type]['name'].value
+        detection_name = DETECTION_SWITCH_MAP[self._detection_type]['name']
         await self._result_queue.put(
             SendTextOutboundEvent(
-                event=Event.SEND_TEXT,
+                event=EventType.SEND_TEXT,
                 text=emojize(
                     f':rotating_light: <b>Alert on "{self._cam.id} - '
                     f'{self._cam.description}": {detection_name}</b>',
@@ -58,29 +60,37 @@ class AlarmTextMessageNotificationTask(AbstractAlertNotificationTask):
 
 class AlarmVideoGifNotificationTask(AbstractAlertNotificationTask):
     async def _run(self) -> None:
-        if self._cam.conf.alert[self._detection_type.value].send_videogif:
+        if self._cam.conf.alert.get_detection_schema_by_type(
+            type_=self._detection_type.value
+        ).send_videogif:
             await self._start_videogif_record()
 
     async def _start_videogif_record(self) -> None:
         await self._cam.start_videogif_record(
             video_type=VideoGifType.ON_ALERT,
-            rewind=self._cam.conf.video_gif[VideoGifType.ON_ALERT.value].rewind,
+            rewind=self._cam.conf.video_gif.get_schema_by_type(
+                type_=VideoGifType.ON_ALERT.value
+            ).rewind,
         )
 
 
 class AlarmPicNotificationTask(AbstractAlertNotificationTask):
     async def _run(self) -> None:
-        if self._cam.conf.alert[self._detection_type.value].sendpic:
+        if self._cam.conf.alert.get_detection_schema_by_type(
+            type_=self._detection_type.value
+        ).sendpic:
             await self._send_pic()
 
     async def _send_pic(self) -> None:
         channel: int = self._cam.conf.picture.on_alert.channel
-        resize = not self._cam.conf.alert[self._detection_type.value].fullpic
+        resize = not self._cam.conf.alert.get_detection_schema_by_type(
+            type_=self._detection_type.value
+        ).fullpic
         photo, ts = await self._cam.take_snapshot(channel=channel, resize=resize)
         await self._result_queue.put(
             AlertSnapshotOutboundEvent(
                 cam=self._cam,
-                event=Event.ALERT_SNAPSHOT,
+                event=EventType.ALERT_SNAPSHOT,
                 img=photo,
                 ts=ts,
                 resized=resize,

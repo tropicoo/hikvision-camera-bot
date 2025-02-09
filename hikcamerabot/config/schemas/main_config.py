@@ -1,198 +1,199 @@
-"""Marshmallow (sorry, no Pydantic) validation config schemas."""
+from abc import ABC
+from pathlib import Path
+from typing import Annotated, Literal, Self
 
-from marshmallow import (
-    INCLUDE,
-    Schema,
-    ValidationError,
-    validates_schema,
-)
-from marshmallow import (
-    fields as f,
-)
-from marshmallow import (
-    validate as v,
-)
+from pydantic import Field, model_validator
 
 from hikcamerabot.clients.hikvision.enums import AuthType
-from hikcamerabot.config.schemas.validators import int_min_1, non_empty_str
-from hikcamerabot.constants import CMD_CAM_ID_REGEX, FFMPEG_LOG_LEVELS
+from hikcamerabot.config.schemas._types import (
+    FfmpegLogLevel,
+    IntMin0,
+    IntMin1,
+    PythonLogLevel,
+)
+from hikcamerabot.config.schemas.abstract import StrictBaseModel
+from hikcamerabot.constants import CMD_CAM_ID_REGEX
 from hikcamerabot.enums import RtspTransportType
 
 
-class LivestreamConf(Schema):
-    enabled = f.Boolean(required=True)
-    livestream_template = f.Str(required=True, validate=non_empty_str)
-    encoding_template = f.Str(required=True, validate=non_empty_str)
+class LivestreamConfSchema(StrictBaseModel):
+    enabled: bool
+    livestream_template: str
+    encoding_template: str
 
 
-class TelegramDvrUploadConf(Schema):
-    enabled = f.Boolean(required=True)
-    group_id = f.Int(required=True, allow_none=True)
+class BaseDVRStorageUploadConfSchema(StrictBaseModel, ABC):
+    enabled: bool
+    group_id: int | None
+
+    @model_validator(mode='after')
+    def validate_group_id(self) -> Self:
+        if self.enabled and self.group_id is None:
+            raise ValueError('Group ID must be set when storage is enabled')
+        return self
 
 
-class DvrUploadStorageConf(Schema):
-    telegram = f.Nested(TelegramDvrUploadConf(), required=True)
-
-
-class DvrUploadConf(Schema):
-    delete_after_upload = f.Boolean(required=True)
-    storage = f.Nested(DvrUploadStorageConf(), required=True)
-
-
-class DvrLivestreamConf(LivestreamConf):
-    local_storage_path = f.Str(required=True, validate=non_empty_str)
-    upload = f.Nested(DvrUploadConf(), required=True)
-
-
-class Livestream(Schema):
-    srs = f.Nested(LivestreamConf(), required=True)
-    dvr = f.Nested(DvrLivestreamConf(), required=True)
-    youtube = f.Nested(LivestreamConf(), required=True)
-    telegram = f.Nested(LivestreamConf(), required=True)
-    icecast = f.Nested(LivestreamConf(), required=True)
-
-
-class Detection(Schema):
-    enabled = f.Boolean(required=True)
-    sendpic = f.Boolean(required=True)
-    fullpic = f.Boolean(required=True)
-    send_videogif = f.Boolean(required=True)
-    send_text = f.Boolean(required=True)
-
-
-class VideoGifOnDemand(Schema):
-    channel = f.Int(required=True)
-    record_time = f.Int(required=True, validate=int_min_1)
-    rewind_time = f.Int(required=True, validate=int_min_1)
-    tmp_storage = f.Str(required=True, validate=non_empty_str)
-    loglevel = f.Str(required=True, validate=v.OneOf(FFMPEG_LOG_LEVELS))
-    rtsp_transport_type = f.Str(
-        required=True, validate=v.OneOf(RtspTransportType.choices())
-    )
-
-
-class VideoGifOnAlert(VideoGifOnDemand):
-    rewind = f.Boolean(required=True)
-
-
-class VideoGif(Schema):
-    on_alert = f.Nested(VideoGifOnAlert(), required=True)
-    on_demand = f.Nested(VideoGifOnDemand(), required=True)
-
-
-class PictureOnAlert(Schema):
-    channel = f.Int(required=True)
-
-
-class PictureOnDemand(PictureOnAlert):
+class TelegramDvrUploadConfSchema(BaseDVRStorageUploadConfSchema):
     pass
 
 
-class Picture(Schema):
-    on_alert = f.Nested(PictureOnAlert(), required=True)
-    on_demand = f.Nested(PictureOnDemand(), required=True)
+class DvrUploadStorageConfSchema(StrictBaseModel):
+    telegram: TelegramDvrUploadConfSchema
+
+    def get_storage_conf_by_type(self, type_: str) -> BaseDVRStorageUploadConfSchema:
+        try:
+            return getattr(self, type_)
+        except AttributeError:
+            raise ValueError(f'Invalid storage type: {type_}') from None
 
 
-class Alert(Schema):
-    delay = f.Int(required=True, validate=v.Range(min=0))
-    motion_detection = f.Nested(Detection(), required=True)
-    line_crossing_detection = f.Nested(Detection(), required=True)
-    intrusion_detection = f.Nested(Detection(), required=True)
+class DvrUploadConfSchema(StrictBaseModel):
+    delete_after_upload: bool
+    storage: DvrUploadStorageConfSchema
 
 
-class CamAPIAuth(Schema):
-    user = f.Str(required=True, validate=non_empty_str)
-    password = f.Str(required=True, validate=non_empty_str)
-    type = f.Str(required=True, validate=v.OneOf(AuthType.choices()))
+class DvrLivestreamConfSchema(LivestreamConfSchema):
+    local_storage_path: Path
+    upload: DvrUploadConfSchema
 
 
-class CamAPI(Schema):
-    host = f.Str(required=True, validate=non_empty_str)
-    port = f.Int(required=True, validate=int_min_1)
-    auth = f.Nested(CamAPIAuth(), required=True)
-    stream_timeout = f.Int(required=True, validate=int_min_1)
+class LivestreamSchema(StrictBaseModel):
+    srs: LivestreamConfSchema
+    dvr: DvrLivestreamConfSchema
+    youtube: LivestreamConfSchema
+    telegram: LivestreamConfSchema
+    icecast: LivestreamConfSchema
 
 
-class CmdSectionsVisibility(Schema):
-    general = f.Boolean(required=True)
-    infrared = f.Boolean(required=True)
-    motion_detection = f.Boolean(required=True)
-    line_detection = f.Boolean(required=True)
-    intrusion_detection = f.Boolean(required=True)
-    alert_service = f.Boolean(required=True)
-    stream_youtube = f.Boolean(required=True)
-    stream_telegram = f.Boolean(required=True)
-    stream_icecast = f.Boolean(required=True)
+class VideoGifOnDemandSchema(StrictBaseModel):
+    channel: int
+    record_time: IntMin1
+    rewind_time: IntMin1
+    tmp_storage: Path
+    loglevel: FfmpegLogLevel
+    rtsp_transport_type: RtspTransportType
 
 
-class Nvr(Schema):
-    is_behind = f.Boolean(required=True)
-    channel_name = f.Str(required=True, allow_none=True)
-
-    @validates_schema
-    def validate_all(self, data: dict[str, dict], **kwargs) -> None:
-        if data['is_behind'] and not data['channel_name']:
-            raise ValidationError(
-                'When camera is behind NVR, channel name should be set'
-            )
+class VideoGifOnAlertSchema(VideoGifOnDemandSchema):
+    rewind: bool
 
 
-class CameraListConfig(Schema):
-    class _CameraListConfig(Schema):
-        hidden = f.Boolean(required=True)
-        description = f.Str(required=True, validate=non_empty_str)
-        hashtag = f.Str(required=True, allow_none=True)
-        group = f.Str(required=True, allow_none=True)
-        api = f.Nested(CamAPI(), required=True)
-        rtsp_port = f.Int(required=True)
-        nvr = f.Nested(Nvr(), required=True)
-        picture = f.Nested(Picture(), required=True)
-        video_gif = f.Nested(VideoGif(), required=True)
-        alert = f.Nested(Alert(), required=True)
-        livestream = f.Nested(Livestream(), required=True)
-        command_sections_visibility = f.Nested(CmdSectionsVisibility(), required=True)
+class VideoGifSchema(StrictBaseModel):
+    on_alert: VideoGifOnAlertSchema
+    on_demand: VideoGifOnDemandSchema
 
-        class Meta:
-            ordered = True
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._inner_validation_schema = self._CameraListConfig()
-        self._cam_id_validator = f.Str(
-            required=True,
-            validate=v.Regexp(
-                CMD_CAM_ID_REGEX,
-                error='Check main config. Bad camera ID syntax, example: "cam_1"',
-            ),
-        )
-
-    @validates_schema
-    def validate_all(self, data: dict[str, dict], **kwargs) -> None:
-        for cam_id, cam_conf in data.items():
-            self._cam_id_validator.validate(cam_id)
-            self._inner_validation_schema.load(cam_conf)
-
-    class Meta:
-        unknown = INCLUDE
-        ordered = True
+    def get_schema_by_type(
+        self, type_: Literal['on_alert', 'on_demand']
+    ) -> VideoGifOnDemandSchema | VideoGifOnAlertSchema:
+        try:
+            return getattr(self, type_)
+        except AttributeError:
+            raise ValueError(f'Invalid VideoGifType: {type_}') from None
 
 
-class Telegram(Schema):
-    api_id = f.Int(required=True, validate=int_min_1)
-    api_hash = f.Str(required=True, validate=non_empty_str)
-    lang_code = f.Str(required=True, validate=non_empty_str)
-    token = f.Str(required=True, validate=non_empty_str)
-    chat_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
-    alert_users = f.List(f.Int(required=True), required=True, validate=non_empty_str)
-    startup_message_users = f.List(f.Int(required=True), required=True)
+class PictureOnAlertSchema(StrictBaseModel):
+    channel: int
 
 
-class MainConfig(Schema):
-    _APP_LOG_LEVELS = {'DEBUG', 'WARNING', 'INFO', 'ERROR', 'CRITICAL'}
+class PictureOnDemandSchema(PictureOnAlertSchema):
+    pass
 
-    telegram = f.Nested(Telegram(), required=True)
-    log_level = f.Str(required=True, validate=v.OneOf(_APP_LOG_LEVELS))
-    camera_list = f.Nested(CameraListConfig(), required=True)
 
-    class Meta:
-        ordered = True
+class PictureSchema(StrictBaseModel):
+    on_alert: PictureOnAlertSchema
+    on_demand: PictureOnDemandSchema
+
+
+class DetectionSchema(StrictBaseModel):
+    enabled: bool
+    sendpic: bool
+    fullpic: bool
+    send_videogif: bool
+    send_text: bool
+
+
+class AlertSchema(StrictBaseModel):
+    delay: IntMin0
+    motion_detection: DetectionSchema
+    line_crossing_detection: DetectionSchema
+    intrusion_detection: DetectionSchema
+
+    def get_detection_schema_by_type(
+        self,
+        type_: Literal[
+            'motion_detection', 'line_crossing_detection', 'intrusion_detection'
+        ],
+    ) -> DetectionSchema:
+        try:
+            return getattr(self, type_)
+        except AttributeError:
+            raise ValueError(f'Invalid DetectionType: {type_}') from None
+
+
+class CamAPIAuthSchema(StrictBaseModel):
+    user: str
+    password: str
+    type: AuthType
+
+
+class CamAPISchema(StrictBaseModel):
+    host: str
+    port: IntMin1
+    auth: CamAPIAuthSchema
+    stream_timeout: IntMin1
+
+
+class CmdSectionsVisibilitySchema(StrictBaseModel):
+    general: bool
+    infrared: bool
+    motion_detection: bool
+    line_detection: bool
+    intrusion_detection: bool
+    alert_service: bool
+    stream_youtube: bool
+    stream_telegram: bool
+    stream_icecast: bool
+
+
+class NvrSchema(StrictBaseModel):
+    is_behind: bool
+    channel_name: str | None
+
+    @model_validator(mode='after')
+    def validate_nvr(self) -> Self:
+        if self.is_behind and self.channel_name is None:
+            raise ValueError('When camera is behind NVR, channel name must be set')
+        return self
+
+
+class CameraConfigSchema(StrictBaseModel):
+    hidden: bool
+    description: str
+    hashtag: str | None
+    group: str | None
+    api: CamAPISchema
+    rtsp_port: int
+    nvr: NvrSchema
+    picture: PictureSchema
+    video_gif: VideoGifSchema
+    alert: AlertSchema
+    livestream: LivestreamSchema
+    command_sections_visibility: CmdSectionsVisibilitySchema
+
+
+class TelegramSchema(StrictBaseModel):
+    api_id: IntMin1
+    api_hash: str
+    lang_code: str
+    token: str
+    chat_users: list[int]
+    alert_users: list[int]
+    startup_message_users: list[int]
+
+
+class MainConfigSchema(StrictBaseModel):
+    telegram: TelegramSchema
+    log_level: PythonLogLevel
+    camera_list: dict[
+        Annotated[str, Field(pattern=CMD_CAM_ID_REGEX)], CameraConfigSchema
+    ]

@@ -1,8 +1,8 @@
-import abc
 import logging
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Union
 
-from hikcamerabot.enums import Alarm, Detection, Stream
+from hikcamerabot.enums import AlarmType, DetectionType, StreamType
 from hikcamerabot.event_engine.queue import get_result_queue
 
 if TYPE_CHECKING:
@@ -11,11 +11,11 @@ if TYPE_CHECKING:
     from hikcamerabot.services.stream.abstract import AbstractStreamService
 
 
-class AbstractService(metaclass=abc.ABCMeta):
+class AbstractService(ABC):
     """Base Service Class."""
 
-    name: Detection | None = None
-    type: Alarm | Stream | None = None
+    NAME: DetectionType | None = None
+    TYPE: AlarmType | StreamType | None = None
 
     def __init__(self, cam: 'HikvisionCam') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -25,27 +25,27 @@ class AbstractService(metaclass=abc.ABCMeta):
     def __str__(self) -> str:
         return self._cls_name
 
-    @abc.abstractmethod
+    @abstractmethod
     async def start(self) -> None:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     async def stop(self) -> None:
         pass
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def started(self) -> bool:
         pass
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def enabled_in_conf(self) -> bool:
         pass
 
 
-class AbstractServiceTask(abc.ABC):
-    type: str | None = None
+class AbstractServiceTask(ABC):
+    TYPE: str | None = None
     _event_manager_cls = None
 
     def __init__(
@@ -61,6 +61,6 @@ class AbstractServiceTask(abc.ABC):
         self._cls_name = self.__class__.__name__
         self._result_queue = get_result_queue()
 
-    @abc.abstractmethod
+    @abstractmethod
     async def run(self) -> None:
         """Main async task entry point."""

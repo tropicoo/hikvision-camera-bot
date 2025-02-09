@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 import xmltodict
 
 from hikcamerabot.clients.hikvision.enums import EndpointAddr
-from hikcamerabot.constants import DETECTION_SWITCH_MAP
-from hikcamerabot.enums import Detection
+from hikcamerabot.constants import DETECTION_SWITCH_MAP, XML_HEADERS
+from hikcamerabot.enums import DetectionType
 from hikcamerabot.exceptions import APIRequestError, HikvisionAPIError
 
 if TYPE_CHECKING:
@@ -14,23 +14,24 @@ if TYPE_CHECKING:
 
 
 class CameraConfigSwitch:
-    SWITCH_ENABLED_XML = r'<enabled>{0}</enabled>'
-    SWITCH_INFRARED_XML = (
+    SWITCH_ENABLED_XML: str = r'<enabled>{0}</enabled>'
+    SWITCH_INFRARED_XML: str = (
         r'<IrcutFilter>'
         r'<IrcutFilterType>{filter_type}</IrcutFilterType>'
         r'<nightToDayFilterLevel>4</nightToDayFilterLevel>'
         r'<nightToDayFilterTime>5</nightToDayFilterTime>'
         r'</IrcutFilter>'
     )
-    XML_HEADERS = {'Content-Type': 'application/xml'}
 
     def __init__(self, api_client: 'HikvisionAPIClient') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._api_client = api_client
 
-    async def switch_enabled_state(self, trigger: Detection, state: bool) -> str | None:
-        endpoint: EndpointAddr = EndpointAddr[trigger.value.upper()]
-        full_name: str = DETECTION_SWITCH_MAP[trigger]['name'].value
+    async def switch_enabled_state(
+        self, trigger: DetectionType, state: bool
+    ) -> str | None:
+        endpoint = EndpointAddr[trigger.value.upper()]
+        full_name = DETECTION_SWITCH_MAP[trigger]['name']
         try:
             is_enabled, xml = await self._get_switch_state(trigger, endpoint)
         except APIRequestError:
@@ -40,7 +41,7 @@ class CameraConfigSwitch:
         except KeyError as err:
             err_msg = f'Failed to verify API response for {full_name}: {err}'
             self._log.error(err_msg)
-            raise HikvisionAPIError(err_msg)
+            raise HikvisionAPIError(err_msg) from err
 
         if is_enabled and state:
             return f'{full_name} already enabled'
@@ -50,7 +51,7 @@ class CameraConfigSwitch:
         xml_payload = self._prepare_xml_payload(xml, state)
         try:
             response = await self._api_client.request(
-                endpoint, headers=self.XML_HEADERS, data=xml_payload, method='PUT'
+                endpoint, headers=XML_HEADERS, data=xml_payload, method='PUT'
             )
             response = response.text
         except APIRequestError:
@@ -63,12 +64,12 @@ class CameraConfigSwitch:
         return None
 
     async def _get_switch_state(
-        self, name: Detection, endpoint: EndpointAddr
+        self, name: DetectionType, endpoint: EndpointAddr
     ) -> tuple[bool, str]:
         response = await self._api_client.request(endpoint, method='GET')
         xml = response.text
         xml_dict = xmltodict.parse(xml)
-        state: str = xml_dict[DETECTION_SWITCH_MAP[name]['method'].value]['enabled']
+        state: str = xml_dict[DETECTION_SWITCH_MAP[name]['method']]['enabled']
         return state == 'true', xml
 
     def _parse_response_xml(self, response: str) -> None:
@@ -81,7 +82,7 @@ class CameraConfigSwitch:
         except KeyError as err:
             err_msg = f'Failed to parse response XML: {err}'
             self._log.error(err)
-            raise HikvisionAPIError(err_msg)
+            raise HikvisionAPIError(err_msg) from err
 
     def _prepare_xml_payload(self, xml: str, enable: bool) -> str:
         regex = self.SWITCH_ENABLED_XML.format(r'[a-z]+')

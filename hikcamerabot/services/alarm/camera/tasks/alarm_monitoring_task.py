@@ -3,7 +3,7 @@ import time
 from httpx import ConnectError
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
-from hikcamerabot.enums import Detection, ServiceType
+from hikcamerabot.enums import DetectionType, ServiceType
 from hikcamerabot.exceptions import AlarmEventChunkDetectorError, ChunkLoopError
 from hikcamerabot.services.abstract import AbstractServiceTask
 from hikcamerabot.services.alarm.camera.chunk import AlarmEventChunkDetector
@@ -15,7 +15,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
 
     type = ServiceType.ALARM
 
-    RETRY_WAIT = 0.5
+    RETRY_WAIT: float = 0.5
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -40,7 +40,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             raise
         except ConnectError:
             self._log.error(
-                '[%s] Failed to connect to Alert Stream. Retrying in %s seconds...',
+                '[%s] Failed to connect to Alert StreamType. Retrying in %s seconds...',
                 self._cam.id,
                 self.RETRY_WAIT,
             )
@@ -79,7 +79,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
         else:
             raise ChunkLoopError
 
-    def _send_alerts(self, detection_type: Detection) -> None:
+    def _send_alerts(self, detection_type: DetectionType) -> None:
         self._log.info('[%s] Sending %s alerts', self._cam.id, detection_type)
         # TODO: Put to queue and await everything, don't schedule tasks.
         self._alert_notifier.notify(detection_type)

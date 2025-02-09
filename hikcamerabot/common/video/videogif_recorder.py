@@ -18,7 +18,6 @@ class VideoGifRecorder:
     """Video Gif Manager Class."""
 
     def __init__(self, cam: 'HikvisionCam') -> None:
-        """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
         self._cam = cam
         self._proc_task_queue = deque()

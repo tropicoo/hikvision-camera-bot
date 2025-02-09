@@ -1,9 +1,9 @@
 """Icecast Livestream module."""
 
-from hikcamerabot.constants import (
-    FFMPEG_CMD_TRANSCODE_ICECAST,
-)
-from hikcamerabot.enums import Stream, VideoEncoder
+from typing import Literal
+
+from hikcamerabot.constants import FFMPEG_CMD_TRANSCODE_ICECAST
+from hikcamerabot.enums import StreamType, VideoEncoderType
 from hikcamerabot.exceptions import ServiceConfigError
 from hikcamerabot.services.stream.abstract import (
     AbstractExternalLivestreamService,
@@ -13,18 +13,18 @@ from hikcamerabot.services.stream.abstract import (
 class IcecastStreamService(AbstractExternalLivestreamService):
     """Icecast livestream Class."""
 
-    name = Stream.ICECAST
+    NAME: Literal[StreamType.ICECAST] = StreamType.ICECAST
 
     def _generate_transcode_cmd(
-        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoder
+        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoderType
     ) -> None:
         try:
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()
-        except KeyError:
+        except KeyError as err:
             raise ServiceConfigError(
                 f'{self._cls_name} does not support {enc_codec_name} streaming,'
                 f' change template type'
-            )
+            ) from err
         icecast_args = FFMPEG_CMD_TRANSCODE_ICECAST.format(
             ice_genre=self._stream_conf.ice_stream.ice_genre,
             ice_name=self._stream_conf.ice_stream.ice_name,

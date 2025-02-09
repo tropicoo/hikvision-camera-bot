@@ -6,12 +6,12 @@ from datetime import datetime
 from io import BytesIO
 from typing import TYPE_CHECKING
 
-from addict import Dict
 from pyrogram.types import Message
 
 from hikcamerabot.clients.hikvision import HikvisionAPI, HikvisionAPIClient
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
 from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
+from hikcamerabot.config.schemas.main_config import CameraConfigSchema
 from hikcamerabot.enums import VideoGifType
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
 from hikcamerabot.services.abstract import AbstractService
@@ -34,7 +34,11 @@ class ServiceContainer:
     """Container class for all services."""
 
     def __init__(
-        self, conf: Dict, api: HikvisionAPI, cam: 'HikvisionCam', bot: 'CameraBot'
+        self,
+        conf: CameraConfigSchema,
+        api: HikvisionAPI,
+        cam: 'HikvisionCam',
+        bot: 'CameraBot',
     ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self.alarm = AlarmService(
@@ -79,25 +83,25 @@ class ServiceContainer:
             cam=cam,
         )
 
-    def get_all(self) -> list[AbstractService]:
+    def get_all(self) -> tuple[AbstractService, ...]:
         """Return list with all services."""
-        return [
+        return (
             self.alarm,
             self.dvr_stream,
             self.srs_stream,
             self.stream_icecast,
             self.stream_tg,
             self.stream_yt,
-        ]
+        )
 
 
 class HikvisionCam:
     """Hikvision Camera Class."""
 
-    _DEFAULT_GROUP_NAME = 'Default group'
+    _DEFAULT_GROUP_NAME: str = 'Default group'
 
-    def __init__(self, id: str, conf: Dict, bot: 'CameraBot') -> None:
-        self.id = id
+    def __init__(self, id_: str, conf: CameraConfigSchema, bot: 'CameraBot') -> None:
+        self.id = id_
         self.conf = conf
         self.bot = bot
         self._log = logging.getLogger(self.__class__.__name__)

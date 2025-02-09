@@ -1,7 +1,17 @@
-import os
+from pathlib import Path
+from typing import Final
 
-_UNIT_SIZE_NAMES = ('', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi')
-_BASE = 1024.0
+_UNIT_SIZE_NAMES: Final[tuple[str, ...]] = (
+    '',
+    'Ki',
+    'Mi',
+    'Gi',
+    'Ti',
+    'Pi',
+    'Ei',
+    'Zi',
+)
+_BASE: Final[float] = 1024.0
 
 
 def format_bytes(num: int, suffix: str = 'B') -> str:
@@ -13,6 +23,6 @@ def format_bytes(num: int, suffix: str = 'B') -> str:
     return f'{num:.1f}Yi{suffix}'
 
 
-def file_size(filepath: str) -> int:
+def file_size(filepath: Path) -> int:
     """Return file size in bytes."""
-    return os.path.getsize(filepath)
+    return filepath.stat().st_size

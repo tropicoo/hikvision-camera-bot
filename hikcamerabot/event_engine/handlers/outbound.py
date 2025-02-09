@@ -1,9 +1,9 @@
 """Result event handlers module."""
 
-import abc
 import logging
-import os
+from abc import ABC, abstractmethod
 from io import BytesIO
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from emoji import emojize
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
 
 
-class AbstractResultEventHandler(metaclass=abc.ABCMeta):
+class AbstractResultEventHandler(ABC):
     def __init__(self, bot: 'CameraBot') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._bot = bot
@@ -36,7 +36,7 @@ class AbstractResultEventHandler(metaclass=abc.ABCMeta):
     async def handle(self, event: BaseOutboundEvent) -> None:
         await self._handle(event)
 
-    @abc.abstractmethod
+    @abstractmethod
     async def _handle(self, event: BaseOutboundEvent) -> None:
         pass
 
@@ -44,7 +44,7 @@ class AbstractResultEventHandler(metaclass=abc.ABCMeta):
 class ResultAlertVideoHandler(AbstractResultEventHandler):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._video_file_cache: dict[str, str] = {}
+        self._video_file_cache: dict[Path, str] = {}
 
     async def _handle(self, event: VideoOutboundEvent) -> None:
         try:
@@ -53,7 +53,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             self._cleanup()
 
     def _cleanup(self) -> None:
-        self._video_file_cache = {}
+        self._video_file_cache.clear()
 
     async def __handle(self, event: VideoOutboundEvent) -> None:
         cam = event.cam
@@ -67,9 +67,9 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             for uid in self._bot.alert_users:
                 await self._send_video(uid, event, caption)
         finally:
-            os.remove(event.video_path)
+            event.video_path.unlink()
             if event.thumb_path:
-                os.remove(event.thumb_path)
+                event.thumb_path.unlink()
 
     @retry(wait=wait_fixed(0.5), stop=stop_after_attempt(10))
     async def _send_video(
@@ -83,7 +83,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             message = await self._bot.send_video(
                 chat_id=uid,
                 caption=caption,
-                video=file_,
+                video=str(file_),
                 duration=event.video_duration,
                 height=event.video_height,
                 width=event.video_width,
@@ -99,7 +99,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
             )
             raise
 
-    def _get_file(self, video_path: str) -> tuple[str, bool]:
+    def _get_file(self, video_path: Path) -> tuple[str | Path, bool]:
         """Get str file id from cache or `InputFile` from video path.
         Indicate whether file is cached or not.
         """
@@ -117,9 +117,9 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
         try:
             await self._upload_video(event)
         finally:
-            os.remove(event.video_path)
+            event.video_path.unlink()
             if event.thumb_path:
-                os.remove(event.thumb_path)
+                event.thumb_path.unlink()
 
     @retry(wait=wait_fixed(0.5), stop=stop_after_attempt(10))
     async def _upload_video(self, event: VideoOutboundEvent) -> None:
@@ -139,7 +139,7 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
             await self._bot.send_video(
                 message.chat.id,
                 caption=caption,
-                video=event.video_path,
+                video=str(event.video_path),
                 duration=event.video_duration,
                 height=event.video_height,
                 width=event.video_width,
@@ -199,7 +199,7 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
         message = event.message
         stream_type = event.stream_type
         state = event.state
-        text: str = event.text or '{0} stream successfully {1}'.format(
+        text: str = event.text or '{} stream successfully {}'.format(
             stream_type.value.capitalize(), 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
@@ -225,7 +225,7 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
         service_name = event.service_name
         state = event.state
 
-        text: str = event.text or '{0} successfully {1}'.format(
+        text: str = event.text or '{} successfully {}'.format(
             service_name.value, 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)
@@ -238,7 +238,7 @@ class ResultDetectionConfHandler(AbstractResultEventHandler):
         name: str = DETECTION_SWITCH_MAP[event.type]['name'].value
         state = event.state
 
-        text: str = event.text or '{0} successfully {1}'.format(
+        text: str = event.text or '{} successfully {}'.format(
             name, 'enabled' if state else 'disabled'
         )
         await send_text(text=bold(text), message=message, quote=True)

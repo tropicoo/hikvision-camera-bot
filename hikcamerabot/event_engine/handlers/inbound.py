@@ -1,11 +1,11 @@
 """Task event s module."""
 
-import abc
 import logging
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
-from hikcamerabot.enums import Event
+from hikcamerabot.enums import EventType
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
 from hikcamerabot.event_engine.events.inbound import (
     AlertConfEvent,
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
 
 
-class AbstractTaskEvent(metaclass=abc.ABCMeta):
+class AbstractTaskEvent(ABC):
     def __init__(self, bot: 'CameraBot') -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._bot = bot
@@ -39,7 +39,7 @@ class AbstractTaskEvent(metaclass=abc.ABCMeta):
     async def handle(self, event: BaseInboundEvent) -> None:
         return await self._handle(event)
 
-    @abc.abstractmethod
+    @abstractmethod
     async def _handle(self, event: BaseInboundEvent) -> None:
         pass
 
@@ -55,7 +55,7 @@ class TaskTakeSnapshot(AbstractTaskEvent):
         except Exception as err:
             await self._result_queue.put(
                 SendTextOutboundEvent(
-                    event=Event.SEND_TEXT,
+                    event=EventType.SEND_TEXT,
                     text=(
                         f'🛑 {bold(f"Failed to take picture on [{cam.id}] {cam.description}")}\n\n'
                         f'{bold(f"👀 Details: {err}")}'
@@ -173,7 +173,7 @@ class TaskIrcutFilterConf(AbstractTaskEvent):
         await event.cam.set_ircut_filter(filter_type=event.filter_type)
         await self._result_queue.put(
             SendTextOutboundEvent(
-                event=Event.SEND_TEXT,
+                event=EventType.SEND_TEXT,
                 message=event.message,
                 text=bold(f'IrcutFilter set to "{event.filter_type.value}"'),
             )

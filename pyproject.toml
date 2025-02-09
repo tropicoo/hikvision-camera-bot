@@ -1,67 +1,68 @@
+[project]
+name = "hikvision-camera-bot"
+version = "1.9"
+description = "Telegram Bot which sends snapshots from your Hikvision cameras"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "emoji>=2.14.1",
+    "httpx>=0.27.2",
+    "pillow>=11.1.0",
+    "pydantic>=2.10.6",
+    "pyrofork>=2.3.58",
+    "tenacity>=9.0.0",
+    "tgcrypto-pyrofork>=1.2.7",
+    "uvloop>=0.21.0 ; sys_platform == 'linux'",
+    "xmltodict>=0.14.2",
+]
+
+[dependency-groups]
+lint = [
+    "ruff>=0.9.3",
+]
+
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py312"
-required-version = ">=0.6.9"
+target-version = "py313"
+required-version = ">=0.9"
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
 
 [tool.ruff.lint]
-select = [
-    "A",
-    "ANN",
-    "ASYNC",
-    "C4",
-    "C90",
-    "COM",
-    "E",
-    "EM103",
-    "EXE",
-    "F",
-    "FA",
-    "FLY",
-    "FURB",
-    "G",
-    "I",
-    "ICN",
-    "ISC",
-    "LOG",
-    "N",
-    "PERF",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "Q",
-    "RET",
-    "RSE",
-    "RUF",
-    "S",
-    "SIM",
-    "SLF001",
-    "SLOT",
-    "T20",
-    "TID",
-    "TRY",
-    "UP",
-    "W",
-]
+select = ["ALL"]
 ignore = [
     "ANN002",
     "ANN003",
-    "ANN101",
-    "ANN102",
     "ANN401",
     "ASYNC110",
+    "BLE001",
     "COM812",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D107",
+    "D203",
+    "D213",
+    "D401", # Temporary
     "E501",
+    "EM101",
+    "EM102",
+    "ERA001", # Temporary
+    "FAST002",
+    "FBT001",
+    "FBT002",
+    "FIX002",
+    "INP001",
     "ISC001",
     "PERF401",
-    "PTH123",
-    "RUF012",
-    "S110",
+    "PLR0913",
+    "TD002",
+    "TD003",
     "TRY003",
 ]
 

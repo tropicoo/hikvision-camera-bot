@@ -13,7 +13,6 @@ class ImageProcessor(metaclass=Singleton):
     """Image Processor Class. Process raw images taken from Hikvision camera."""
 
     def __init__(self) -> None:
-        """Constructor."""
         self._log = logging.getLogger(self.__class__.__name__)
 
     def resize(self, raw_snapshot: BytesIO) -> BytesIO:
@@ -44,7 +43,8 @@ class ImageProcessor(metaclass=Singleton):
 
     def _calculate_size(self, raw_snapshot_image: Image.Image) -> tuple[int, int]:
         """Make it work correctly for 4x3 cameras by JulyIghor.
-        https://github.com/tropicoo/hikvision-camera-bot/issues/122
+
+        https://github.com/tropicoo/hikvision-camera-bot/issues/122.
         """
         # Calculate new size maintaining aspect ratio
         target_width, target_height = Img.SIZE

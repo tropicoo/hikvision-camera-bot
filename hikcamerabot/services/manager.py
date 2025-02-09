@@ -22,10 +22,10 @@ class ServiceManager:
     def register(self, service_instances: Iterable[AbstractService]) -> None:
         """Register service instances."""
         for svc in service_instances:
-            self._services[svc.type][svc.name] = svc
+            self._services[svc.TYPE][svc.NAME] = svc
 
     def unregister(self, service_instance: AbstractService) -> None:
-        self._services[service_instance.type].pop(service_instance.name, None)
+        self._services[service_instance.TYPE].pop(service_instance.NAME, None)
 
     async def start_all(self, only_conf_enabled: bool = False) -> None:
         for service_type_dict in self._services.values():
@@ -51,7 +51,7 @@ class ServiceManager:
                     self._log.warning(
                         '[%s] Warning while stopping service "%s": %s',
                         service.cam.id,
-                        service.name.value,
+                        service.NAME.value,
                         err,
                     )
 
@@ -70,7 +70,7 @@ class ServiceManager:
             services.extend(service_type_dict.values())
         return services
 
-    def count(self, stream_type: str = None) -> int:
+    def count(self, stream_type: str | None = None) -> int:
         try:
             return len(self._services[stream_type])
         except KeyError:

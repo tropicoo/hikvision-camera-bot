@@ -2,8 +2,7 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-from addict import Dict
-
+from hikcamerabot.config.schemas.main_config import CameraConfigSchema
 from hikcamerabot.services.stream.dvr.tasks.file_lock_check import FileLockCheckTask
 from hikcamerabot.utils.shared import shallow_sleep_async
 
@@ -12,13 +11,15 @@ if TYPE_CHECKING:
 
 
 class DvrFileMonitoringTask:
-    _TASK_SLEEP = 30
+    _TASK_SLEEP: int = 30
 
-    def __init__(self, engine: 'DvrUploadEngine', conf: Dict, cam_id: str) -> None:
+    def __init__(
+        self, engine: 'DvrUploadEngine', conf: CameraConfigSchema, cam_id: str
+    ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._engine = engine
         self._conf = conf
-        self._storage_path: str = self._conf.livestream.dvr.local_storage_path
+        self._storage_path = self._conf.livestream.dvr.local_storage_path
         self._cam_id = cam_id
 
     async def run(self) -> None:

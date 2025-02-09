@@ -1,11 +1,12 @@
 import asyncio
+from typing import Literal
 
 from hikcamerabot.constants import (
     FFMPEG_CMD_DVR,
     FFMPEG_CMD_NULL_AUDIO,
     RTSP_TRANSPORT_TPL,
 )
-from hikcamerabot.enums import Stream, VideoEncoder
+from hikcamerabot.enums import StreamType, VideoEncoderType
 from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.stream.dvr.upload.engine import DvrUploadEngine
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask
@@ -13,9 +14,9 @@ from hikcamerabot.utils.task import create_task
 
 
 class DvrStreamService(AbstractStreamService):
-    name = Stream.DVR
+    NAME: Literal[StreamType.DVR] = StreamType.DVR
     _FFMPEG_CMD_TPL = FFMPEG_CMD_DVR
-    _DVR_FILENAME_TPL = (
+    _DVR_FILENAME_TPL: str = (
         '{storage_path}/{cam_id}_{channel}_{segment_time}_%Y-%m-%d_%H-%M-%S.mp4'
     )
 
@@ -87,7 +88,7 @@ class DvrStreamService(AbstractStreamService):
         )
 
     def _generate_transcode_cmd(
-        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoder
+        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoderType
     ) -> None:
         try:
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()

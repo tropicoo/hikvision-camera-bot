@@ -7,12 +7,12 @@ from typing import Literal
 
 from hikcamerabot.camera import HikvisionCam
 
-CamRegistryValue = dict[
+type CamRegistryValue = dict[
     Literal['cam', 'cmds', 'cmds_presentation'], HikvisionCam | dict | str
 ]
-CamRegistryType = dict[str, CamRegistryValue]
-GroupRegistryValue = dict[str, str | list[HikvisionCam]]
-GroupRegistryType = dict[str, GroupRegistryValue]
+type CamRegistryType = dict[str, CamRegistryValue]
+type GroupRegistryValue = dict[str, str | list[HikvisionCam]]
+type GroupRegistryType = dict[str, GroupRegistryValue]
 
 
 class CameraRegistry:

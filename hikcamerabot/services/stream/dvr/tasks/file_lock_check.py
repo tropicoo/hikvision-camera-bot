@@ -6,8 +6,8 @@ from hikcamerabot.utils.process import get_stdout_stderr, kill_proc
 
 
 class FileLockCheckTask:
-    _PROCESS_TIMEOUT = 5
-    _LOCKED_FILES_CMD = r"lsof|awk '/ffmpeg.*\.mp4/'"
+    _PROCESS_TIMEOUT: int = 5
+    _LOCKED_FILES_CMD: str = r"lsof|awk '/ffmpeg.*\.mp4/'"
 
     def __init__(self, files: list[str]) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -20,9 +20,7 @@ class FileLockCheckTask:
         return await self._get_unlocked_files()
 
     async def _get_unlocked_files(self) -> list[str]:
-        """Return list with absolute file paths that are not locked by ffmpeg process
-        during write operation.
-        """
+        """Return list with absolute file paths that are not locked by ffmpeg process during write operation."""
         proc = await asyncio.create_subprocess_shell(
             self._LOCKED_FILES_CMD,
             stdout=asyncio.subprocess.PIPE,

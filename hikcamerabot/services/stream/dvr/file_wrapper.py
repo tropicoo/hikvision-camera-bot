@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -23,16 +22,16 @@ class DvrFile:
         self._lock_count = lock_count
         self._cam = cam
 
-        self._storage_path: str = self._cam.conf.livestream.dvr.local_storage_path
-        self._full_path = os.path.join(self._storage_path, self._filename)
-        self._thumbnail = os.path.join(self._storage_path, f'{self.name}-thumb.jpg')
+        self._storage_path = Path(self._cam.conf.livestream.dvr.local_storage_path)
+        self._full_path = self._storage_path / self._filename
+        self._thumbnail = self._storage_path / f'{self.name}-thumb.jpg'
 
         self._duration: int | None = None
         self._width: int | None = None
         self._height: int | None = None
         self._probe_ctx: dict | None = None
 
-        self._is_broken = False
+        self._is_broken: bool = False
 
     def __str__(self) -> str:
         return self._filename
@@ -84,21 +83,19 @@ class DvrFile:
 
     @property
     def is_empty(self) -> bool:
-        return Path(self.full_path).stat().st_size == 0
+        return self.full_path.stat().st_size == 0
 
     @property
     def exists(self) -> bool:
-        return Path(self.full_path).is_file()
+        return self.full_path.is_file()
 
     @property
     def name(self) -> str:
         return self._filename
 
     @property
-    def thumbnail(self) -> str | None:
-        if Path(self._thumbnail).is_file():
-            return self._thumbnail
-        return None
+    def thumbnail(self) -> Path | None:
+        return self._thumbnail if self._thumbnail.is_file() else None
 
     @property
     def height(self) -> int | None:
@@ -113,7 +110,7 @@ class DvrFile:
         return self._duration
 
     @property
-    def full_path(self) -> str:
+    def full_path(self) -> Path:
         return self._full_path
 
     @property

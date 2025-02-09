@@ -1,9 +1,7 @@
 import re
 
-from hikcamerabot.constants import (
-    DETECTION_SWITCH_MAP,
-)
-from hikcamerabot.enums import Detection, DetectionEventName
+from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.enums import DetectionEventName, DetectionType
 from hikcamerabot.exceptions import AlarmEventChunkDetectorError
 
 
@@ -20,7 +18,7 @@ class AlarmEventChunkDetector:
     DETECTION_KEY_GROUP = 1
 
     @classmethod
-    def detect_chunk(cls, chunk: str) -> Detection | None:
+    def detect_chunk(cls, chunk: str) -> DetectionType | None:
         """Detect chunk in regard of `DETECTION_REGEX` string and return
         detection key.
 

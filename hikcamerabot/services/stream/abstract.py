@@ -1,18 +1,13 @@
-import abc
 import asyncio
 import os
 import signal
 import time
-from collections.abc import Callable
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
-from addict import Dict
-
-from hikcamerabot.config.config import (
-    get_encoding_tpl_config,
-    get_livestream_tpl_config,
-)
+from hikcamerabot.config.config import encoding_conf, livestream_conf
+from hikcamerabot.config.schemas.main_config import LivestreamConfSchema
 from hikcamerabot.constants import (
     FFMPEG_CAM_VIDEO_SRC,
     FFMPEG_CMD_LIVESTREAM,
@@ -24,7 +19,7 @@ from hikcamerabot.constants import (
     RTSP_TRANSPORT_TPL,
     SRS_LIVESTREAM_NAME_TPL,
 )
-from hikcamerabot.enums import ServiceType, Stream, VideoEncoder
+from hikcamerabot.enums import ServiceType, StreamType, VideoEncoderType
 from hikcamerabot.exceptions import ServiceConfigError, ServiceRuntimeError
 from hikcamerabot.services.abstract import AbstractService
 from hikcamerabot.services.tasks.livestream import (
@@ -36,31 +31,33 @@ from hikcamerabot.utils.shared import shallow_sleep_async
 from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from hikcamerabot.camera import HikvisionCam
 
 
-class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
+class AbstractStreamService(AbstractService, ABC):
     """livestream Service Base Class."""
 
-    name: Stream | None = None
+    NAME: StreamType | None = None
     type = ServiceType.STREAM
 
     _FFMPEG_CMD_TPL: str | None = None
-    _IGNORE_RESTART_CHECK = -1
+    _IGNORE_RESTART_CHECK: int = -1
 
     def __init__(
         self,
-        conf: Dict,
+        conf: LivestreamConfSchema,
         hik_user: str,
         hik_password: str,
         hik_host: str,
         cam: 'HikvisionCam',
-    ):
+    ) -> None:
         super().__init__(cam)
 
-        self._cmd_gen_dispatcher: dict[VideoEncoder, Callable[[], str]] = {
-            VideoEncoder.X264: self._generate_x264_cmd,
-            VideoEncoder.VP9: self._generate_vp9_cmd,
+        self._cmd_gen_dispatcher: dict[VideoEncoderType, Callable[[], str]] = {
+            VideoEncoderType.X264: self._generate_x264_cmd,
+            VideoEncoderType.VP9: self._generate_vp9_cmd,
         }
 
         self._conf = conf
@@ -70,8 +67,11 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
 
         self._proc: asyncio.subprocess.Process | None = None
         self._start_ts: int | None = None
-        self._stream_conf: Dict | None = None
-        self._enc_conf: Dict | None = None
+
+        # TODO: Set type hints.
+        self._stream_conf: None = None
+        self._enc_conf: None = None
+
         self._cmd: str | None = None
         self._generate_cmd()
 
@@ -91,11 +91,11 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
 
     def _get_cap_service_name(self) -> str:
         """Get capitalized service name, e.g. "TELEGRAM" -> "Telegram"."""
-        return self.name.value.capitalize()
+        return self.NAME.value.capitalize()
 
     @property
     def _srs_enabled(self) -> bool:
-        """If SRS Stream enabled in conf, it will used as input video source."""
+        """If SRS StreamType enabled in conf, it will be used as input video source."""
         return self.cam.conf.livestream.srs.enabled
 
     def _generate_video_source(self) -> str:
@@ -160,10 +160,10 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             await kill_proc(process=self._proc, signal_=signal.SIGINT, reraise=True)
         except ProcessLookupError as err:
             self._log.error('Failed to kill process: %s', err)
-        except Exception:
-            err_msg = f'Failed to kill/disable {self.name.value} stream'
+        except Exception as err:
+            err_msg = f'Failed to kill/disable {self.NAME.value} stream'
             self._log.exception(err_msg)
-            raise ServiceRuntimeError(err_msg)
+            raise ServiceRuntimeError(err_msg) from err
 
         if disable:
             self._started.clear()
@@ -205,17 +205,17 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
 
     def _generate_cmd(self) -> None:
         try:
-            tpl_name_ls: str = self._conf.livestream_template
+            tpl_name_ls = self._conf.livestream_template
             enc_codec_name, tpl_name_enc = self._conf.encoding_template.split('.')
-        except ValueError:
+        except ValueError as err:
             err_msg = f'Failed to load {self._cls_name} templates'
             self._log.error(err_msg)
-            raise ServiceConfigError(err_msg)
+            raise ServiceConfigError(err_msg) from err
 
-        self._stream_conf = get_livestream_tpl_config()[self.name.value.lower()][
-            tpl_name_ls
+        self._stream_conf = livestream_conf.get_tpl_by_name(name=self.NAME)[tpl_name_ls]
+        self._enc_conf = encoding_conf.get_by_template_name(name=enc_codec_name)[
+            tpl_name_enc
         ]
-        self._enc_conf = get_encoding_tpl_config()[enc_codec_name][tpl_name_enc]
 
         cmd_tpl = self._format_ffmpeg_cmd_tpl()
 
@@ -232,10 +232,12 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
             )
 
         self._generate_transcode_cmd(
-            cmd_tpl, cmd_transcode, VideoEncoder(enc_codec_name)
+            cmd_tpl=cmd_tpl,
+            cmd_transcode=cmd_transcode,
+            enc_codec_name=VideoEncoderType(enc_codec_name),
         )
 
-    @abc.abstractmethod
+    @abstractmethod
     def _format_ffmpeg_cmd_tpl(self) -> str:
         pass
 
@@ -251,25 +253,25 @@ class AbstractStreamService(AbstractService, metaclass=abc.ABCMeta):
         )
 
     def _generate_x264_cmd(self) -> str:
-        return FFMPEG_CMD_TRANSCODE[VideoEncoder.X264].format(
+        return FFMPEG_CMD_TRANSCODE[VideoEncoderType.X264].format(
             preset=self._enc_conf.preset, tune=self._enc_conf.tune
         )
 
     def _generate_vp9_cmd(self) -> str:
-        return FFMPEG_CMD_TRANSCODE[VideoEncoder.VP9].format(
+        return FFMPEG_CMD_TRANSCODE[VideoEncoderType.VP9].format(
             deadline=self._enc_conf.deadline, speed=self._enc_conf.speed
         )
 
-    @abc.abstractmethod
+    @abstractmethod
     def _generate_transcode_cmd(
-        self, cmd_tpl, cmd_transcode, enc_codec_name: VideoEncoder
+        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoderType
     ) -> str:
         # Example: self._cmd = cmd_tpl.format(...)
         pass
 
 
-class AbstractExternalLivestreamService(AbstractStreamService):
-    _FFMPEG_CMD_TPL = FFMPEG_CMD_LIVESTREAM
+class AbstractExternalLivestreamService(AbstractStreamService, ABC):
+    _FFMPEG_CMD_TPL: str = FFMPEG_CMD_LIVESTREAM
 
     def _format_ffmpeg_cmd_tpl(self) -> str:
         null_audio = (

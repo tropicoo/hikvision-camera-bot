@@ -1,14 +1,12 @@
 import asyncio
 import logging
-import os
 import signal
 import socket
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlsplit
 
-from addict import Dict
 from pyrogram.types import Message
 
 from hikcamerabot.common.video.tasks.ffprobe_context import GetFfprobeContextTask
@@ -23,7 +21,7 @@ from hikcamerabot.constants import (
     SRS_DOCKER_CONTAINER_NAME,
     SRS_LIVESTREAM_NAME_TPL,
 )
-from hikcamerabot.enums import Event, VideoGifType
+from hikcamerabot.enums import EventType, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
     SendTextOutboundEvent,
     VideoOutboundEvent,
@@ -34,20 +32,22 @@ from hikcamerabot.utils.process import kill_proc
 from hikcamerabot.utils.shared import bold, format_ts, gen_random_str
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from hikcamerabot.camera import HikvisionCam
 
 
 class RecordVideoGifTask:
-    _PROCESS_TIMEOUT = 30
+    _PROCESS_TIMEOUT: int = 30
 
-    _VIDEO_FILENAME_MAP: dict[VideoGifType, str] = {
+    _VIDEO_FILENAME_MAP: ClassVar[dict[VideoGifType, str]] = {
         VideoGifType.ON_ALERT: '{0}-alert-{1}-{2}.mp4',
         VideoGifType.ON_DEMAND: '{0}-{1}-{2}.mp4',
     }
 
-    _VIDEO_TYPE_TO_EVENT: dict[VideoGifType, Event] = {
-        VideoGifType.ON_ALERT: Event.ALERT_VIDEO,
-        VideoGifType.ON_DEMAND: Event.RECORD_VIDEOGIF,
+    _VIDEO_TYPE_TO_EVENT: ClassVar[dict[VideoGifType, EventType]] = {
+        VideoGifType.ON_ALERT: EventType.ALERT_VIDEO,
+        VideoGifType.ON_DEMAND: EventType.RECORD_VIDEOGIF,
     }
 
     FILENAME_TIME_FORMAT = '%Y-%b-%d--%H-%M-%S'
@@ -57,24 +57,25 @@ class RecordVideoGifTask:
         rewind: bool,
         cam: 'HikvisionCam',
         video_type: VideoGifType,
-        message: Message = None,
-    ):
+        message: Message | None = None,
+    ) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
         self._cam = cam
         self._video_type = video_type
         self._rewind = rewind
-        self._gif_conf: Dict = self._cam.conf.video_gif[self._video_type.value]
-        self._is_srs_enabled: bool = self._cam.conf.livestream.srs.enabled
-
-        self._tmp_storage_path: str = self._gif_conf.tmp_storage
-        self._filename = self._get_filename()
-        self._file_path: str = os.path.join(self._tmp_storage_path, self._filename)
-        self._thumb_path: str = os.path.join(
-            self._tmp_storage_path, f'{self._filename}-thumb.jpg'
+        self._gif_conf = self._cam.conf.video_gif.get_schema_by_type(
+            type_=video_type.value
         )
+        self._is_srs_enabled = self._cam.conf.livestream.srs.enabled
+
+        self._tmp_storage_path = self._gif_conf.tmp_storage
+        self._filename = self._get_filename()
+        self._file_path: Path = self._tmp_storage_path / self._filename
+        self._thumb_path: Path = self._tmp_storage_path / f'{self._filename}-thumb.jpg'
+
         self._thumb_created = False
 
-        self._rec_time: int = self._gif_conf.record_time
+        self._rec_time = self._gif_conf.record_time
         if self._rewind:
             self._rec_time += self._gif_conf.rewind_time
 
@@ -105,18 +106,18 @@ class RecordVideoGifTask:
         else:
             await self._post_process_failed_record()
 
-    async def _post_process_successful_record(self):
+    async def _post_process_successful_record(self) -> None:
         await asyncio.gather(self._get_probe_ctx(), self._make_thumbnail_frame())
         await self._send_result()
 
-    async def _post_process_failed_record(self):
+    async def _post_process_failed_record(self) -> None:
         self._post_err_cleanup()
         err_msg = f'Failed to record {self._file_path} on {self._cam.description}'
         self._log.error(err_msg)
         await self._result_queue.put(
             SendTextOutboundEvent(
-                event=Event.SEND_TEXT,
-                text=f'{err_msg}.\nEvent type: {self._event.value}\nCheck logs.',
+                event=EventType.SEND_TEXT,
+                text=f'{err_msg}.\nEventType type: {self._event.value}\nCheck logs.',
                 message=self._message,
             )
         )
@@ -124,7 +125,7 @@ class RecordVideoGifTask:
     async def _make_thumbnail_frame(self) -> None:
         # TODO: Refactor duplicate code. Move to mixin.
         self._thumb_created = await MakeThumbnailTask(
-            self._thumb_path, self._file_path
+            thumbnail_path=self._thumb_path, file_path=self._file_path
         ).run()
         if not self._thumb_created:
             self._log.error('Error during making thumbnail of %s', self._file_path)
@@ -146,9 +147,9 @@ class RecordVideoGifTask:
     def _post_err_cleanup(self) -> None:
         """Delete video file and thumb if they exist after exception."""
         for file_path in (self._file_path, self._thumb_path):
-            if os.path.exists(file_path):
+            if file_path.exists():
                 try:
-                    os.remove(file_path)
+                    file_path.unlink()
                 except Exception as err:
                     self._log.warning('File path %s not deleted: %s', file_path, err)
 
@@ -170,7 +171,7 @@ class RecordVideoGifTask:
     async def _validate_file(self) -> bool:
         """Validate recorded file existence and size."""
         try:
-            is_empty = os.path.getsize(self._file_path) == 0
+            is_empty = self._file_path.stat().st_size == 0
         except FileNotFoundError:
             self._log.error(
                 'Failed to validate %s: File does not exist', self._file_path
@@ -195,7 +196,7 @@ class RecordVideoGifTask:
                 thumb_path=self._thumb_path if self._thumb_created else None,
                 cam=self._cam,
                 message=self._message,
-                file_size=file_size(self._file_path),
+                file_size=file_size(filepath=self._file_path),
                 create_ts=int(datetime.now().timestamp()),
             )
         )
@@ -205,7 +206,7 @@ class RecordVideoGifTask:
             text = f'📹 Recording video gif for {self._rec_time} seconds'
             await self._result_queue.put(
                 SendTextOutboundEvent(
-                    event=Event.SEND_TEXT,
+                    event=EventType.SEND_TEXT,
                     message=self._message,
                     text=bold(text),
                 )

@@ -1,39 +1,40 @@
-import enum
+from collections.abc import Callable
+from enum import StrEnum, unique
 
 
-class _BaseNonUniqueEnum(enum.Enum):
+class BaseNonUniqueChoiceStrEnum(StrEnum):
     @classmethod
-    def choices(cls) -> frozenset[str]:
+    def choices(cls) -> frozenset[Callable[[], str]]:
         return frozenset(member.value for member in cls)
 
 
-@enum.unique
-class _BaseUniqueEnum(_BaseNonUniqueEnum):
+@unique
+class BaseUniqueChoiceStrEnum(BaseNonUniqueChoiceStrEnum):
     pass
 
 
-class RtspTransportType(_BaseUniqueEnum):
+class RtspTransportType(BaseUniqueChoiceStrEnum):
     TCP = 'tcp'
     UDP = 'udp'
 
 
-class ConfigFile(_BaseUniqueEnum):
+class ConfigFile(BaseUniqueChoiceStrEnum):
     MAIN = 'config.json'
     LIVESTREAM = 'livestream_templates.json'
     ENCODING = 'encoding_templates.json'
 
 
-class PictureType(_BaseUniqueEnum):
+class PictureType(BaseUniqueChoiceStrEnum):
     ON_ALERT = 'on_alert'
     ON_DEMAND = 'on_demand'
 
 
-class VideoGifType(_BaseUniqueEnum):
+class VideoGifType(BaseUniqueChoiceStrEnum):
     ON_ALERT = 'on_alert'
     ON_DEMAND = 'on_demand'
 
 
-class Event(_BaseUniqueEnum):
+class EventType(BaseUniqueChoiceStrEnum):
     ALERT_MSG = 'alert_msg'
     ALERT_SNAPSHOT = 'alert_snapshot'
     ALERT_VIDEO = 'alert_video'
@@ -46,33 +47,33 @@ class Event(_BaseUniqueEnum):
     TAKE_SNAPSHOT = 'take_snapshot'
 
 
-class CmdSectionType(_BaseUniqueEnum):
+class CmdSectionType(BaseUniqueChoiceStrEnum):
     general = 'General'
     infrared = 'Infrared Mode'
-    motion_detection = 'Motion Detection'
-    line_detection = 'Line Crossing Detection'
-    intrusion_detection = 'Intrusion (Field) Detection'
+    motion_detection = 'Motion DetectionType'
+    line_detection = 'Line Crossing DetectionType'
+    intrusion_detection = 'Intrusion (Field) DetectionType'
     alert_service = 'Alert Service'
-    stream_youtube = 'YouTube Stream'
-    stream_telegram = 'Telegram Stream'
-    stream_icecast = 'Icecast Stream'
+    stream_youtube = 'YouTube StreamType'
+    stream_telegram = 'Telegram StreamType'
+    stream_icecast = 'Icecast StreamType'
 
 
-class Alarm(_BaseNonUniqueEnum):
+class AlarmType(BaseUniqueChoiceStrEnum):
     ALARM = 'Alarm'
 
 
-class ServiceType(_BaseUniqueEnum):
+class ServiceType(BaseUniqueChoiceStrEnum):
     ALARM = 'alarm'
     STREAM = 'stream'
     UPLOAD = 'upload'
 
 
-class DvrUploadType(_BaseUniqueEnum):
+class DvrUploadType(BaseUniqueChoiceStrEnum):
     TELEGRAM = 'telegram'
 
 
-class Stream(_BaseUniqueEnum):
+class StreamType(BaseUniqueChoiceStrEnum):
     DVR = 'DVR'
     ICECAST = 'ICECAST'
     SRS = 'SRS'
@@ -80,13 +81,13 @@ class Stream(_BaseUniqueEnum):
     YOUTUBE = 'YOUTUBE'
 
 
-class VideoEncoder(_BaseUniqueEnum):
+class VideoEncoderType(BaseUniqueChoiceStrEnum):
     X264 = 'x264'
     VP9 = 'vp9'
     DIRECT = 'direct'
 
 
-class Detection(_BaseUniqueEnum):
+class DetectionType(BaseUniqueChoiceStrEnum):
     """Detection type/name in config file."""
 
     MOTION = 'motion_detection'
@@ -94,15 +95,15 @@ class Detection(_BaseUniqueEnum):
     INTRUSION = 'intrusion_detection'
 
 
-class DetectionEventName(_BaseUniqueEnum):
-    """Event name coming from Hikvision's camera alert stream."""
+class DetectionEventName(BaseUniqueChoiceStrEnum):
+    """EventType name coming from Hikvision's camera alert stream."""
 
     INTRUSION = 'fielddetection'
     LINE = 'linedetection'
     MOTION = 'VMD'
 
 
-class DetectionXMLMethodName(_BaseUniqueEnum):
+class DetectionXMLMethodName(BaseUniqueChoiceStrEnum):
     """Detection XML method name used in API requests to Hikvision camera."""
 
     INTRUSION = 'FieldDetection'
@@ -110,9 +111,9 @@ class DetectionXMLMethodName(_BaseUniqueEnum):
     MOTION = 'MotionDetection'
 
 
-class DetectionVerboseName(_BaseUniqueEnum):
+class DetectionVerboseName(BaseUniqueChoiceStrEnum):
     """Detection verbose name."""
 
-    INTRUSION = 'Intrusion (Field) Detection'
-    LINE = 'Line Crossing Detection'
-    MOTION = 'Motion Detection'
+    INTRUSION = 'Intrusion (Field) DetectionType'
+    LINE = 'Line Crossing DetectionType'
+    MOTION = 'Motion DetectionType'

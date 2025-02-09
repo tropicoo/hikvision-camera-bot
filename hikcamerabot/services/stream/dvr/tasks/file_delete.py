@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from typing import TYPE_CHECKING
 
 from hikcamerabot.utils.shared import shallow_sleep_async
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class DvrFileDeleteTask:
-    _QUEUE_SLEEP = 30
+    _QUEUE_SLEEP: int = 30
 
     def __init__(self, queue: asyncio.Queue['DvrFile']) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -46,7 +45,7 @@ class DvrFileDeleteTask:
     def _delete_file(self, file_: 'DvrFile') -> None:
         self._log.debug('Deleting DVR file %s', file_.full_path)
         try:
-            os.remove(file_.full_path)
+            file_.full_path.unlink()
         except Exception:
             self._log.exception('Failed to delete DVR file %s', file_.full_path)
 
@@ -58,6 +57,6 @@ class DvrFileDeleteTask:
 
         self._log.debug('Deleting DVR file thumbnail %s', thumb)
         try:
-            os.remove(thumb)
+            thumb.unlink()
         except Exception:
             self._log.exception('Failed to delete thumbnail %s', thumb)

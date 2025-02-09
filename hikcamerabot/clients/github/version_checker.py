@@ -20,7 +20,9 @@ class BotVersion:
 
 
 class HikCameraBotVersionChecker:
-    LATEST_TAG_URL = 'https://github.com/tropicoo/hikvision-camera-bot/releases/latest'
+    LATEST_TAG_URL: str = (
+        'https://github.com/tropicoo/hikvision-camera-bot/releases/latest'
+    )
 
     def __init__(self) -> None:
         self._log = logging.getLogger(self.__class__.__name__)

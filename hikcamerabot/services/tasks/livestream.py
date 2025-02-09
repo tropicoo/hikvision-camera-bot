@@ -32,7 +32,7 @@ class ServiceStreamerTask(AbstractServiceTask):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._exit_msg = (
-            f'[{self._cam.id}] Exiting {self.service.name.value} stream task '
+            f'[{self._cam.id}] Exiting {self.service.NAME.value} stream task '
             f'for "{self._cam.description}"'
         )
 
@@ -41,7 +41,7 @@ class ServiceStreamerTask(AbstractServiceTask):
         self._log.debug(
             '[%s] Starting %s stream task for "%s"',
             self._cam.id,
-            self.service.name.value,
+            self.service.NAME,
             self._cam.description,
         )
         try:
@@ -56,7 +56,7 @@ class ServiceStreamerTask(AbstractServiceTask):
                     self._log.info(
                         '[%s] Restarting %s stream [need restart: %s] [is alive: %s]',
                         self._cam.id,
-                        self.service.name.value,
+                        self.service.NAME,
                         self.service.need_restart,
                         self.service.alive,
                     )
@@ -69,7 +69,7 @@ class ServiceStreamerTask(AbstractServiceTask):
             self._log.exception(
                 '[%s] Unknown error in %s stream task',
                 self._cam.id,
-                self.service.name.value,
+                self.service.NAME,
             )
             raise
         self._log.info(self._exit_msg)

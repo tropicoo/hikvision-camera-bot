@@ -1,3 +1,4 @@
+from typing import Literal
 from urllib.parse import urlsplit
 
 from hikcamerabot.constants import (
@@ -5,15 +6,15 @@ from hikcamerabot.constants import (
     FFMPEG_CMD_SRS,
     SRS_LIVESTREAM_NAME_TPL,
 )
-from hikcamerabot.enums import Stream, VideoEncoder
+from hikcamerabot.enums import StreamType, VideoEncoderType
 from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask
 from hikcamerabot.utils.task import create_task
 
 
 class SrsStreamService(AbstractStreamService):
-    name = Stream.SRS
-    _FFMPEG_CMD_TPL = FFMPEG_CMD_SRS
+    NAME: Literal[StreamType.SRS] = StreamType.SRS
+    _FFMPEG_CMD_TPL: str = FFMPEG_CMD_SRS
 
     def _format_ffmpeg_cmd_tpl(self) -> str:
         null_audio = (
@@ -50,7 +51,7 @@ class SrsStreamService(AbstractStreamService):
         )
 
     def _generate_transcode_cmd(
-        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoder
+        self, cmd_tpl: str, cmd_transcode: str, enc_codec_name: VideoEncoderType
     ) -> None:
         try:
             inner_args = self._cmd_gen_dispatcher[enc_codec_name]()
