@@ -84,7 +84,7 @@ class ServiceContainer:
         )
 
     def get_all(self) -> tuple[AbstractService, ...]:
-        """Return list with all services."""
+        """Return tuple with all services."""
         return (
             self.alarm,
             self.dvr_stream,
@@ -101,17 +101,18 @@ class HikvisionCam:
     _DEFAULT_GROUP_NAME: str = 'Default group'
 
     def __init__(self, id_: str, conf: CameraConfigSchema, bot: 'CameraBot') -> None:
+        self._log = logging.getLogger(self.__class__.__name__)
+
         self.id = id_
         self.conf = conf
         self.bot = bot
-        self._log = logging.getLogger(self.__class__.__name__)
 
-        self.description: str = conf.description
-        self.host: str = conf.api.host
-        self.hashtag = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
+        self.description = conf.description
+        self.host = conf.api.host
+        self.hashtag: str = f'#{conf.hashtag.lower() if conf.hashtag else self.id}'
         self.group = conf.group or self._DEFAULT_GROUP_NAME
-        self.is_behind_nvr: bool = conf.nvr.is_behind
-        self.nvr_channel_name: str | None = conf.nvr.channel_name
+        self.is_behind_nvr = conf.nvr.is_behind
+        self.nvr_channel_name = conf.nvr.channel_name
 
         self._api = HikvisionAPI(api_client=HikvisionAPIClient(conf=conf.api))
         self._img_processor = ImageProcessor()
@@ -125,7 +126,7 @@ class HikvisionCam:
         self.service_manager = ServiceManager()
         self.service_manager.register(self.services.get_all())
 
-        self.snapshots_taken = 0
+        self.snapshots_taken: int = 0
         self._videogif = VideoGifRecorder(cam=self)
 
         self._log.debug('[%s] Initializing camera "%s"', self.id, self.description)
@@ -137,7 +138,7 @@ class HikvisionCam:
         self,
         video_type: VideoGifType = VideoGifType.ON_DEMAND,
         rewind: bool = False,
-        message: Message = None,
+        message: Message | None = None,
     ) -> None:
         self._videogif.start_rec(video_type=video_type, rewind=rewind, message=message)
 

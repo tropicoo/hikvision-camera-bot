@@ -113,8 +113,8 @@ async def cmd_getfullpic(bot: CameraBot, message: Message, cam: HikvisionCam) ->
 @authorization_check
 @camera_selection
 async def cmd_getvideo(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
-    """Record video gif."""
-    log.info('Get video gif requested')
+    """Record video."""
+    log.info('Record video requested')
     event = GetVideoEvent(
         cam=cam,
         event=EventType.RECORD_VIDEOGIF,
@@ -127,8 +127,8 @@ async def cmd_getvideo(bot: CameraBot, message: Message, cam: HikvisionCam) -> N
 @authorization_check
 @camera_selection
 async def cmd_getvideor(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
-    """Record rewind video gif."""
-    log.info('Get rewound video gif requested')
+    """Record rewind video."""
+    log.info('Get rewound video requested')
     event = GetVideoEvent(
         cam=cam,
         event=EventType.RECORD_VIDEOGIF,

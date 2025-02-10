@@ -111,7 +111,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
 
 
 class ResultRecordVideoGifHandler(AbstractResultEventHandler):
-    """Requested record of video gif result handler."""
+    """Requested record of video result handler."""
 
     async def _handle(self, event: VideoOutboundEvent) -> None:
         try:
@@ -148,7 +148,7 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
                 reply_to_message_id=message.id,
             )
         except Exception:
-            self._log.exception('Failed to upload video gif. Retrying')
+            self._log.exception('Failed to upload video. Retrying')
             raise
 
 

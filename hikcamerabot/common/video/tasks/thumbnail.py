@@ -42,8 +42,10 @@ class MakeThumbnailTask(AbstractFfBinaryTask):
         if self._thumbnail_path.exists():
             return
 
-        self._log.info('Cleaning up errored "%s"', self._thumbnail_path)
+        self._log.info('Cleaning up errored thumbnail: "%s"', self._thumbnail_path)
         try:
             self._thumbnail_path.unlink()
         except Exception:
-            self._log.exception('Cleanup failed for errored "%s"', self._thumbnail_path)
+            self._log.exception(
+                'Cleanup failed for errored thumbnail "%s"', self._thumbnail_path
+            )

@@ -6,14 +6,17 @@ Version: 1.9. [Release details](releases/release_1.9.md).
 
 ## Features
 
-1. Send full/resized pictures on request (NVR is supported).
-2. Auto-send pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**.
-3. Send so-called Telegram video-gifs on request and alert events from the previous
-   paragraph.
-4. YouTube, Telegram, and Icecast direct or re-encoded livestreams.
-5. DVR to local storage with upload to Telegram group.
-6. SRS re-stream server.
-7. Theoretically, Hikvision doorbells also should be supported, but I don't have one.
+1. Send videos and full/resized pictures on request (NVR is supported).
+2. Auto-send videos and pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**.
+3. YouTube, Telegram, and Icecast direct or re-encoded livestreams.
+4. DVR to local storage with upload to Telegram group.
+5. SRS re-stream server with support of "rewound videos".
+6. Theoretically, Hikvision doorbells also should be supported.
+
+> Rewound video is a video that starts from the moment of the alert and goes back in time for a specified period.
+> It's useful when you want to see what happened before the alert or during manual request.
+> The bot will send a video with a specified rewind time in seconds.
+> Example: if a manual request or an alert was triggered at 12:00:00 and the rewind time is 10 seconds with a regular video of 15 seconds, the video will start at 11:59:50 and end at 12:00:15, totaling 25 seconds.
 
 ![frames](.assets/screenshot-1.png)
 
@@ -248,29 +251,31 @@ If you want to use the default UTC time format, set Greenwich Mean Time timezone
 
 
 # Commands
-| Command | Description |
-|---|---|
-| `/start` | Start the bot (one-time action during the first start) and show help |
-| `/help` | Show help message |
-| `/list_cams` | List all your cameras |
-| `/cmds_cam_*` | List commands for particular camera |
-| `/getpic_cam_*` | Get resized picture from your Hikvision camera  |
-| `/getfullpic_cam_*` | Get a full-sized picture from your Hikvision camera |
-| `/ir_on_cam_*` | Turn on Infrared mode |
-| `/ir_off_cam_*` | Turn off Infrared mode |
-| `/ir_auto_cam_*` | Turn on Infrared auto mode |
-| `/md_on_cam_*` | Enable Motion Detection |
-| `/md_off_cam_*` | Disable Motion Detection |
-| `/ld_on_cam_*` | Enable Line Crossing Detection |
-| `/ld_off_cam_*` | Disable Line Crossing Detection |
-| `/intr_on_cam_*` | Enable Intrusion (Field) Detection |
-| `/intr_off_cam_*` | Disable Intrusion (Field) Detection |
-| `/alert_on_cam_*` | Enable Alert (Alarm) mode. It means it will send a respective alert to your account in Telegram |
-| `/alert_off_cam_*` | Disable Alert (Alarm) mode, no alerts will be sent when something is detected |
-| `/yt_on_cam_*` | Enable YouTube stream |
-| `/yt_off_cam_*` | Disable YouTube stream |
-| `/icecast_on_cam_*` | Enable Icecast stream |
-| `/icecast_off_cam_*` | Disable Icecast stream |
+| Command              | Description                                                                                     |
+|----------------------|-------------------------------------------------------------------------------------------------|
+| `/start`             | Start the bot (one-time action during the first start) and show help                            |
+| `/help`              | Show help message                                                                               |
+| `/list_cams`         | List all your cameras                                                                           |
+| `/cmds_cam_*`        | List commands for particular camera                                                             |
+| `/getpic_cam_*`      | Get resized picture from your Hikvision camera                                                  |
+| `/getfullpic_cam_*`  | Get a full-sized picture from your Hikvision camera                                             |
+| `/getvideo_cam_*`    | Get a video from your Hikvision camera                                                          |
+| `/getvideor_cam_*`   | Get a rewound video from your Hikvision camera                                                  |
+| `/ir_on_cam_*`       | Turn on Infrared mode                                                                           |
+| `/ir_off_cam_*`      | Turn off Infrared mode                                                                          |
+| `/ir_auto_cam_*`     | Turn on Infrared auto mode                                                                      |
+| `/md_on_cam_*`       | Enable Motion Detection                                                                         |
+| `/md_off_cam_*`      | Disable Motion Detection                                                                        |
+| `/ld_on_cam_*`       | Enable Line Crossing Detection                                                                  |
+| `/ld_off_cam_*`      | Disable Line Crossing Detection                                                                 |
+| `/intr_on_cam_*`     | Enable Intrusion (Field) Detection                                                              |
+| `/intr_off_cam_*`    | Disable Intrusion (Field) Detection                                                             |
+| `/alert_on_cam_*`    | Enable Alert (Alarm) mode. It means it will send a respective alert to your account in Telegram |
+| `/alert_off_cam_*`   | Disable Alert (Alarm) mode, no alerts will be sent when something is detected                   |
+| `/yt_on_cam_*`       | Enable YouTube stream                                                                           |
+| `/yt_off_cam_*`      | Disable YouTube stream                                                                          |
+| `/icecast_on_cam_*`  | Enable Icecast stream                                                                           |
+| `/icecast_off_cam_*` | Disable Icecast stream                                                                          |
 
 `*` - camera digit id e.g., `cam_1`.
 
@@ -373,11 +378,11 @@ file with DVR stream settings:
 ## YouTube Livestream
 To enable YouTube Live Stream enable it in the `youtube` key.
 
-| Parameter | Value | Description |
-|---|---|---|
-| `"enabled"` | `false` | set `true` to start stream during bot start |
-| `"livestream_template"` | `"tpl_kitchen"` | stream template, read below |
-| `"encoding_template"` | `"x264.kitchen"` | stream template, read below |
+| Parameter               | Value            | Description                                 |
+|-------------------------|------------------|---------------------------------------------|
+| `"enabled"`             | `false`          | set `true` to start stream during bot start |
+| `"livestream_template"` | `"tpl_kitchen"`  | stream template, read below                 |
+| `"encoding_template"`   | `"x264.kitchen"` | stream template, read below                 |
 
 **Livestream templates**
 
@@ -458,20 +463,20 @@ Same for `encoding_templates-template.json` -> `encoding_templates.json`
 
 Where:
 
-| Parameter | Value | Description |
-|---|---|---|
-| `channel` | `101` | camera channel. 101 is the main stream, and 102 is the substream. |
-| `restart_period` | `39600` | stream restart period in seconds |
-| `restart_pause` | `10` | stream pause before starting on restart |
-| `url` | `"rtmp://a.rtmp.youtube.com/live2"` | YouTube rtmp server |
-| `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Streams key. |
-| `ice_genre` | `"Default"` | Icecast stream genre |
-| `ice_name` | `"Default"` | Icecast stream name |
-| `ice_description` | `"Default"` | Icecast stream description |
-| `ice_public` | `0` | Icecast public switch, default 0 |
-| `url` | `"icecast://source@x.x.x.x:8000/video.webm"` | Icecast server URL, Port, and media mount point |
-| `password` | `"xxxx"` | Icecast authentication password |
-| `content_type` | `"video/webm"` | FFMPEG content-type for Icecast stream |
+| Parameter         | Value                                        | Description                                                       |
+|-------------------|----------------------------------------------|-------------------------------------------------------------------|
+| `channel`         | `101`                                        | camera channel. 101 is the main stream, and 102 is the substream. |
+| `restart_period`  | `39600`                                      | stream restart period in seconds                                  |
+| `restart_pause`   | `10`                                         | stream pause before starting on restart                           |
+| `url`             | `"rtmp://a.rtmp.youtube.com/live2"`          | YouTube rtmp server                                               |
+| `key`             | `"aaaa-bbbb-cccc-dddd"`                      | YouTube Live Streams key.                                         |
+| `ice_genre`       | `"Default"`                                  | Icecast stream genre                                              |
+| `ice_name`        | `"Default"`                                  | Icecast stream name                                               |
+| `ice_description` | `"Default"`                                  | Icecast stream description                                        |
+| `ice_public`      | `0`                                          | Icecast public switch, default 0                                  |
+| `url`             | `"icecast://source@x.x.x.x:8000/video.webm"` | Icecast server URL, Port, and media mount point                   |
+| `password`        | `"xxxx"`                                     | Icecast authentication password                                   |
+| `content_type`    | `"video/webm"`                               | FFMPEG content-type for Icecast stream                            |
 
 <details>
   <summary>encoding_templates-template.json</summary>
@@ -594,22 +599,22 @@ Where:
 
 Where:
 
-| Parameter | Value | Description |
-|---|---|---|
-| `null_audio` | `false` | enable fake silent audio (for cameras without mics) |
-| `url` | `"rtmp://a.rtmp.youtube.com/live2"` | YouTube rtmp server |
-| `key` | `"aaaa-bbbb-cccc-dddd"` | YouTube Live Streams key |
-| `loglevel` | `"quiet"` | ffmpeg log levels, default "quiet" |
-| `pix_fmt` | `"yuv420p"` | pixel format, Hikvision streams in yuvj420p |
-| `framerate` | `25` | encode framerate, YouTube will re-encode any to 30 anyway |
-| `preset` | `"superfast"` | libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264 |
-| `maxrate` | `"3000k"` | max variable bitrate |
-| `bufsize` | `"2000k"` | rate control buffer |
-| `tune` | `"zerolatency"` | tune for zero latency |
-| `scale` | \<key\> | re-scale video size |
-| `enabled` | `true` | false to disable and re-encode with source width and height |
-| `width` | `640` | width |
-| `height` | `-1` | height, -1 means will be automatically determined |
-| `format` | `"yuv420p"` | pixel format |
+| Parameter    | Value                               | Description                                                                     |
+|--------------|-------------------------------------|---------------------------------------------------------------------------------|
+| `null_audio` | `false`                             | enable fake silent audio (for cameras without mics)                             |
+| `url`        | `"rtmp://a.rtmp.youtube.com/live2"` | YouTube rtmp server                                                             |
+| `key`        | `"aaaa-bbbb-cccc-dddd"`             | YouTube Live Streams key                                                        |
+| `loglevel`   | `"quiet"`                           | ffmpeg log levels, default "quiet"                                              |
+| `pix_fmt`    | `"yuv420p"`                         | pixel format, Hikvision streams in yuvj420p                                     |
+| `framerate`  | `25`                                | encode framerate, YouTube will re-encode any to 30 anyway                       |
+| `preset`     | `"superfast"`                       | libx264 predefined presets, more here https://trac.ffmpeg.org/wiki/Encode/H.264 |
+| `maxrate`    | `"3000k"`                           | max variable bitrate                                                            |
+| `bufsize`    | `"2000k"`                           | rate control buffer                                                             |
+| `tune`       | `"zerolatency"`                     | tune for zero latency                                                           |
+| `scale`      | \<key\>                             | re-scale video size                                                             |
+| `enabled`    | `true`                              | false to disable and re-encode with source width and height                     |
+| `width`      | `640`                               | width                                                                           |
+| `height`     | `-1`                                | height, -1 means will be automatically determined                               |
+| `format`     | `"yuv420p"`                         | pixel format                                                                    |
 
 > YouTube Live Streams server/key is available at https://www.youtube.com/live_dashboard.

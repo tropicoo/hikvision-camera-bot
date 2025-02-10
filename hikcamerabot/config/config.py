@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Final, cast
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from hikcamerabot.config.schemas import CONFIG_SCHEMA_MAPPING
 from hikcamerabot.config.schemas.encoding import EncodingTemplatesSchema
@@ -17,10 +17,11 @@ from hikcamerabot.exceptions import ConfigError
 type ConfigsType = tuple[
     MainConfigSchema, LivestreamTemplatesSchema, EncodingTemplatesSchema
 ]
+type ConfigErrorsType = dict[ConfigFile, str]
 
 
 class ConfigLoader:
-    _CONFIGS_DIR: Final[str] = 'configs'
+    _CONFIGS_DIR: Final[Path] = Path('configs')
 
     def __init__(self) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -31,10 +32,10 @@ class ConfigLoader:
             self._process_errors_and_exit_app(errors)
         return configs
 
-    def _load_configs(self) -> tuple[ConfigsType, dict[ConfigFile, str]]:
+    def _load_configs(self) -> tuple[ConfigsType, ConfigErrorsType]:
         """Load telegram and camera configuration from config file."""
-        config_data = []
-        errors: dict[ConfigFile, str] = {}
+        config_data: list[BaseModel] = []
+        errors: ConfigErrorsType = {}
         dir_path = Path(__file__).parent.parent.parent / self._CONFIGS_DIR
         for conf_file, schema in CONFIG_SCHEMA_MAPPING.items():
             conf_file_path = dir_path / conf_file
@@ -59,7 +60,7 @@ class ConfigLoader:
             self._log.error(err_msg)
             raise ConfigError(err_msg)
 
-    def _process_errors_and_exit_app(self, errors: dict) -> None:
+    def _process_errors_and_exit_app(self, errors: ConfigErrorsType) -> None:
         for config_filename, error_messages in errors.items():
             self._log.error(
                 'Config validation error - "%s": %s', config_filename, error_messages

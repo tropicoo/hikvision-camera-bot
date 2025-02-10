@@ -50,7 +50,7 @@ class RecordVideoGifTask:
         VideoGifType.ON_DEMAND: EventType.RECORD_VIDEOGIF,
     }
 
-    FILENAME_TIME_FORMAT = '%Y-%b-%d--%H-%M-%S'
+    FILENAME_TIME_FORMAT: str = '%Y-%b-%d--%H-%M-%S'
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class RecordVideoGifTask:
         self._file_path: Path = self._tmp_storage_path / self._filename
         self._thumb_path: Path = self._tmp_storage_path / f'{self._filename}-thumb.jpg'
 
-        self._thumb_created = False
+        self._thumb_created: bool = False
 
         self._rec_time = self._gif_conf.record_time
         if self._rewind:
@@ -95,7 +95,7 @@ class RecordVideoGifTask:
     async def _record(self) -> None:
         """Start Ffmpeg subprocess and return file path and video type."""
         self._log.debug(
-            'Recording "%s" video gif from "%s": "%s"',
+            'Recording "%s" video from "%s": "%s"',
             self._video_type.value,
             self._cam.conf.description,
             self._ffmpeg_cmd,
@@ -203,7 +203,7 @@ class RecordVideoGifTask:
 
     async def _send_confirmation_message(self) -> None:
         if self._video_type is VideoGifType.ON_DEMAND:
-            text = f'📹 Recording video gif for {self._rec_time} seconds'
+            text = f'📹 Recording video for {self._rec_time} seconds'
             await self._result_queue.put(
                 SendTextOutboundEvent(
                     event=EventType.SEND_TEXT,

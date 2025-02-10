@@ -23,7 +23,10 @@ class VideoGifRecorder:
         self._proc_task_queue = deque()
 
     def start_rec(
-        self, video_type: VideoGifType, rewind: bool = False, message: Message = None
+        self,
+        video_type: VideoGifType,
+        rewind: bool = False,
+        message: Message | None = None,
     ) -> None:
         """Start recording video-gif."""
         self._start_rec(video_type=video_type, rewind=rewind, message=message)
@@ -49,7 +52,7 @@ class VideoGifRecorder:
 
     def get_recorded_videos(self) -> list[tuple[str, str]]:
         """Get recorded video file paths."""
-        videos = []
+        videos: list[tuple[str, str]] = []
         for _ in range(len(self._proc_task_queue)):
             task = self._proc_task_queue.pop()
             if task.done():
