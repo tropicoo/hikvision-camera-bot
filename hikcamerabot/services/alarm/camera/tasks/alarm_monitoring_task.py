@@ -1,4 +1,5 @@
 import time
+from typing import Literal
 
 from httpx import ConnectError
 from tenacity import retry, retry_if_exception_type, wait_fixed
@@ -13,7 +14,7 @@ from hikcamerabot.services.alarm.camera.notifier import AlarmNotifier
 class ServiceAlarmMonitoringTask(AbstractServiceTask):
     """Alarm Pusher Service Class."""
 
-    type = ServiceType.ALARM
+    TYPE: Literal[ServiceType.ALARM] = ServiceType.ALARM
 
     RETRY_WAIT: float = 0.5
 

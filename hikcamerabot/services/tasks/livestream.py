@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Literal
 
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
@@ -27,7 +28,7 @@ class FfmpegStdoutReaderTask:
 
 
 class ServiceStreamerTask(AbstractServiceTask):
-    type = ServiceType.STREAM
+    TYPE: Literal[ServiceType.STREAM] = ServiceType.STREAM
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

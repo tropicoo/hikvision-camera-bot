@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
 
+from hikcamerabot.enums import ServiceType, StreamType
 from hikcamerabot.services.abstract import AbstractService
 
 
@@ -58,10 +59,12 @@ class ServiceManager:
     async def stop(self, service_type: str, service_name: str) -> None:
         await self._services[service_type][service_name].stop()
 
-    async def start(self, service_type: str, service_name: str) -> None:
+    async def start(self, service_type: ServiceType, service_name: StreamType) -> None:
         await self._services[service_type][service_name].start()
 
-    def get(self, service_type: str, service_name: str) -> AbstractService:
+    def get(
+        self, service_type: ServiceType, service_name: StreamType
+    ) -> AbstractService:
         return self._services[service_type][service_name]
 
     def get_all(self) -> list[AbstractService]:

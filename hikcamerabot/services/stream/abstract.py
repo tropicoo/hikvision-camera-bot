@@ -3,7 +3,7 @@ import os
 import signal
 import time
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
 from hikcamerabot.config.config import encoding_conf, livestream_conf
@@ -40,7 +40,7 @@ class AbstractStreamService(AbstractService, ABC):
     """livestream Service Base Class."""
 
     NAME: StreamType | None = None
-    type = ServiceType.STREAM
+    TYPE: Literal[ServiceType.STREAM] = ServiceType.STREAM
 
     _FFMPEG_CMD_TPL: str | None = None
     _IGNORE_RESTART_CHECK: int = -1

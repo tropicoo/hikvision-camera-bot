@@ -25,8 +25,8 @@ class AlarmService(AbstractService):
 
     ALARM_TRIGGERS = DetectionType.choices()
 
-    TYPE: Literal[ServiceType.ALARM] = ServiceType.ALARM
     NAME: Literal[AlarmType.ALARM] = AlarmType.ALARM
+    TYPE: Literal[ServiceType.ALARM] = ServiceType.ALARM
 
     def __init__(
         self,
