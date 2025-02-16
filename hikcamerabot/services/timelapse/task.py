@@ -154,7 +154,9 @@ class TimelapseTask(AbstractServiceTask):
 
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(1))
     async def run(self) -> None:
-        self._log.info('Starting timelapse task for "%s"', self._cam.description)
+        self._log.info(
+            '[%s] Starting timelapse task for "%s"', self._cam.id, self._cam.description
+        )
         prefix = f'tmp_timelapse_dir-{self._cam.id}-'
         with TemporaryDirectory(prefix=prefix, dir=self._tmp_storage) as tmp_dir:
             self._full_tmp_path = Path(tmp_dir)
@@ -172,48 +174,55 @@ class TimelapseTask(AbstractServiceTask):
                     self._cam.description,
                 )
 
-    async def _run(self) -> None:
+    async def _run(self) -> None:  # noqa: C901
         sleep_time = self._conf.snapshot_period
         start_hour = self._conf.start_hour
         end_hour = self._conf.end_hour
         img_num: int = 0
         timelapse_started: bool = False
+        default_sleep: float = 1
+
+        async def _make_snapshot() -> None:
+            nonlocal img_num
+            nonlocal timelapse_started
+            nonlocal default_sleep
+
+            await self._take_picture(img_num=img_num)
+            await shallow_sleep_async(sleep_time)
+            timelapse_started = True
+            img_num += 1
+            default_sleep = 0
+
+        async def _create_timelapse() -> None:
+            nonlocal img_num
+            nonlocal timelapse_started
+            nonlocal default_sleep
+
+            filepath = await self._create_timelapse_video(img_num=img_num)
+            await self._shutil_move(filepath, self._conf.storage)
+            filepath.unlink()
+            timelapse_started = False
+            img_num = 0
+            default_sleep = 1
+
         try:
             local_tz = self._local_tz
-            default_sleep: float = 1
             while self.service.started and not self._should_exit():
                 curr_hour = datetime.now(local_tz).hour
                 if start_hour < end_hour:
                     # Period within the same day (e.g., 07:00 to 18:00)
                     if start_hour <= curr_hour < end_hour:
-                        await self._take_picture(img_num=img_num)
-                        await shallow_sleep_async(sleep_time)
-                        timelapse_started = True
-                        img_num += 1
-                        default_sleep = 0
+                        await _make_snapshot()
                     elif timelapse_started and curr_hour >= end_hour:
-                        filepath = await self._create_timelapse_video(img_num=img_num)
-                        await self._shutil_move(filepath, self._conf.storage)
-                        filepath.unlink()
-                        timelapse_started = False
-                        img_num = 0
-                        default_sleep = 1
+                        await _create_timelapse()
+
                 # Spanning across midnight (e.g., 22:00 to 04:00)
                 elif curr_hour >= start_hour or curr_hour < end_hour:
-                    await self._take_picture(img_num=img_num)
-                    await shallow_sleep_async(sleep_time)
-                    timelapse_started = True
-                    img_num += 1
-                    default_sleep = 0
+                    await _make_snapshot()
                 elif timelapse_started and (
                     curr_hour < start_hour or curr_hour >= end_hour
                 ):
-                    filepath = await self._create_timelapse_video(img_num=img_num)
-                    await self._shutil_move(filepath, self._conf.storage)
-                    filepath.unlink()
-                    timelapse_started = False
-                    img_num = 0
-                    default_sleep = 1
+                    await _create_timelapse()
 
                 await shallow_sleep_async(default_sleep)
         except HikvisionCamError as err:
