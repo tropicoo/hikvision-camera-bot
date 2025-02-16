@@ -2,7 +2,6 @@ import asyncio
 import os
 import shutil
 from datetime import datetime
-from enum import IntEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Literal
@@ -24,18 +23,15 @@ if TYPE_CHECKING:
     from hikcamerabot.services.timelapse.timelapse import TimelapseService
 
 
-class _HourType(IntEnum):
-    MIDNIGHT_ZERO = 0
-    MIDNIGHT_24 = 24
-
-
 class MakeTimelapseVideoTask(AbstractFfBinaryTask):
     _CMD = (
         f'{FFMPEG_BIN} -loglevel {{loglevel}} '
         f'-framerate {{img_num}}/{{video_length}} '
         f'-i {{pattern_path}} '
         f'-c:v {{video_codec}} '
-        f'-crf {{image_quality}} -pix_fmt {{pix_fmt}} -r {{framerate}} '
+        f'-crf {{image_quality}} '
+        f'-pix_fmt {{pix_fmt}} '
+        f'-r {{framerate}} '
         f'{{custom_ffmpeg_args}} '
         f'"{{timelapse_video_path}}"'
     )
@@ -187,16 +183,30 @@ class TimelapseTask(AbstractServiceTask):
             default_sleep: float = 1
             while self.service.started and not self._should_exit():
                 curr_hour = datetime.now(local_tz).hour
-                if (start_hour <= curr_hour < _HourType.MIDNIGHT_24) or (
-                    _HourType.MIDNIGHT_ZERO <= curr_hour < end_hour
-                ):
+                if start_hour < end_hour:
+                    # Period within the same day (e.g., 07:00 to 18:00)
+                    if start_hour <= curr_hour < end_hour:
+                        await self._take_picture(img_num=img_num)
+                        await shallow_sleep_async(sleep_time)
+                        timelapse_started = True
+                        img_num += 1
+                        default_sleep = 0
+                    elif timelapse_started and curr_hour >= end_hour:
+                        filepath = await self._create_timelapse_video(img_num=img_num)
+                        await self._shutil_move(filepath, self._conf.storage)
+                        filepath.unlink()
+                        timelapse_started = False
+                        img_num = 0
+                        default_sleep = 1
+                # Spanning across midnight (e.g., 22:00 to 04:00)
+                elif curr_hour >= start_hour or curr_hour < end_hour:
                     await self._take_picture(img_num=img_num)
                     await shallow_sleep_async(sleep_time)
-                    timelapse_started: bool = True
+                    timelapse_started = True
                     img_num += 1
                     default_sleep = 0
                 elif timelapse_started and (
-                    curr_hour >= end_hour or curr_hour < start_hour
+                    curr_hour < start_hour or curr_hour >= end_hour
                 ):
                     filepath = await self._create_timelapse_video(img_num=img_num)
                     await self._shutil_move(filepath, self._conf.storage)

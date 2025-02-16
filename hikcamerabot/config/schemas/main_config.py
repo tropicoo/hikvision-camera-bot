@@ -1,6 +1,6 @@
 from abc import ABC
 from pathlib import Path
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Literal, Self
 from zoneinfo import available_timezones
 
 from pydantic import DirectoryPath, Field, field_validator, model_validator
@@ -207,10 +207,6 @@ class TimelapseSchema(StrictBaseModel):
         if value is None:
             return ''
         return value
-
-    @property
-    def is_day(self) -> bool:
-        return self.start_hour == self.end_hour
 
 
 class CameraConfigSchema(StrictBaseModel):
