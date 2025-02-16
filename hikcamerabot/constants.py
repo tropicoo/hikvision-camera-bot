@@ -19,6 +19,8 @@ SEND_TIMEOUT: Final[int] = 300
 
 TG_MAX_MSG_SIZE: Final[int] = 4096
 
+TIMELAPSE_STILL_EXT: Final[str] = 'jpg'
+
 
 @dataclass(frozen=True)
 class _Img:
@@ -35,15 +37,15 @@ FFMPEG_LOG_LEVELS: Final[frozenset[str]] = frozenset(
 
 SRS_DOCKER_CONTAINER_NAME: Final[str] = 'hikvision_srs_server'
 
-_FFMPEG_BIN: Final[str] = 'ffmpeg'
+DAY_HOURS_RANGE: Final[range] = range(24)
+
+FFMPEG_BIN: Final[str] = 'ffmpeg'
 _FFMPEG_LOG_LEVEL: Final[str] = '-loglevel {loglevel}'
 
 FFMPEG_CAM_VIDEO_SRC: Final[str] = (
     '"rtsp://{user}:{pw}@{host}:{rtsp_port}/Streaming/Channels/{channel}/"'
 )
-FFMPEG_SRS_RTMP_VIDEO_SRC: Final[str] = (
-    f'"rtmp://{SRS_DOCKER_CONTAINER_NAME}/live/{{livestream_name}}"'
-)
+FFMPEG_SRS_RTMP_VIDEO_SRC: Final[str] = '"rtmp://{ip_address}/live/{livestream_name}"'
 FFMPEG_SRS_HLS_VIDEO_SRC: Final[str] = (
     '"http://{ip_address}:8080/hls/live/{livestream_name}.m3u8"'
 )
@@ -54,7 +56,7 @@ RTSP_TRANSPORT_TPL: Final[str] = '-rtsp_transport {rtsp_transport_type}'
 # Video Gif Command. Hardcoded aac audio to mitigate any issues regarding
 # supported formats for mp4 container.
 FFMPEG_CMD_VIDEO_GIF: Final[str] = (
-    f'{_FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
+    f'{FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
     '{rtsp_transport} '
     '-i {video_source} '
     '-c:v copy -c:a aac '
@@ -63,7 +65,7 @@ FFMPEG_CMD_VIDEO_GIF: Final[str] = (
 )
 
 FFMPEG_CMD_HLS_VIDEO_GIF: Final[str] = (
-    f'{_FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
+    f'{FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
     '-live_start_index 0 '
     '-i {video_source} '
     '-c copy '
@@ -73,7 +75,7 @@ FFMPEG_CMD_HLS_VIDEO_GIF: Final[str] = (
 
 # Livestream constants.
 FFMPEG_CMD_SRS: Final[str] = (
-    f'{_FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
+    f'{FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
     '-reorder_queue_size 1000000 '
     '-buffer_size 1000000 '
     '{filter} '
@@ -91,7 +93,7 @@ FFMPEG_CMD_SRS: Final[str] = (
 )
 
 FFMPEG_CMD_LIVESTREAM: Final[str] = (
-    f'{_FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
+    f'{FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
     '{filter} '
     '{rtsp_transport} '
     '-i {video_source} '
@@ -106,7 +108,7 @@ FFMPEG_CMD_LIVESTREAM: Final[str] = (
 )
 
 FFMPEG_CMD_DVR: Final[str] = (
-    f'{_FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
+    f'{FFMPEG_BIN} {_FFMPEG_LOG_LEVEL} '
     '{filter} '
     '{rtsp_transport} '
     '-i {video_source} '

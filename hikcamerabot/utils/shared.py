@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import random
+import socket
 import string
 from collections.abc import Generator
 from datetime import datetime
@@ -13,7 +14,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from hikcamerabot.config.config import main_conf
-from hikcamerabot.constants import TG_MAX_MSG_SIZE
+from hikcamerabot.constants import SRS_DOCKER_CONTAINER_NAME, TG_MAX_MSG_SIZE
 from hikcamerabot.enums import CmdSectionType
 
 if TYPE_CHECKING:
@@ -75,7 +76,7 @@ def build_command_presentation(
     groups: list[str] = []
     visibility_opts = cam.conf.command_sections_visibility
     for section_desc, cmds in commands.items():
-        if getattr(visibility_opts, CmdSectionType(section_desc).name):
+        if getattr(visibility_opts, CmdSectionType(section_desc).name.lower()):
             rendered_cmds = '\n'.join([f'/{cmd}' for cmd in cmds])
             groups.append(f'{section_desc}\n{rendered_cmds}')
     return '\n\n'.join(groups)
@@ -110,3 +111,7 @@ async def send_text(
         else:
             await message.reply_text(chunk, quote=quote, parse_mode=parse_mode)
             first_chunk_sent = True
+
+
+def get_srs_server_ip_address() -> str:
+    return socket.gethostbyname(SRS_DOCKER_CONTAINER_NAME)

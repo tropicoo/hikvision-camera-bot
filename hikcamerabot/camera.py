@@ -24,6 +24,7 @@ from hikcamerabot.services.stream import (
     TelegramStreamService,
     YouTubeStreamService,
 )
+from hikcamerabot.services.timelapse.timelapse import TimelapseService
 from hikcamerabot.utils.image import ImageProcessor
 
 if TYPE_CHECKING:
@@ -82,6 +83,12 @@ class ServiceContainer:
             hik_host=conf.api.host,
             cam=cam,
         )
+        self.timelapse = TimelapseService(
+            configs=conf.timelapse,
+            cam=cam,
+            api=api,
+            bot=bot,
+        )
 
     def get_all(self) -> tuple[AbstractService, ...]:
         """Return tuple with all services."""
@@ -92,6 +99,7 @@ class ServiceContainer:
             self.stream_icecast,
             self.stream_tg,
             self.stream_yt,
+            self.timelapse,
         )
 
 

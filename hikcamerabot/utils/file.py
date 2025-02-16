@@ -1,5 +1,9 @@
+import os
+import shutil
 from pathlib import Path
 from typing import Final
+
+from hikcamerabot.utils.task import wrap
 
 _UNIT_SIZE_NAMES: Final[tuple[str, ...]] = (
     '',
@@ -26,3 +30,8 @@ def format_bytes(num: int, suffix: str = 'B') -> str:
 def file_size(filepath: Path) -> int:
     """Return file size in bytes."""
     return filepath.stat().st_size
+
+
+awaitable_shutil_move = wrap(shutil.move)
+awaitable_shutil_copyfileobj = wrap(shutil.copyfileobj)
+awaitable_os_killpg = wrap(os.killpg)

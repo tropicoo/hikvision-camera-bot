@@ -45,7 +45,7 @@ class AbstractService(ABC):
 
 
 class AbstractServiceTask(ABC):
-    TYPE: str | None = None
+    TYPE: ServiceType | None = None
     _event_manager_cls = None
 
     def __init__(

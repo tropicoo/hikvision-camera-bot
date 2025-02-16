@@ -48,15 +48,15 @@ class EventType(BaseUniqueChoiceStrEnum):
 
 
 class CmdSectionType(BaseUniqueChoiceStrEnum):
-    general = 'General'
-    infrared = 'Infrared Mode'
-    motion_detection = 'Motion DetectionType'
-    line_detection = 'Line Crossing DetectionType'
-    intrusion_detection = 'Intrusion (Field) DetectionType'
-    alert_service = 'Alert Service'
-    stream_youtube = 'YouTube StreamType'
-    stream_telegram = 'Telegram StreamType'
-    stream_icecast = 'Icecast StreamType'
+    GENERAL = 'General'
+    INFRARED = 'Infrared Mode'
+    MOTION_DETECTION = 'Motion DetectionType'
+    LINE_DETECTION = 'Line Crossing DetectionType'
+    INTRUSION_DETECTION = 'Intrusion (Field) DetectionType'
+    ALERT_SERVICE = 'Alert Service'
+    STREAM_YOUTUBE = 'YouTube StreamType'
+    STREAM_TELEGRAM = 'Telegram StreamType'
+    STREAM_ICECAST = 'Icecast StreamType'
 
 
 class AlarmType(BaseUniqueChoiceStrEnum):
@@ -67,6 +67,7 @@ class ServiceType(BaseUniqueChoiceStrEnum):
     ALARM = 'alarm'
     STREAM = 'stream'
     UPLOAD = 'upload'
+    TIMELAPSE = 'timelapse'
 
 
 class DvrUploadType(BaseUniqueChoiceStrEnum):
@@ -117,3 +118,15 @@ class DetectionVerboseName(BaseUniqueChoiceStrEnum):
     INTRUSION = 'Intrusion (Field) DetectionType'
     LINE = 'Line Crossing DetectionType'
     MOTION = 'Motion DetectionType'
+
+
+class FfmpegVideoCodecType(BaseUniqueChoiceStrEnum):
+    X264 = 'libx264'
+    X265 = 'libx265'
+    VP9 = 'vp9'
+
+
+class FfmpegPixFmt(BaseUniqueChoiceStrEnum):
+    YUV420P = 'yuv420p'
+    YUV422P = 'yuv422p'
+    YUV444P = 'yuv444p'
