@@ -2,12 +2,13 @@ import asyncio
 import logging
 import signal
 
+from hikcamerabot.constants import FFMPEG_BIN
 from hikcamerabot.utils.process import get_stdout_stderr, kill_proc
 
 
 class FileLockCheckTask:
     _PROCESS_TIMEOUT: int = 5
-    _LOCKED_FILES_CMD: str = r"lsof|awk '/ffmpeg.*\.mp4/'"
+    _LOCKED_FILES_CMD: str = rf"lsof|awk '/{FFMPEG_BIN}.*\.mp4/'"
 
     def __init__(self, files: list[str]) -> None:
         self._log = logging.getLogger(self.__class__.__name__)

@@ -1,8 +1,9 @@
 from abc import ABC
 from pathlib import Path
-from typing import Annotated, Literal, Self
+from typing import Annotated, Any, Literal, Self
+from zoneinfo import available_timezones
 
-from pydantic import Field, model_validator
+from pydantic import DirectoryPath, Field, field_validator, model_validator
 
 from hikcamerabot.clients.hikvision.enums import AuthType
 from hikcamerabot.config.schemas._types import (
@@ -12,8 +13,8 @@ from hikcamerabot.config.schemas._types import (
     PythonLogLevel,
 )
 from hikcamerabot.config.schemas.abstract import StrictBaseModel
-from hikcamerabot.constants import CMD_CAM_ID_REGEX
-from hikcamerabot.enums import RtspTransportType
+from hikcamerabot.constants import CMD_CAM_ID_REGEX, DAY_HOURS_RANGE
+from hikcamerabot.enums import FfmpegPixFmt, FfmpegVideoCodecType, RtspTransportType
 
 
 class LivestreamConfSchema(StrictBaseModel):
@@ -166,6 +167,52 @@ class NvrSchema(StrictBaseModel):
         return self
 
 
+class TimelapseSchema(StrictBaseModel):
+    enabled: bool
+    start_hour: IntMin0
+    end_hour: IntMin0
+    snapshot_period: IntMin1
+    video_length: IntMin1
+    video_framerate: IntMin1
+    channel: IntMin1
+    timezone: str
+    tmp_storage: DirectoryPath
+    storage: DirectoryPath
+    keep_stills: bool
+    ffmpeg_log_level: FfmpegLogLevel
+    image_quality: IntMin0
+    video_codec: FfmpegVideoCodecType
+    pix_fmt: FfmpegPixFmt
+    custom_ffmpeg_args: str | None
+    nice_value: int | None
+    threads: IntMin1 | None
+
+    @field_validator('start_hour', 'end_hour')
+    @classmethod
+    def validate_start_end_hour(cls, value: int) -> int:
+        if value not in DAY_HOURS_RANGE:
+            raise ValueError(f'Invalid hour: {value}')
+        return value
+
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        if value not in available_timezones():
+            raise ValueError(f'Invalid timezone: {value}')
+        return value
+
+    @field_validator('custom_ffmpeg_args')
+    @classmethod
+    def validate_custom_ffmpeg_args(cls, value: str | None) -> str:
+        if value is None:
+            return ''
+        return value
+
+    @property
+    def is_day(self) -> bool:
+        return self.start_hour == self.end_hour
+
+
 class CameraConfigSchema(StrictBaseModel):
     hidden: bool
     description: str
@@ -174,6 +221,7 @@ class CameraConfigSchema(StrictBaseModel):
     api: CamAPISchema
     rtsp_port: int
     nvr: NvrSchema
+    timelapse: TimelapseSchema
     picture: PictureSchema
     video_gif: VideoGifSchema
     alert: AlertSchema

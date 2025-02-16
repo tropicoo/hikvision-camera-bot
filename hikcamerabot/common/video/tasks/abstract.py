@@ -16,6 +16,7 @@ class AbstractFfBinaryTask(ABC):
         self._file_path = file_path
 
     async def _run_proc(self, cmd: str) -> asyncio.subprocess.Process | None:
+        self._log.debug('Running command: "%s"', cmd)
         proc = await asyncio.create_subprocess_shell(
             cmd=cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )

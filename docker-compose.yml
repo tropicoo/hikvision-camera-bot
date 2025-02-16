@@ -9,6 +9,7 @@ services:
     volumes:
       # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
       - "/data/dvr:/data/dvr"
+      - "/data/timelapses:/data/timelapses"
       - "./configs:/app/configs"
     restart: unless-stopped
     depends_on:

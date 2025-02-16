@@ -75,7 +75,7 @@ def build_command_presentation(
     groups: list[str] = []
     visibility_opts = cam.conf.command_sections_visibility
     for section_desc, cmds in commands.items():
-        if getattr(visibility_opts, CmdSectionType(section_desc).name):
+        if getattr(visibility_opts, CmdSectionType(section_desc).name.lower()):
             rendered_cmds = '\n'.join([f'/{cmd}' for cmd in cmds])
             groups.append(f'{section_desc}\n{rendered_cmds}')
     return '\n\n'.join(groups)
