@@ -45,9 +45,7 @@ _FFMPEG_LOG_LEVEL: Final[str] = '-loglevel {loglevel}'
 FFMPEG_CAM_VIDEO_SRC: Final[str] = (
     '"rtsp://{user}:{pw}@{host}:{rtsp_port}/Streaming/Channels/{channel}/"'
 )
-FFMPEG_SRS_RTMP_VIDEO_SRC: Final[str] = (
-    f'"rtmp://{SRS_DOCKER_CONTAINER_NAME}/live/{{livestream_name}}"'
-)
+FFMPEG_SRS_RTMP_VIDEO_SRC: Final[str] = '"rtmp://{ip_address}/live/{livestream_name}"'
 FFMPEG_SRS_HLS_VIDEO_SRC: Final[str] = (
     '"http://{ip_address}:8080/hls/live/{livestream_name}.m3u8"'
 )

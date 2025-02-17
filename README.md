@@ -2,16 +2,17 @@
 
 Telegram Bot which sends snapshots from your Hikvision cameras.
 
-Version: 1.9. [Release details](releases/release_1.9.md).
+Version: 2.0. [Release details](releases/release_2.0.md).
 
 ## Features
 
 1. Send videos and full/resized pictures on request (NVR is supported).
 2. Auto-send videos and pictures on **Motion**, **Line Crossing** and **Intrusion (Field) Detection**.
 3. YouTube, Telegram, and Icecast direct or re-encoded livestreams.
-4. DVR to local storage with upload to Telegram group.
-5. SRS re-stream server with support of "rewound videos".
-6. Theoretically, Hikvision doorbells also should be supported.
+4. Multiple timelapses per camera
+5. DVR to local storage with upload to Telegram group.
+6. SRS re-stream server with support of "rewound videos".
+7. Theoretically, Hikvision doorbells also should be supported.
 
 > Rewound video is a video that starts from the moment of the alert and goes back in time for a specified period.
 > It's useful when you want to see what happened before the alert or during manual request.
@@ -116,6 +117,29 @@ Configuration files are stored in JSON format and can be found in the `configs` 
         "stream_timeout": 10
       },
       "rtsp_port": 554,
+      "timelapse": [
+        {
+          "enabled": false,
+          "name": "Kitchen view",
+          "start_hour": 7,
+          "end_hour": 18,
+          "snapshot_period": 10,
+          "video_length": 120,
+          "video_framerate": 30,
+          "channel": 102,
+          "timezone": "Europe/Kyiv",
+          "tmp_storage": "/data/timelapses",
+          "storage": "/data/timelapses",
+          "keep_stills": false,
+          "ffmpeg_log_level": "error",
+          "image_quality": 30,
+          "video_codec": "libx264",
+          "pix_fmt": "yuv420p",
+          "custom_ffmpeg_args": "-preset ultrafast",
+          "nice_value": 19,
+          "threads": 1
+        }
+      ],
       "nvr": {
         "is_behind": false,
         "channel_name": ""

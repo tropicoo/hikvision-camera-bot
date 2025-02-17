@@ -84,7 +84,7 @@ class ServiceContainer:
             cam=cam,
         )
         self.timelapse = TimelapseService(
-            conf=conf.timelapse,
+            configs=conf.timelapse,
             cam=cam,
             api=api,
             bot=bot,

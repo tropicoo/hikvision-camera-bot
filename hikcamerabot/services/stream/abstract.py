@@ -27,7 +27,7 @@ from hikcamerabot.services.tasks.livestream import (
     ServiceStreamerTask,
 )
 from hikcamerabot.utils.process import kill_proc
-from hikcamerabot.utils.shared import shallow_sleep_async
+from hikcamerabot.utils.shared import get_srs_server_ip_address, shallow_sleep_async
 from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:
@@ -102,10 +102,11 @@ class AbstractStreamService(AbstractService, ABC):
         """From direct cam video source or SRS."""
         if self._srs_enabled:
             return FFMPEG_SRS_RTMP_VIDEO_SRC.format(
+                ip_address=get_srs_server_ip_address(),
                 livestream_name=SRS_LIVESTREAM_NAME_TPL.format(
                     channel=self._stream_conf.channel,
                     cam_id=self.cam.id,
-                )
+                ),
             )
         return FFMPEG_CAM_VIDEO_SRC.format(
             user=self._hik_user,

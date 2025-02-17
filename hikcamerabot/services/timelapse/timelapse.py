@@ -1,4 +1,5 @@
 import asyncio
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 from hikcamerabot.clients.hikvision import HikvisionAPI
@@ -16,13 +17,13 @@ if TYPE_CHECKING:
 class TimelapseService(AbstractService):
     def __init__(
         self,
-        conf: TimelapseSchema,
+        configs: list[TimelapseSchema],
         api: HikvisionAPI,
         cam: 'HikvisionCam',
         bot: 'CameraBot',
     ) -> None:
         super().__init__(cam)
-        self._conf = conf
+        self._configs = configs
         self._api = api
         self.bot = bot
 
@@ -30,29 +31,30 @@ class TimelapseService(AbstractService):
 
     async def start(self) -> None:
         if self.started:
-            raise ServiceRuntimeError('Timelapse service already started')
+            raise ServiceRuntimeError('Timelapse service has already started')
         self._started.set()
         self._start_service_task()
 
     def _start_service_task(self) -> None:
-        task_name = f'{TimelapseTask.__name__}_{self.cam.id}'
-        create_task(
-            TimelapseTask(conf=self._conf, service=self).run(),
-            task_name=task_name,
-            logger=self._log,
-            exception_message='Task %s raised an exception',
-            exception_message_args=(task_name,),
-        )
+        for conf in self._configs:
+            task_name = f'{TimelapseTask.__name__}_{self.cam.id}_{conf.name}_{conf.start_hour}-{conf.end_hour}'
+            create_task(
+                TimelapseTask(conf=conf, service=self).run(),
+                task_name=task_name,
+                logger=self._log,
+                exception_message='Task %s raised an exception',
+                exception_message_args=(task_name,),
+            )
 
     async def stop(self) -> None:
         if not self.started:
-            raise ServiceRuntimeError('Timelapse service already stopped')
+            raise ServiceRuntimeError('Timelapse service has been already stopped')
         self._started.clear()
 
-    @property
+    @cached_property
     def enabled_in_conf(self) -> bool:
-        """Check if stream is enabled in configuration."""
-        return self._conf.enabled
+        """Check if any of the timelapses are enabled in configuration."""
+        return any(conf.enabled for conf in self._configs)
 
     @property
     def started(self) -> bool:

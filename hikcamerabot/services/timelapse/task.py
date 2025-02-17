@@ -1,6 +1,4 @@
 import asyncio
-import os
-import shutil
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,14 +8,16 @@ from zoneinfo import ZoneInfo
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from hikcamerabot.common.video.tasks.abstract import AbstractFfBinaryTask
+from hikcamerabot.config.env_settings import settings
 from hikcamerabot.config.schemas.main_config import TimelapseSchema
 from hikcamerabot.constants import FFMPEG_BIN, TIMELAPSE_STILL_EXT
 from hikcamerabot.enums import ServiceType
 from hikcamerabot.exceptions import HikvisionCamError
 from hikcamerabot.services.abstract import AbstractServiceTask
+from hikcamerabot.utils.file import awaitable_shutil_copyfileobj, awaitable_shutil_move
 from hikcamerabot.utils.process import get_stdout_stderr
 from hikcamerabot.utils.shared import shallow_sleep_async
-from hikcamerabot.utils.task import create_task, wrap
+from hikcamerabot.utils.task import create_task
 
 if TYPE_CHECKING:
     from hikcamerabot.services.timelapse.timelapse import TimelapseService
@@ -51,8 +51,6 @@ class MakeTimelapseVideoTask(AbstractFfBinaryTask):
         self._conf = conf
         self._pattern_path = pattern_path
         self._current_tmp_dir = self._file_path.parent
-
-        self._shutil_move = wrap(shutil.move)
 
     async def run(self) -> None:
         try:
@@ -112,7 +110,6 @@ class MakeTimelapseVideoTask(AbstractFfBinaryTask):
     async def _move_stills_to_storage(self) -> None:
         timelapse_stills_dir = self._conf.storage / self._TIMELAPSE_DIR
         dest_timelapse_dir = timelapse_stills_dir / self._file_path.stem
-        dest_timelapse_dir.mkdir(parents=True, exist_ok=True)
 
         self._log.info(
             'Moving timelapse stills from "%s" to "%s"',
@@ -120,7 +117,7 @@ class MakeTimelapseVideoTask(AbstractFfBinaryTask):
             dest_timelapse_dir,
         )
         try:
-            await self._shutil_move(
+            await awaitable_shutil_move(
                 self._current_tmp_dir.as_posix(), dest_timelapse_dir.as_posix()
             )
         except Exception as err:
@@ -139,16 +136,13 @@ class TimelapseTask(AbstractServiceTask):
     TYPE: Literal[ServiceType.TIMELAPSE] = ServiceType.TIMELAPSE
     service: 'TimelapseService'
 
-    server_tz = ZoneInfo(os.getenv('TZ'))
+    server_tz = ZoneInfo(settings.tz)
 
     def __init__(self, *args, conf: TimelapseSchema, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._conf = conf
         self._local_tz = ZoneInfo(self._conf.timezone)
         self._tmp_storage = self._conf.tmp_storage
-
-        self._copyfileobj = wrap(shutil.copyfileobj)
-        self._shutil_move = wrap(shutil.move)
 
         self._full_tmp_path: Path | None = None
 
@@ -198,9 +192,7 @@ class TimelapseTask(AbstractServiceTask):
             nonlocal timelapse_started
             nonlocal default_sleep
 
-            filepath = await self._create_timelapse_video(img_num=img_num)
-            await self._shutil_move(filepath, self._conf.storage)
-            filepath.unlink()
+            _ = await self._create_timelapse_video(img_num=img_num)
             timelapse_started = False
             img_num = 0
             default_sleep = 1
@@ -239,12 +231,12 @@ class TimelapseTask(AbstractServiceTask):
         )
         self._log.info('[%s] Saving timelapse image "%s"', self._cam.id, filepath)
         with filepath.open('wb') as fd_out:
-            await self._copyfileobj(img, fd_out)
+            await awaitable_shutil_copyfileobj(img, fd_out)
 
     async def _create_timelapse_video(self, img_num: int) -> Path:
         task_name = f'{self._cam.id} timelapse video task'
         timestamp = datetime.now(tz=self.server_tz).strftime('%Y-%m-%d_%H-%M-%S')
-        filepath = self._full_tmp_path / f'{self._cam.id}-timelapse-{timestamp}.mp4'
+        filepath = self._conf.storage / f'{self._cam.id}-timelapse-{timestamp}.mp4'
         task = MakeTimelapseVideoTask(
             img_num=img_num,
             conf=self._conf,

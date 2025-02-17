@@ -7,15 +7,16 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
-      - "/data/dvr:/data/dvr"
-      - "/data/timelapses:/data/timelapses"
+      - "/data/dvr:/data/dvr"                # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
+      - "/data/timelapses:/data/timelapses"  # The first path is a real local storage path e.g., "D:\Timelapses" in Windows. Change to your preferred one.
       - "./configs:/app/configs"
     restart: unless-stopped
     depends_on:
       - hikvision-srs-server
     command: >
       bash -c "python ./bot.py"
+    networks:
+      - hik_network
 
   hikvision-srs-server:
     container_name: "hikvision_srs_server"
@@ -37,3 +38,9 @@ services:
       - "1935:1935"
       # SRS WebUI port. Also serves HLS stream; same warning as for previous port mapping.
       - "8080:8080"
+    networks:
+      - hik_network
+
+networks:
+  hik_network:
+    driver: bridge

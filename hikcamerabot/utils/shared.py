@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import random
+import socket
 import string
 from collections.abc import Generator
 from datetime import datetime
@@ -13,7 +14,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from hikcamerabot.config.config import main_conf
-from hikcamerabot.constants import TG_MAX_MSG_SIZE
+from hikcamerabot.constants import SRS_DOCKER_CONTAINER_NAME, TG_MAX_MSG_SIZE
 from hikcamerabot.enums import CmdSectionType
 
 if TYPE_CHECKING:
@@ -110,3 +111,7 @@ async def send_text(
         else:
             await message.reply_text(chunk, quote=quote, parse_mode=parse_mode)
             first_chunk_sent = True
+
+
+def get_srs_server_ip_address() -> str:
+    return socket.gethostbyname(SRS_DOCKER_CONTAINER_NAME)

@@ -4,11 +4,13 @@ from urllib.parse import urlsplit
 from hikcamerabot.constants import (
     FFMPEG_CMD_NULL_AUDIO,
     FFMPEG_CMD_SRS,
+    SRS_DOCKER_CONTAINER_NAME,
     SRS_LIVESTREAM_NAME_TPL,
 )
 from hikcamerabot.enums import StreamType, VideoEncoderType
 from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask
+from hikcamerabot.utils.shared import get_srs_server_ip_address
 from hikcamerabot.utils.task import create_task
 
 
@@ -67,4 +69,7 @@ class SrsStreamService(AbstractStreamService):
             channel=self._stream_conf.channel,
             cam_id=self.cam.id,
         )
-        return f'{self._stream_conf.url}/{livestream_name}'
+        url = self._stream_conf.url.replace(
+            SRS_DOCKER_CONTAINER_NAME, get_srs_server_ip_address()
+        )
+        return f'{url}/{livestream_name}'

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import signal
-import socket
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar
@@ -18,7 +17,6 @@ from hikcamerabot.constants import (
     FFMPEG_SRS_HLS_VIDEO_SRC,
     FFMPEG_SRS_RTMP_VIDEO_SRC,
     RTSP_TRANSPORT_TPL,
-    SRS_DOCKER_CONTAINER_NAME,
     SRS_LIVESTREAM_NAME_TPL,
 )
 from hikcamerabot.enums import EventType, VideoGifType
@@ -29,7 +27,12 @@ from hikcamerabot.event_engine.events.outbound import (
 from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.utils.file import file_size
 from hikcamerabot.utils.process import kill_proc
-from hikcamerabot.utils.shared import bold, format_ts, gen_random_str
+from hikcamerabot.utils.shared import (
+    bold,
+    format_ts,
+    gen_random_str,
+    get_srs_server_ip_address,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -226,7 +229,7 @@ class RecordVideoGifTask:
             )
             if self._rewind:
                 video_source = FFMPEG_SRS_HLS_VIDEO_SRC.format(
-                    ip_address=socket.gethostbyname(SRS_DOCKER_CONTAINER_NAME),
+                    ip_address=get_srs_server_ip_address(),
                     livestream_name=livestream_name,
                 )
                 return FFMPEG_CMD_HLS_VIDEO_GIF.format(
@@ -236,7 +239,8 @@ class RecordVideoGifTask:
                     filepath=self._file_path,
                 )
             video_source = FFMPEG_SRS_RTMP_VIDEO_SRC.format(
-                livestream_name=livestream_name
+                ip_address=get_srs_server_ip_address(),
+                livestream_name=livestream_name,
             )
         else:
             video_source = FFMPEG_CAM_VIDEO_SRC.format(

@@ -1,11 +1,11 @@
 from abc import ABC
 from pathlib import Path
 from typing import Annotated, Literal, Self
-from zoneinfo import available_timezones
 
 from pydantic import DirectoryPath, Field, field_validator, model_validator
 
 from hikcamerabot.clients.hikvision.enums import AuthType
+from hikcamerabot.config._types import TimezoneType
 from hikcamerabot.config.schemas._types import (
     FfmpegLogLevel,
     IntMin0,
@@ -169,13 +169,14 @@ class NvrSchema(StrictBaseModel):
 
 class TimelapseSchema(StrictBaseModel):
     enabled: bool
+    name: str
     start_hour: IntMin0
     end_hour: IntMin0
     snapshot_period: IntMin1
     video_length: IntMin1
     video_framerate: IntMin1
     channel: IntMin1
-    timezone: str
+    timezone: TimezoneType
     tmp_storage: DirectoryPath
     storage: DirectoryPath
     keep_stills: bool
@@ -194,13 +195,6 @@ class TimelapseSchema(StrictBaseModel):
             raise ValueError(f'Invalid hour: {value}')
         return value
 
-    @field_validator('timezone')
-    @classmethod
-    def validate_timezone(cls, value: str) -> str:
-        if value not in available_timezones():
-            raise ValueError(f'Invalid timezone: {value}')
-        return value
-
     @field_validator('custom_ffmpeg_args')
     @classmethod
     def validate_custom_ffmpeg_args(cls, value: str | None) -> str:
@@ -217,7 +211,7 @@ class CameraConfigSchema(StrictBaseModel):
     api: CamAPISchema
     rtsp_port: int
     nvr: NvrSchema
-    timelapse: TimelapseSchema
+    timelapse: list[TimelapseSchema]
     picture: PictureSchema
     video_gif: VideoGifSchema
     alert: AlertSchema
