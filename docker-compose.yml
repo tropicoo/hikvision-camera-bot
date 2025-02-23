@@ -10,11 +10,11 @@ services:
       - "/data/dvr:/data/dvr"                # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
       - "/data/timelapses:/data/timelapses"  # The first path is a real local storage path e.g., "D:\Timelapses" in Windows. Change to your preferred one.
       - "./configs:/app/configs"
-    restart: unless-stopped
     depends_on:
       - hikvision-srs-server
     command: >
       bash -c "python ./bot.py"
+    restart: unless-stopped
     networks:
       - hik_network
 
@@ -33,6 +33,7 @@ services:
       - "./srs_prod:/usr/local/srs/user_conf"
     command: >
       bash -c "./objs/srs -c user_conf/hik-docker.conf"
+    restart: unless-stopped
     ports:
       # SRS RTMP port. If you comment this out, you won't be able to connect with video player like VLC.
       - "1935:1935"

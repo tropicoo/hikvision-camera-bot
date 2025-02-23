@@ -37,16 +37,15 @@ class TimelapseService(AbstractService):
 
     def _start_service_task(self) -> None:
         for conf in self._configs:
-            if not conf.enabled:
-                continue
-            task_name = f'{TimelapseTask.__name__}_{self.cam.id}_{conf.name}_{conf.start_hour}-{conf.end_hour}'
-            create_task(
-                TimelapseTask(conf=conf, service=self).run(),
-                task_name=task_name,
-                logger=self._log,
-                exception_message='Task %s raised an exception',
-                exception_message_args=(task_name,),
-            )
+            if conf.enabled:
+                task_name = f'{TimelapseTask.__name__}_{self.cam.id}_{conf.name}_{conf.start_hour}-{conf.end_hour}'
+                create_task(
+                    TimelapseTask(conf=conf, service=self).run(),
+                    task_name=task_name,
+                    logger=self._log,
+                    exception_message='Task %s raised an exception',
+                    exception_message_args=(task_name,),
+                )
 
     async def stop(self) -> None:
         if not self.started:

@@ -157,12 +157,12 @@ class AbstractStreamService(AbstractService, ABC):
             self._log.warning(warn_msg)
             raise ServiceRuntimeError(warn_msg)
         try:
-            self._log.info('Killing proc')
+            self._log.info('Killing proc "%s"', self._cmd)
             await kill_proc(process=self._proc, signal_=signal.SIGINT, reraise=True)
         except ProcessLookupError as err:
             self._log.error('Failed to kill process: %s', err)
         except Exception as err:
-            err_msg = f'Failed to kill/disable {self.NAME.value} stream'
+            err_msg = f'Failed to kill/disable {self.NAME} stream'
             self._log.exception(err_msg)
             raise ServiceRuntimeError(err_msg) from err
 

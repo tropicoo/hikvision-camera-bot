@@ -47,7 +47,7 @@ class AbstractTaskEvent(ABC):
 class TaskTakeSnapshot(AbstractTaskEvent):
     async def _handle(self, event: GetPicEvent) -> None:
         cam = event.cam
-        channel: int = cam.conf.picture.on_demand.channel
+        channel = cam.conf.picture.on_demand.channel
         try:
             img, create_ts = await cam.take_snapshot(
                 channel=channel, resize=event.resize

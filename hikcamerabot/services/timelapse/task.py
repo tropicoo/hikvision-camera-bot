@@ -149,7 +149,10 @@ class TimelapseTask(AbstractServiceTask):
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(1))
     async def run(self) -> None:
         self._log.info(
-            '[%s] Starting timelapse task for "%s"', self._cam.id, self._cam.description
+            '[%s] Starting timelapse task "%s" for "%s"',
+            self._cam.id,
+            self._conf.name,
+            self._cam.description,
         )
         prefix = f'tmp_timelapse_dir-{self._cam.id}-'
         with TemporaryDirectory(prefix=prefix, dir=self._tmp_storage) as tmp_dir:
