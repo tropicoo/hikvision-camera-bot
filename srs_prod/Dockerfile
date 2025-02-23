@@ -1,1 +1,1 @@
-FROM ossrs/srs:4
+FROM ossrs/srs:6
