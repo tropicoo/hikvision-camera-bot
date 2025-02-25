@@ -50,7 +50,7 @@ class MakeTimelapseVideoTask(AbstractFfBinaryTask):
         self._img_num = img_num
         self._conf = conf
         self._pattern_path = pattern_path
-        self._current_tmp_dir = self._file_path.parent
+        self._current_tmp_dir = self._pattern_path.parent
 
     async def run(self) -> None:
         try:

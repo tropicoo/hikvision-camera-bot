@@ -34,5 +34,5 @@ class OutboundEventDispatcher(AbstractDispatcher):
 
     async def dispatch(self, event: BaseOutboundEvent) -> None:
         """Dispatch outbound event to appropriate handler."""
-        self._log.debug('Outbound event: %s', event)
+        self._log.debug('Outbound event: "%s"', event)
         await self._dispatch[event.event].handle(event)
