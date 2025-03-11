@@ -152,7 +152,7 @@ class AlertStreamEndpoint(AbstractEndpoint):
         )
         timeout = httpx.Timeout(CONN_TIMEOUT, read=300)
         response: httpx.Response
-        self._log.debug('Alert StreamType Request: %s - %s', self._METHOD, url)
+        self._log.debug('Alert Stream Request: %s - %s', self._METHOD, url)
         async with self._api_client.session.stream(
             self._METHOD, url, timeout=timeout
         ) as response:

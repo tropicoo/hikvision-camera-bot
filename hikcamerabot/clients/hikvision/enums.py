@@ -8,7 +8,7 @@ class AuthType(BaseUniqueChoiceStrEnum):
 
 
 class EndpointAddr(BaseUniqueChoiceStrEnum):
-    ALERT_STREAM = 'ISAPI/EventType/notification/alertStream'
+    ALERT_STREAM = 'ISAPI/Event/notification/alertStream'
     CHANNEL_CAPABILITIES = 'ISAPI/Image/channels/1/capabilities'
     EXPOSURE = 'ISAPI/Image/channels/1/exposure'
     IRCUT_FILTER = 'ISAPI/Image/channels/1/ircutFilter'

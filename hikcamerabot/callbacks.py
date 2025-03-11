@@ -207,7 +207,7 @@ async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
 async def cmd_intrusion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Intrusion DetectionType."""
+    """Enable camera's Intrusion Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,
@@ -223,7 +223,7 @@ async def cmd_intrusion_detection_on(
 async def cmd_intrusion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Intrusion DetectionType."""
+    """Disable camera's Intrusion Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,
@@ -239,7 +239,7 @@ async def cmd_intrusion_detection_off(
 async def cmd_motion_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Motion DetectionType."""
+    """Enable camera's Motion Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,
@@ -255,7 +255,7 @@ async def cmd_motion_detection_on(
 async def cmd_motion_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Motion DetectionType."""
+    """Disable camera's Motion Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,
@@ -271,7 +271,7 @@ async def cmd_motion_detection_off(
 async def cmd_line_detection_on(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Enable camera's Line Crossing DetectionType."""
+    """Enable camera's Line Crossing Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,
@@ -287,7 +287,7 @@ async def cmd_line_detection_on(
 async def cmd_line_detection_off(
     bot: CameraBot, message: Message, cam: HikvisionCam
 ) -> None:
-    """Disable camera's Line Crossing DetectionType."""
+    """Disable camera's Line Crossing Detection."""
     event = DetectionConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_DETECTION,

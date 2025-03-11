@@ -95,7 +95,7 @@ class AbstractStreamService(AbstractService, ABC):
 
     @property
     def _srs_enabled(self) -> bool:
-        """If SRS StreamType enabled in conf, it will be used as input video source."""
+        """If SRS Stream enabled in conf, it will be used as input video source."""
         return self.cam.conf.livestream.srs.enabled
 
     def _generate_video_source(self) -> str:

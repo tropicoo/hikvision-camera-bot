@@ -128,7 +128,7 @@ class AlertSchema(StrictBaseModel):
         try:
             return getattr(self, type_)
         except AttributeError:
-            raise ValueError(f'Invalid DetectionType: {type_}') from None
+            raise ValueError(f'Invalid Detection: {type_}') from None
 
 
 class CamAPIAuthSchema(StrictBaseModel):

@@ -25,7 +25,7 @@ class ResultWorkerTask:
                     await self._outbound_dispatcher.dispatch(event)
                 except Exception:
                     self._log.exception(
-                        'Unhandled exception in result worker %s. EventType context: %s',
+                        'Unhandled exception in result worker %s. Event context: %s',
                         self._worker_id,
                         event,
                     )

@@ -41,7 +41,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             raise
         except ConnectError:
             self._log.error(
-                '[%s] Failed to connect to Alert StreamType. Retrying in %s seconds...',
+                '[%s] Failed to connect to Alert Stream. Retrying in %s seconds...',
                 self._cam.id,
                 self.RETRY_WAIT,
             )

@@ -39,7 +39,7 @@ class NvrAlarmMonitoringTask:
         self._cam_delays = _cam_delays
 
         # Each camera connects to the same NVR with the same credentials.
-        # We need Hikvision API instance just to get the NVR Alert StreamType.
+        # We need Hikvision API instance just to get the NVR Alert Stream.
         self._api = cameras[0]._api  # noqa: SLF001
 
         self._run_forever = run_forever
@@ -47,13 +47,13 @@ class NvrAlarmMonitoringTask:
 
     @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(RETRY_WAIT))
     async def run(self) -> None:
-        """Monitor and process alarm/alert chunks from NVR Alarm StreamType."""
+        """Monitor and process alarm/alert chunks from NVR Alarm Stream."""
         self._log.info('Starting NVR Alarm Monitoring Task')
         try:
             await self._process_chunks()
         except ChunkLoopError:
             self._log.error(
-                'Unexpectedly exited from NVR "%s" Alert StreamType chunk processing loop. '
+                'Unexpectedly exited from NVR "%s" Alert Stream chunk processing loop. '
                 'Retrying in %s seconds...',
                 self._host,
                 self.RETRY_WAIT,
@@ -61,7 +61,7 @@ class NvrAlarmMonitoringTask:
             raise
         except ConnectError:
             self._log.error(
-                'Failed to connect to NVR "%s" Alert StreamType. Retrying in %s seconds...',
+                'Failed to connect to NVR "%s" Alert Stream. Retrying in %s seconds...',
                 self._host,
                 self.RETRY_WAIT,
             )
@@ -76,7 +76,7 @@ class NvrAlarmMonitoringTask:
             raise
 
     async def _process_chunks(self) -> None:
-        """Process chunks received from NVR Alert StreamType."""
+        """Process chunks received from NVR Alert Stream."""
         async for chunk in self._api.alert_stream():
             self._log.debug('Alert chunk from NVR "%s": %s', self._host, chunk)
             if not chunk:

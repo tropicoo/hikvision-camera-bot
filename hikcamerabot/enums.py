@@ -45,18 +45,19 @@ class EventType(BaseUniqueChoiceStrEnum):
     SEND_TEXT = 'send_text'
     STREAM = 'stream'
     TAKE_SNAPSHOT = 'take_snapshot'
+    SEND_TIMELAPSE = 'send_timelapse'
 
 
 class CmdSectionType(BaseUniqueChoiceStrEnum):
     GENERAL = 'General'
     INFRARED = 'Infrared Mode'
-    MOTION_DETECTION = 'Motion DetectionType'
-    LINE_DETECTION = 'Line Crossing DetectionType'
-    INTRUSION_DETECTION = 'Intrusion (Field) DetectionType'
+    MOTION_DETECTION = 'Motion Detection'
+    LINE_DETECTION = 'Line Crossing Detection'
+    INTRUSION_DETECTION = 'Intrusion (Field) Detection'
     ALERT_SERVICE = 'Alert Service'
-    STREAM_YOUTUBE = 'YouTube StreamType'
-    STREAM_TELEGRAM = 'Telegram StreamType'
-    STREAM_ICECAST = 'Icecast StreamType'
+    STREAM_YOUTUBE = 'YouTube Stream'
+    STREAM_TELEGRAM = 'Telegram Stream'
+    STREAM_ICECAST = 'Icecast Stream'
 
 
 class AlarmType(BaseUniqueChoiceStrEnum):
@@ -97,7 +98,7 @@ class DetectionType(BaseUniqueChoiceStrEnum):
 
 
 class DetectionEventName(BaseUniqueChoiceStrEnum):
-    """EventType name coming from Hikvision's camera alert stream."""
+    """Event name coming from Hikvision's camera alert stream."""
 
     INTRUSION = 'fielddetection'
     LINE = 'linedetection'
@@ -115,9 +116,9 @@ class DetectionXMLMethodName(BaseUniqueChoiceStrEnum):
 class DetectionVerboseName(BaseUniqueChoiceStrEnum):
     """Detection verbose name."""
 
-    INTRUSION = 'Intrusion (Field) DetectionType'
-    LINE = 'Line Crossing DetectionType'
-    MOTION = 'Motion DetectionType'
+    INTRUSION = 'Intrusion (Field) Detection'
+    LINE = 'Line Crossing Detection'
+    MOTION = 'Motion Detection'
 
 
 class FfmpegVideoCodecType(BaseUniqueChoiceStrEnum):

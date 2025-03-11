@@ -120,7 +120,7 @@ class RecordVideoGifTask:
         await self._result_queue.put(
             SendTextOutboundEvent(
                 event=EventType.SEND_TEXT,
-                text=f'{err_msg}.\nEventType type: {self._event.value}\nCheck logs.',
+                text=f'{err_msg}.\nEvent type: {self._event.value}\nCheck logs.',
                 message=self._message,
             )
         )
