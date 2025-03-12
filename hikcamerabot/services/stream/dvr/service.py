@@ -1,6 +1,7 @@
 import asyncio
 from typing import Literal
 
+from hikcamerabot.config.schemas.main_config import DvrLivestreamConfSchema
 from hikcamerabot.constants import (
     FFMPEG_CMD_DVR,
     FFMPEG_CMD_NULL_AUDIO,
@@ -19,6 +20,7 @@ class DvrStreamService(AbstractStreamService):
     _DVR_FILENAME_TPL: str = (
         '{storage_path}/{cam_id}_{channel}_{segment_time}_%Y-%m-%d_%H-%M-%S.mp4'
     )
+    _conf: DvrLivestreamConfSchema
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -64,18 +66,17 @@ class DvrStreamService(AbstractStreamService):
         """Start Upload Engine only if at least one storage is enabled."""
         # TODO: Right now upload engine will start only if DVR records are set
         # TODO: to be deleted since there is no tracking for uploaded files.
-        for storage_settings in self._conf.upload.storage.values():
-            if (
-                storage_settings.enabled
-                and self.cam.conf.livestream.dvr.upload.delete_after_upload
-            ):
-                self._log.info(
-                    '[%s] Starting DVR Upload Engine for "%s"',
-                    self.cam.id,
-                    self.cam.description,
-                )
-                await self._upload_engine.start()
-                return
+        if (
+            self._conf.upload.storage.is_any_upload_storage_enabled()
+            and self.cam.conf.livestream.dvr.upload.delete_after_upload
+        ):
+            self._log.info(
+                '[%s] Starting DVR Upload Engine for "%s"',
+                self.cam.id,
+                self.cam.description,
+            )
+            await self._upload_engine.start()
+            return
         self._log.info('[%s] DVR Upload Engine not started', self.cam.id)
 
     def _start_stream_task(self) -> None:

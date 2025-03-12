@@ -3,7 +3,6 @@ import logging
 from typing import TYPE_CHECKING, ClassVar
 
 from hikcamerabot.config.schemas.main_config import (
-    BaseDVRStorageUploadConfSchema,
     DvrLivestreamConfSchema,
 )
 from hikcamerabot.enums import DvrUploadType
@@ -37,10 +36,9 @@ class DvrUploadEngine:
     def _create_storage_queues(self) -> dict[str, asyncio.Queue]:
         storage_queues: dict[str, asyncio.Queue] = {}
 
-        settings: BaseDVRStorageUploadConfSchema
-        for storage, settings in dict(self._conf.upload.storage).items():
+        for storage_name, settings in self._conf.upload.storage.get_storage_items():
             if settings.enabled:
-                storage_queues[storage] = asyncio.Queue()
+                storage_queues[storage_name] = asyncio.Queue()
 
         self._log.debug('[%s] Created storage queues: %s', self._cam.id, storage_queues)
         return storage_queues

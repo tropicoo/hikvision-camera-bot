@@ -1,4 +1,5 @@
 from abc import ABC
+from collections.abc import Generator
 from pathlib import Path
 from typing import Annotated, Literal, Self
 
@@ -41,11 +42,23 @@ class TelegramDvrUploadConfSchema(BaseDVRStorageUploadConfSchema):
 class DvrUploadStorageConfSchema(StrictBaseModel):
     telegram: TelegramDvrUploadConfSchema
 
+    def is_any_upload_storage_enabled(self) -> bool:
+        return any(
+            getattr(self, storage_name).enabled
+            for storage_name in self.model_fields_set
+        )
+
+    def get_storage_items(
+        self,
+    ) -> Generator[tuple[str, BaseDVRStorageUploadConfSchema]]:
+        for storage_name in self.model_fields_set:
+            yield storage_name, getattr(self, storage_name)
+
     def get_storage_conf_by_type(self, type_: str) -> BaseDVRStorageUploadConfSchema:
         try:
             return getattr(self, type_)
-        except AttributeError:
-            raise ValueError(f'Invalid storage type: {type_}') from None
+        except AttributeError as err:
+            raise ValueError(f'Invalid storage type: {type_}') from err
 
 
 class DvrUploadConfSchema(StrictBaseModel):
