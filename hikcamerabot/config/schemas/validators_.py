@@ -1,4 +1,7 @@
-from hikcamerabot.constants import FFMPEG_LOG_LEVELS, PYTHON_LOG_LEVELS
+import logging
+from zoneinfo import available_timezones
+
+from hikcamerabot.constants import FFMPEG_LOG_LEVELS
 
 
 def int_min_0(value: int) -> int:
@@ -26,6 +29,13 @@ def validate_ffmpeg_loglevel(value: str) -> str:
 
 
 def validate_python_log_level(value: str) -> str:
-    if value not in PYTHON_LOG_LEVELS:
-        raise ValueError(f'Invalid log level: {value}. Allowed: {PYTHON_LOG_LEVELS}')
+    allowed_values = logging.getLevelNamesMapping().keys()
+    if value not in allowed_values:
+        raise ValueError(f'Invalid log level: {value}. Allowed: {list(allowed_values)}')
+    return value
+
+
+def validate_timezone(value: str) -> str:
+    if value not in available_timezones():
+        raise ValueError(f'Invalid timezone: {value}')
     return value

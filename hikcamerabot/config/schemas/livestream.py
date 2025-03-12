@@ -1,5 +1,5 @@
-from hikcamerabot.config.schemas._types import IntMin0, IntMin1, IntMinus1
 from hikcamerabot.config.schemas.abstract import StrictBaseModel
+from hikcamerabot.config.schemas.types_ import IntMin0, IntMin1, IntMinus1
 from hikcamerabot.enums import StreamType
 
 

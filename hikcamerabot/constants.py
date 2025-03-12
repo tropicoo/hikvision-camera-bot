@@ -171,10 +171,4 @@ DETECTION_SWITCH_MAP: Final[
 }
 
 
-# TODO: Remove this
-PYTHON_LOG_LEVELS: frozenset[str] = frozenset(
-    ('DEBUG', 'WARNING', 'INFO', 'ERROR', 'CRITICAL')
-)
-
-
 XML_HEADERS: Final[dict[str, str]] = {'Content-Type': 'application/xml'}

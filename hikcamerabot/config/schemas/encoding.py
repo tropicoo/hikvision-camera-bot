@@ -1,11 +1,11 @@
 from typing import Literal
 
-from hikcamerabot.config.schemas._types import (
+from hikcamerabot.config.schemas.abstract import StrictBaseModel
+from hikcamerabot.config.schemas.types_ import (
     FfmpegLogLevel,
     IntMin1,
     IntMinus1,
 )
-from hikcamerabot.config.schemas.abstract import StrictBaseModel
 from hikcamerabot.enums import RtspTransportType
 
 

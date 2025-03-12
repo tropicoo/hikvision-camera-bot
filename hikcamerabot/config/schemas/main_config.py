@@ -6,14 +6,15 @@ from typing import Annotated, Literal, Self
 from pydantic import DirectoryPath, Field, field_validator, model_validator
 
 from hikcamerabot.clients.hikvision.enums import AuthType
-from hikcamerabot.config._types import TimezoneType
-from hikcamerabot.config.schemas._types import (
+from hikcamerabot.config.schemas.abstract import StrictBaseModel
+from hikcamerabot.config.schemas.types_ import (
+    DvrStorageType,
     FfmpegLogLevel,
     IntMin0,
     IntMin1,
     PythonLogLevel,
+    TimezoneType,
 )
-from hikcamerabot.config.schemas.abstract import StrictBaseModel
 from hikcamerabot.constants import CMD_CAM_ID_REGEX, DAY_HOURS_RANGE
 from hikcamerabot.enums import FfmpegPixFmt, FfmpegVideoCodecType, RtspTransportType
 
@@ -50,11 +51,14 @@ class DvrUploadStorageConfSchema(StrictBaseModel):
 
     def get_storage_items(
         self,
-    ) -> Generator[tuple[str, BaseDVRStorageUploadConfSchema]]:
+    ) -> Generator[tuple[DvrStorageType, BaseDVRStorageUploadConfSchema]]:
+        storage_name: DvrStorageType
         for storage_name in self.model_fields_set:
             yield storage_name, getattr(self, storage_name)
 
-    def get_storage_conf_by_type(self, type_: str) -> BaseDVRStorageUploadConfSchema:
+    def get_storage_conf_by_type(
+        self, type_: DvrStorageType
+    ) -> BaseDVRStorageUploadConfSchema:
         try:
             return getattr(self, type_)
         except AttributeError as err:
@@ -101,8 +105,8 @@ class VideoGifSchema(StrictBaseModel):
     ) -> VideoGifOnDemandSchema | VideoGifOnAlertSchema:
         try:
             return getattr(self, type_)
-        except AttributeError:
-            raise ValueError(f'Invalid VideoGifType: {type_}') from None
+        except AttributeError as err:
+            raise ValueError(f'Invalid VideoGifType: {type_}') from err
 
 
 class PictureOnAlertSchema(StrictBaseModel):

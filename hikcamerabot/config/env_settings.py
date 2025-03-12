@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 
-from hikcamerabot.config._types import TimezoneType
+from hikcamerabot.config.schemas.types_ import TimezoneType
 
 
 class Settings(BaseSettings):
