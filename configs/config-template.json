@@ -60,7 +60,7 @@
             ],
             "nvr": {
                 "is_behind": false,
-                "channel_name": ""
+                "channel_name": null
             },
             "picture": {
                 "on_demand": {
@@ -203,7 +203,7 @@
             ],
             "nvr": {
                 "is_behind": false,
-                "channel_name": ""
+                "channel_name": null
             },
             "picture": {
                 "on_demand": {

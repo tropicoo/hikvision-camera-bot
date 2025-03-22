@@ -142,7 +142,7 @@ Configuration files are stored in JSON format and can be found in the `configs` 
       ],
       "nvr": {
         "is_behind": false,
-        "channel_name": ""
+        "channel_name": null
       },
       "picture": {
         "on_demand": {
