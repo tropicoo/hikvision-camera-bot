@@ -187,7 +187,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/44/66/2c17bae31c9066137
 
 [[package]]
 name = "pydantic"
-version = "2.11.0"
+version = "2.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -195,9 +195,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/82/2a/4ba34614269b1e12a28b9fe54710983f5c3679f945797e86250c6269263f/pydantic-2.11.0.tar.gz", hash = "sha256:d6a287cd6037dee72f0597229256dfa246c4d61567a250e99f86b7b4626e2f41", size = 782184 }
+sdist = { url = "https://files.pythonhosted.org/packages/93/a3/698b87a4d4d303d7c5f62ea5fbf7a79cab236ccfbd0a17847b7f77f8163e/pydantic-2.11.1.tar.gz", hash = "sha256:442557d2910e75c991c39f4b4ab18963d57b9b55122c8b2a9cd176d8c29ce968", size = 782817 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/09/2c/3a0a1b022bb028e4cd455c69a17ceaad809bf6763c110d093efc0d8f67aa/pydantic-2.11.0-py3-none-any.whl", hash = "sha256:d52535bb7aba33c2af820eaefd866f3322daf39319d03374921cd17fbbdf28f9", size = 442591 },
+    { url = "https://files.pythonhosted.org/packages/cc/12/f9221a949f2419e2e23847303c002476c26fbcfd62dc7f3d25d0bec5ca99/pydantic-2.11.1-py3-none-any.whl", hash = "sha256:5b6c415eee9f8123a14d859be0c84363fec6b1feb6b688d6435801230b56e0b8", size = 442648 },
 ]
 
 [[package]]
@@ -279,16 +279,16 @@ wheels = [
 
 [[package]]
 name = "pyrofork"
-version = "2.3.59"
+version = "2.3.60"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyaes" },
     { name = "pymediainfo-pyrofork" },
     { name = "pysocks" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/2a/ead2a0693f79fff2a58cc62213d2b9fd030700d536aa97eb4d6370d5eb00/pyrofork-2.3.59.tar.gz", hash = "sha256:eb8f0d9cdea41b446a7312eeb612c615c60ce851b16a912f10320af1fc099cc2", size = 473288 }
+sdist = { url = "https://files.pythonhosted.org/packages/79/6e/8799df381af1bf3aaa23b1cfdc2685d901084792f3fbd497c4c368ea04ed/pyrofork-2.3.60.tar.gz", hash = "sha256:b4c24075ee5e096f8dbb38ac606e9493db4075d9d08068dec2011e3fafb3c289", size = 478784 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/24/c64d83142b8d6f30c5b3da7a38d429360a33e374e4a69d09320eb978b15b/pyrofork-2.3.59-py3-none-any.whl", hash = "sha256:364df1015c47c5590df9f00c9064466f890d849ad476081da33e4c8ae0dbcf7b", size = 4886877 },
+    { url = "https://files.pythonhosted.org/packages/f1/41/4bb0c97d37dd7264339f343acb743e0ada136cf9f33faf41380da294603d/pyrofork-2.3.60-py3-none-any.whl", hash = "sha256:3baed77b51a04b87281d2e3b26058c90f22993a80de29a56c89db75c29288cff", size = 4933829 },
 ]
 
 [[package]]
