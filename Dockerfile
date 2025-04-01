@@ -1,5 +1,7 @@
 FROM python:3.13-alpine3.20
 
+COPY apk_mirrors /etc/apk/repositories
+
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV UV_COMPILE_BYTECODE=1

@@ -34,7 +34,7 @@ class AbstractResultEventHandler(ABC):
         self._bot = bot
 
     async def handle(self, event: BaseOutboundEvent) -> None:
-        await self._handle(event)
+        await self._handle(event=event)
 
     @abstractmethod
     async def _handle(self, event: BaseOutboundEvent) -> None:
@@ -263,13 +263,13 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
             f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
         )
 
-        self._log.info('Sending resized cam snapshot')
+        self._log.info('[%s] Sending resized cam snapshot', cam.id)
         await self._bot.send_chat_action(
             chat_id=message.chat.id,
             action=ChatAction.UPLOAD_PHOTO,
         )
         await message.reply_photo(event.img, caption=caption, quote=True)
-        self._log.info('Resized snapshot sent')
+        self._log.info('[%s] Resized snapshot sent', cam.id)
 
     async def _send_full_photo(self, event: SnapshotOutboundEvent) -> None:
         cam = event.cam
@@ -286,7 +286,7 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
             f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
         )
 
-        self._log.info('Sending full cam snapshot')
+        self._log.info('[%s] Sending full cam snapshot', cam.id)
         await self._bot.send_chat_action(
             chat_id=message.chat.id, action=ChatAction.UPLOAD_PHOTO
         )
@@ -296,4 +296,46 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
             quote=True,
             file_name=filename,
         )
-        self._log.info('Full snapshot "%s" sent', filename)
+        self._log.info('[%s] Full snapshot "%s" sent', cam.id, filename)
+
+
+class ResultTimelapseHandler(AbstractResultEventHandler):
+    """Timelapse video upload handler."""
+
+    async def _handle(self, event: VideoOutboundEvent) -> None:
+        try:
+            await self._upload_video(event)
+        finally:
+            event.video_path.unlink()
+            if event.thumb_path:
+                event.thumb_path.unlink()
+
+    @retry(wait=wait_fixed(0.5), stop=stop_after_attempt(10))
+    async def _upload_video(self, event: VideoOutboundEvent) -> None:
+        try:
+            cam = event.cam
+            message = event.message
+            caption = (
+                f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
+                f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
+                f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
+                f'📏 {bold("Size:")} {event.file_size_human()}\n'
+                f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
+            )
+            await self._bot.send_chat_action(
+                message.chat.id, action=ChatAction.UPLOAD_VIDEO
+            )
+            await self._bot.send_video(
+                message.chat.id,
+                caption=caption,
+                video=str(event.video_path),
+                duration=event.video_duration,
+                height=event.video_height,
+                width=event.video_width,
+                thumb=event.thumb_path,
+                supports_streaming=True,
+                reply_to_message_id=message.id,
+            )
+        except Exception:
+            self._log.exception('Failed to upload video. Retrying')
+            raise
