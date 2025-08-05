@@ -208,6 +208,9 @@ class TimelapseSchema(StrictBaseModel):
     @field_validator('start_hour', 'end_hour')
     @classmethod
     def validate_start_end_hour(cls, value: int) -> int:
+        # Normalize midnight value of 24 to 0 for proper parsing.
+        value = 0 if value == 24 else value
+
         if value not in DAY_HOURS_RANGE:
             raise ValueError(f'Invalid hour: {value}')
         return value

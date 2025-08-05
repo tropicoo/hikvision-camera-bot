@@ -19,7 +19,7 @@ from hikcamerabot.event_engine.handlers.inbound import (
 class InboundEventDispatcher(AbstractDispatcher):
     """Inbound EventType Dispatcher Class."""
 
-    DISPATCH: ClassVar[dict[EventType, AbstractTaskEvent]] = {
+    DISPATCH: ClassVar[dict[EventType, type[AbstractTaskEvent]]] = {
         EventType.CONFIGURE_ALARM: TaskAlarmConf,
         EventType.CONFIGURE_DETECTION: TaskDetectionConf,
         EventType.CONFIGURE_IRCUT_FILTER: TaskIrcutFilterConf,
