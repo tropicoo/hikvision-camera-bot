@@ -52,7 +52,7 @@ class ConfigLoader:
 
                 config_data.append(config)
 
-        return cast(ConfigsType, tuple(config_data)), errors
+        return cast('ConfigsType', tuple(config_data)), errors
 
     def _check_path_existence(self, conf_file_path: Path) -> None:
         if not conf_file_path.is_file():

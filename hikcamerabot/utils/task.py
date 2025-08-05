@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 T = TypeVar('T')
 
 
-def create_task(
+def create_task[T](
     coroutine: Awaitable[T],
     logger: logging.Logger,
     loop: asyncio.AbstractEventLoop | None = None,

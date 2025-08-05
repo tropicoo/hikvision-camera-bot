@@ -22,7 +22,7 @@ class SrsStreamService(AbstractStreamService):
         null_audio = (
             FFMPEG_CMD_NULL_AUDIO
             if self._enc_conf.null_audio
-            else {k: '' for k in FFMPEG_CMD_NULL_AUDIO}
+            else dict.fromkeys(FFMPEG_CMD_NULL_AUDIO, '')
         )
         return self._FFMPEG_CMD_TPL.format(
             abitrate=null_audio['bitrate'],
