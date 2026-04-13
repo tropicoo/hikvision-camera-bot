@@ -19,7 +19,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ty>=0.0.1a16",
+    "ty>=0.0.29",
 ]
 lint = [
     "ruff>=0.9.3",
