@@ -22,7 +22,7 @@ dev = [
     "ty>=0.0.1a16",
 ]
 lint = [
-    "ruff>=0.9.3",
+    "ruff>=0.15.10",
 ]
 
 [tool.ruff]
