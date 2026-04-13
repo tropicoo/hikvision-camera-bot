@@ -13,7 +13,7 @@ dependencies = [
     "pyrofork>=2.3.58",
     "tenacity>=9.0.0",
     "tgcrypto-pyrofork>=1.2.7",
-    "uvloop>=0.21.0 ; sys_platform == 'linux'",
+    "uvloop>=0.22.1 ; sys_platform == 'linux'",
     "xmltodict>=0.14.2",
 ]
 
