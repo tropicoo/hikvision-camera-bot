@@ -42,7 +42,7 @@ Version: 2.0.1. [Release details](releases/release_2.0.1.md).
 To install Hikvision Telegram Camera Bot, simply `clone` the repo.
 
 ```shell script
-git clone https://github.com/tropicoo/hikvision-camera-bot.git
+git clone https://github.com/SA1D77/hikvision-camera-bot.git
 cd hikvision-camera-bot
 ```
 
@@ -262,15 +262,15 @@ If you want to use the default UTC time format, set Greenwich Mean Time timezone
 2. Build an image and run a container in a detached mode
     ```bash
     # Build containers and start
-    sudo docker-compose build && sudo docker-compose up -d
+    sudo docker compose build && sudo docker compose up -d
    
    # Tail logs per container or from all at once
-   sudo docker-compose logs -f --tail 500 hikvision-camera-bot
-   sudo docker-compose logs -f --tail 500 hik-hikvision-srs-server
-   sudo docker-compose logs -f --tail 500
+   sudo docker compose logs -f --tail 500 hikvision-camera-bot
+   sudo docker compose logs -f --tail 500 hikvision-srs-server
+   sudo docker compose logs -f --tail 500
    
     # Stop running containers while you're in the bot directory
-    sudo docker-compose stop
+    sudo docker compose stop
    
     # Check whether any containers are running
     sudo docker ps
@@ -295,6 +295,8 @@ stopped gracefully, so DVR files are not corrupted.
 | `/menu`              | Control cameras with inline buttons: photo, video, alerts, motion detection, infrared           |
 | `/status`            | Show uptime, CPU temperature, RAM, free disk space and running services per camera              |
 | `/list_cams`         | List all your cameras                                                                           |
+| `/groups`            | List camera groups                                                                              |
+| `/version`           | Show the bot version and whether an update is available                                         |
 | `/cmds_cam_*`        | List commands for particular camera                                                             |
 | `/getpic_cam_*`      | Get resized picture from your Hikvision camera                                                  |
 | `/getfullpic_cam_*`  | Get a full-sized picture from your Hikvision camera                                             |
@@ -313,10 +315,29 @@ stopped gracefully, so DVR files are not corrupted.
 | `/alert_off_cam_*`   | Disable Alert (Alarm) mode, no alerts will be sent when something is detected                   |
 | `/yt_on_cam_*`       | Enable YouTube stream                                                                           |
 | `/yt_off_cam_*`      | Disable YouTube stream                                                                          |
+| `/tg_on_cam_*`       | Enable Telegram stream                                                                          |
+| `/tg_off_cam_*`      | Disable Telegram stream                                                                         |
 | `/icecast_on_cam_*`  | Enable Icecast stream                                                                           |
 | `/icecast_off_cam_*` | Disable Icecast stream                                                                          |
 
 `*` - camera digit id e.g., `cam_1`.
+
+Bot messages in Telegram are in Russian. An unknown or mistyped command is answered
+with a hint to open `/menu` or `/help`.
+
+# Troubleshooting
+| What you see | What to do |
+|--------------|------------|
+| "📡 Камера не отвечает" (camera does not respond) | Check the camera power, network cable / Wi-Fi and the camera IP address (`host`) in `configs/config.json`. |
+| "🔑 Камера отклонила логин или пароль" (wrong login or password) | Fix `user` / `password` of the camera in `configs/config.json` and restart the bot: `docker compose restart hikvision-camera-bot`. Several wrong attempts may temporarily lock the user on the camera. |
+| "⚠️ Камера вернула ошибку" (camera returned an error) | The feature is probably not supported by the camera or is disabled in its web interface. |
+| "📡 Нет связи с камерой" notification | The alert stream was lost for more than a minute. The bot keeps reconnecting by itself and sends "✅ Камера снова на связи" when the camera is back. |
+| No alerts arrive | Open `/menu` and check that alerts and the needed detections are marked with ✅; `/status` shows running services. |
+| The bot does not answer | `docker compose ps` (must be `healthy`), `docker compose logs --tail 100 hikvision-camera-bot`, then `docker compose restart hikvision-camera-bot`. Make sure your Telegram ID is in `chat_users`. |
+| Low disk space / CPU overheating warnings | Delete old DVR records or move the storage to a bigger disk; check the device cooling. |
+
+Camera errors are logged as one line per attempt; set `"log_level": "DEBUG"` in
+`configs/config.json` to see full tracebacks.
 
 #  Advanced Configuration
 ## SRS

@@ -92,12 +92,12 @@ class CameraBot(Client):
     async def set_commands_menu(self) -> None:
         """Show main commands in Telegram "Menu" button near the input field."""
         commands = [
-            BotCommand('menu', 'Control cameras with buttons'),
-            BotCommand('list_cams', 'List cameras and their commands'),
-            BotCommand('status', 'Bot, storage and cameras status'),
-            BotCommand('groups', 'List camera groups'),
-            BotCommand('help', 'Help'),
-            BotCommand('version', 'Bot version'),
+            BotCommand('menu', 'Управление камерами кнопками'),
+            BotCommand('list_cams', 'Список камер и их команды'),
+            BotCommand('status', 'Состояние бота, диска и камер'),
+            BotCommand('groups', 'Группы камер'),
+            BotCommand('help', 'Справка'),
+            BotCommand('version', 'Версия бота'),
         ]
         try:
             await self.set_bot_commands(commands)
@@ -106,16 +106,20 @@ class CameraBot(Client):
 
     async def send_startup_message(self) -> None:
         """Send welcome message to defined telegram ids after bot launch."""
+        # Imported here: the menu module imports this one.
+        from hikcamerabot.menu import MENU_REPLY_KEYBOARD  # noqa: PLC0415
+
         text = (
-            f'{(await self.get_me()).first_name} bot started, see /help for '
-            f'available commands'
+            f'✅ Бот «{(await self.get_me()).first_name}» запущен.\n'
+            'Нажмите «📋 Меню» или отправьте /menu, справка — /help'
         )
         for user_id in self.startup_message_users:
             telegram_id_type = 'group_id' if user_id < 0 else 'user_id'
             self._log.debug(
                 'Sending welcome message to %s "%d"', telegram_id_type, user_id
             )
-            await self._send_message(text, user_id)
+            # Show the menu button right away, without waiting for /start.
+            await self._send_message(text, user_id, reply_markup=MENU_REPLY_KEYBOARD)
 
     async def send_alert_message(self, text: str, **kwargs) -> None:
         """Send message to alert users."""

@@ -83,7 +83,7 @@ class AlarmService(AbstractService):
             return
 
         if self.started:
-            raise ServiceRuntimeError('Alarm (alert) mode already started')
+            raise ServiceRuntimeError('Оповещения уже включены')
         await self._enable_triggers_on_camera()
         self._started.set()
         self._start_service_task()
@@ -125,7 +125,7 @@ class AlarmService(AbstractService):
     async def stop(self) -> None:
         """Disable alarm."""
         if not self.started:
-            raise ServiceRuntimeError('Alarm alert mode already stopped')
+            raise ServiceRuntimeError('Оповещения уже выключены')
         self._started.clear()
         self._cancel_service_task()
 

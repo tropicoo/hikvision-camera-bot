@@ -104,7 +104,7 @@ def format_duration(seconds: float) -> str:
     hours, seconds = divmod(seconds, 3600)
     minutes = seconds // 60
     if days:
-        return f'{days}d {hours}h {minutes}m'
+        return f'{days} д {hours} ч {minutes} мин'
     if hours:
-        return f'{hours}h {minutes}m'
-    return f'{minutes}m'
+        return f'{hours} ч {minutes} мин'
+    return f'{minutes} мин'

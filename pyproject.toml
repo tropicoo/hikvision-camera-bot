@@ -67,14 +67,15 @@ ignore = [
     "ISC001",
     "PERF401",
     "PLR0913",
+    "RUF001", # Russian texts for Telegram users
+    "RUF002",
+    "RUF003",
     "TD002",
     "TD003",
     "TRY003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Russian button labels.
-"hikcamerabot/menu.py" = ["RUF001"]
 "tests/**" = [
     "ANN",
     "ARG001",

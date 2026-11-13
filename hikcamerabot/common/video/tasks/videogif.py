@@ -120,7 +120,13 @@ class RecordVideoGifTask:
         await self._result_queue.put(
             SendTextOutboundEvent(
                 event=EventType.SEND_TEXT,
-                text=f'{err_msg}.\nEvent type: {self._event.value}\nCheck logs.',
+                text=(
+                    f'🛑 {bold("Не удалось записать видео")} — '
+                    f'{self._cam.description} ({self._cam.id})\n\n'
+                    'Скорее всего, камера не отвечает или недоступен её '
+                    'видеопоток (RTSP). Проверьте питание и сеть камеры, '
+                    'подробности — в логах бота.'
+                ),
                 message=self._message,
             )
         )
@@ -206,7 +212,7 @@ class RecordVideoGifTask:
 
     async def _send_confirmation_message(self) -> None:
         if self._video_type is VideoGifType.ON_DEMAND:
-            text = f'📹 Recording video for {self._rec_time} seconds'
+            text = f'📹 Записываю видео: {self._rec_time} с'
             await self._result_queue.put(
                 SendTextOutboundEvent(
                     event=EventType.SEND_TEXT,

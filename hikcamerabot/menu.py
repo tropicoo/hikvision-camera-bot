@@ -28,8 +28,9 @@ from hikcamerabot.config.store import ConfigStore
 from hikcamerabot.constants import TG_MAX_MSG_SIZE
 from hikcamerabot.decorators import authorization_check
 from hikcamerabot.enums import DetectionType
-from hikcamerabot.exceptions import ServiceRuntimeError
+from hikcamerabot.exceptions import HikvisionAPIError, ServiceRuntimeError
 from hikcamerabot.health import build_status_text
+from hikcamerabot.utils.errors import describe_error
 from hikcamerabot.utils.shared import send_text
 
 if TYPE_CHECKING:
@@ -326,7 +327,7 @@ def _status_keyboard(back_cam_id: str) -> InlineKeyboardMarkup:
 
 
 async def cmd_start(bot: 'CameraBot', message: Message) -> None:  # noqa: ARG001
-    """Send help message and show the persistent menu button."""
+    """Send help message (`/start`, `/help`) and show the persistent menu button."""
     await message.reply_text(cb.HELP_TEXT, reply_markup=MENU_REPLY_KEYBOARD, quote=True)
 
 
@@ -391,11 +392,11 @@ async def on_menu_callback(bot: 'CameraBot', query: CallbackQuery) -> None:
     action, cam_id = parsed
     try:
         await _process_action(bot, query, message, action, cam_id)
-    except Exception:
+    except Exception as err:
         log.exception('Failed to process menu action "%s" for "%s"', action, cam_id)
         # The query may be already answered.
         with contextlib.suppress(Exception):
-            await query.answer('❌ Ошибка, смотрите логи', show_alert=True)
+            await query.answer(describe_error(err), show_alert=True)
 
 
 async def _process_action(  # noqa: PLR0911
@@ -460,8 +461,27 @@ async def _process_action(  # noqa: PLR0911
 
     callback, answer_text = _CAMERA_ACTIONS[action]
     await query.answer(answer_text)
-    # Skip decorators: authorization is checked above and camera is known.
-    await inspect.unwrap(callback)(bot, message, cam=cam)
+    await _run_camera_action(bot, message, cam, action, callback)
+
+
+async def _run_camera_action(
+    bot: 'CameraBot',
+    message: Message,
+    cam: 'HikvisionCam',
+    action: str,
+    callback: Callable,
+) -> None:
+    try:
+        # Skip decorators: authorization is checked above and camera is known.
+        await inspect.unwrap(callback)(bot, message, cam=cam)
+    except Exception as err:
+        log.exception('[%s] Menu action "%s" failed', cam.id, action)
+        # The query is already answered, so tell about the failure in chat.
+        await bot.send_message(
+            message.chat.id,
+            f'🛑 <b>Не получилось</b> — {cam.description} ({cam.id})\n\n'
+            f'{describe_error(err)}',
+        )
 
 
 async def _show_camera(bot: 'CameraBot', message: Message, cam: 'HikvisionCam') -> None:
@@ -492,6 +512,13 @@ async def _save_alert(cam: 'HikvisionCam', alert: AlertSchema) -> str:
     return ''
 
 
+def _service_error_text(err: ServiceRuntimeError) -> str:
+    """Explain camera API errors; show service's own message otherwise."""
+    if isinstance(err.__cause__, HikvisionAPIError):
+        return describe_error(err)
+    return f'❌ {err}'
+
+
 def _updated_alert(cam: 'HikvisionCam', **update: object) -> AlertSchema:
     """Return validated copy of camera alert settings with updated fields."""
     data = cam.conf.alert.model_dump()
@@ -508,7 +535,7 @@ async def _toggle_alert(message: Message, cam: 'HikvisionCam') -> str:
         else:
             await alarm.stop()
     except ServiceRuntimeError as err:
-        return f'❌ {err}'
+        return _service_error_text(err)
     if state and not alarm.started:
         return '⚠️ Камера за NVR — оповещения не запускаются'
 
@@ -540,7 +567,7 @@ async def _toggle_detection(
         # Switch detection on the camera itself, like `/md_on_cam_1` does.
         await cam.services.alarm.trigger_switch(trigger=detection_type, state=state)
     except ServiceRuntimeError as err:
-        return f'❌ {err}'
+        return _service_error_text(err)
 
     detection = _detection_conf(cam, code).model_copy(update={'enabled': state})
     note = await _save_alert(

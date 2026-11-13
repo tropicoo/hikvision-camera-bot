@@ -5,12 +5,22 @@ from typing import TYPE_CHECKING, Any, ClassVar, Final
 from urllib.parse import urljoin
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import (
+    retry,
+    retry_if_not_exception_type,
+    stop_after_attempt,
+    wait_fixed,
+)
 
 from hikcamerabot.clients.hikvision.auth import DigestAuthCached
 from hikcamerabot.clients.hikvision.enums import AuthType, EndpointAddr
 from hikcamerabot.constants import CONN_TIMEOUT
-from hikcamerabot.exceptions import APIBadResponseCodeError, APIRequestError
+from hikcamerabot.exceptions import (
+    APIAuthError,
+    APIBadResponseCodeError,
+    APIConnectionError,
+    APIRequestError,
+)
 
 if TYPE_CHECKING:
     # Runtime import causes circular import: config schemas import this package.
@@ -47,6 +57,8 @@ class HikvisionAPIClient:
     @retry(
         wait=wait_fixed(_RETRY_WAIT),
         stop=stop_after_attempt(_RETRY_STOP_AFTER_ATTEMPT),
+        # Repeating a wrong password only gets the user locked on the camera.
+        retry=retry_if_not_exception_type(APIAuthError),
         reraise=True,
     )
     async def request(
@@ -68,20 +80,41 @@ class HikvisionAPIClient:
                 timeout=timeout,
             )
         except Exception as err:
+            is_conn_err = isinstance(err, httpx.TransportError)
             err_msg = (
-                f'API encountered an unknown error for method {method}, '
-                f'url {url}, data {data}'
+                f'Camera is unreachable: {method} {url}'
+                if is_conn_err
+                else f'API request failed: {method} {url}'
             )
-            self._log.exception(err_msg)
-            raise APIRequestError(f'{err_msg}: {err}') from err
+            # One line per attempt; full traceback only on DEBUG level.
+            self._log.warning('%s: %s: %s', err_msg, err.__class__.__name__, err)
+            self._log.debug('Request error traceback, data %s', data, exc_info=True)
+            exc_cls = APIConnectionError if is_conn_err else APIRequestError
+            raise exc_cls(f'{err_msg}: {err}') from err
         self._validate_response(response)
         return response
 
     def _validate_response(self, response: httpx.Response) -> None:
-        if httpx.codes.is_error(response.status_code):
-            err_msg = f'Error during API call: Bad response code {response.status_code}'
+        status_code = response.status_code
+        if httpx.codes.is_error(status_code):
+            err_msg = f'Error during API call: Bad response code {status_code}'
             self._log.error(err_msg)
             self._log.debug(
                 'Error response data: %s - %s', response.headers, response.text
             )
-            raise APIBadResponseCodeError(err_msg)
+            self.raise_for_status_code(status_code)
+
+    @staticmethod
+    def raise_for_status_code(status_code: int) -> None:
+        """Raise auth error for 401/403 and bad response error for other 4xx/5xx."""
+        if not httpx.codes.is_error(status_code):
+            return
+        exc_cls = (
+            APIAuthError
+            if status_code in (httpx.codes.UNAUTHORIZED, httpx.codes.FORBIDDEN)
+            else APIBadResponseCodeError
+        )
+        raise exc_cls(
+            f'Error during API call: Bad response code {status_code}',
+            status_code=status_code,
+        )

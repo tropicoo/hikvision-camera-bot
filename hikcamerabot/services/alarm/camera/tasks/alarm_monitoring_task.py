@@ -1,13 +1,18 @@
 import time
 from typing import Literal
 
-from httpx import ConnectError
+from httpx import TransportError
 
 from hikcamerabot.enums import DetectionType, ServiceType
-from hikcamerabot.exceptions import AlarmEventChunkDetectorError, ChunkLoopError
+from hikcamerabot.exceptions import (
+    AlarmEventChunkDetectorError,
+    ChunkLoopError,
+    HikvisionAPIError,
+)
 from hikcamerabot.services.abstract import AbstractServiceTask
 from hikcamerabot.services.alarm.camera.chunk import AlarmEventChunkDetector
 from hikcamerabot.services.alarm.camera.notifier import AlarmNotifier
+from hikcamerabot.services.alarm.link import CameraLinkNotifier
 from hikcamerabot.utils.task import retry_forever
 
 
@@ -22,6 +27,9 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             cam=self._cam,
             alert_count=self.service.alert_count,
         )
+        self._link = CameraLinkNotifier(
+            bot=self._bot, title=f'{self._cam.description} ({self._cam.id})'
+        )
 
     async def run(self) -> None:
         """Monitor alarm/alert chunks, reconnecting with backoff on errors."""
@@ -34,20 +42,29 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
         self._log.info('[%s] Starting alert pusher task', self._cam.id)
         try:
             await self._process_chunks()
-        except ChunkLoopError:
+        except Exception as err:
+            self._log_failure(err)
+            await self._link.on_failure(err)
+            raise
+
+    def _log_failure(self, err: Exception) -> None:
+        if isinstance(err, ChunkLoopError):
             self._log.error(
                 '[%s] Unexpectedly exited from stream chunk processing loop',
                 self._cam.id,
             )
-            raise
-        except ConnectError:
-            self._log.error('[%s] Failed to connect to Alert Stream', self._cam.id)
-            raise
-        except Exception:
+        elif isinstance(err, TransportError | HikvisionAPIError):
+            # Camera is offline or rejects us: one line, no traceback.
+            self._log.error(
+                '[%s] Alert Stream connection failed: %s: %s',
+                self._cam.id,
+                err.__class__.__name__,
+                err,
+            )
+        else:
             self._log.exception(
                 '[%s] Unknown exception in %s', self._cam.id, self.__class__.__name__
             )
-            raise
 
     async def _process_chunks(self) -> None:
         """Process chunks received from Hikvision camera alert stream."""
@@ -57,6 +74,7 @@ class ServiceAlarmMonitoringTask(AbstractServiceTask):
             if not self.service.started:
                 self._log.info('[%s] Exiting alert pusher task', self._cam.id)
                 break
+            await self._link.on_success()
 
             if int(time.time()) < wait_before or not chunk:
                 continue

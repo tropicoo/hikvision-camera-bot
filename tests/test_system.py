@@ -62,6 +62,6 @@ def test_disk_low_thresholds():
 
 
 def test_format_duration():
-    assert format_duration(59) == '0m'
-    assert format_duration(3 * 3600 + 120) == '3h 2m'
-    assert format_duration(2 * 86400 + 3600 + 60) == '2d 1h 1m'
+    assert format_duration(59) == '0 мин'
+    assert format_duration(3 * 3600 + 120) == '3 ч 2 мин'
+    assert format_duration(2 * 86400 + 3600 + 60) == '2 д 1 ч 1 мин'

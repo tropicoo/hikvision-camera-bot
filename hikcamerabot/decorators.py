@@ -1,15 +1,15 @@
 """Decorators module."""
 
+import contextlib
 import logging
 import re
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
-from emoji import emojize
-
 from hikcamerabot.constants import CMD_CAM_ID_REGEX
-from hikcamerabot.utils.shared import get_user_info
+from hikcamerabot.utils.errors import describe_error
+from hikcamerabot.utils.shared import bold, get_user_info
 
 if TYPE_CHECKING:
     from pyrogram.types import Message
@@ -17,42 +17,6 @@ if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
 
 log = logging.getLogger(__name__)
-
-
-# def event_error_handler(func):
-#     @wraps(func)
-#     async def wrapper(*args, **kwargs):
-#         handler, data = args
-#         try:
-#             return await func(*args, **kwargs)
-#         except Exceptio n as err:
-#             return {'error_full': traceback.format_exc(), 'error': str(err),
-#                     **data}
-#
-#     return wrapper
-
-
-# def result_error_handler(func):
-#     @wraps(func)
-#     async def wrapper(*args, **kwargs):
-#         handler, data = args
-#
-#         if 'error' not in data:
-#             return await func(*args, **kwargs)
-#
-#         message: Message
-#         cam_id, message = handler._bot._updates.pop(data['event_id'])
-#
-#         err_text = data['error']
-#
-#         # TODO: Move to util module.
-#         if len(err_text) > TG_MAX_MSG_SIZE:
-#             for x in range(0, len(err_text), TG_MAX_MSG_SIZE):
-#                 await message.answer(err_text[x:x + TG_MAX_MSG_SIZE])
-#         else:
-#             await message.answer(err_text)
-#
-#     return wrapper
 
 
 def authorization_check(
@@ -70,7 +34,7 @@ def authorization_check(
             return await func(*args, **kwargs)
 
         log.error('User authorization error: %s', message.chat.id)
-        await message.reply_text(emojize(':stop_sign: Not authorized'), quote=True)
+        await message.reply_text('⛔ Нет доступа', quote=True)
         return None
 
     return wrapper
@@ -79,7 +43,7 @@ def authorization_check(
 def camera_selection(
     func: Callable[..., Awaitable[Any]],
 ) -> Callable[..., Awaitable[Any]]:
-    """Select camera ID to use."""
+    """Select camera ID to use and tell the user if the command failed."""
 
     @wraps(func)
     async def wrapper(*args, **kwargs) -> Any:
@@ -89,8 +53,15 @@ def camera_selection(
         cam = bot.cam_registry.get_instance(cam_id)
         try:
             return await func(*args, cam=cam, **kwargs)
-        except Exception:
+        except Exception as err:
             log.exception('Failed to process event for %s', cam_id)
             log.debug('Failed event context: %s', message)
+            # Never leave the user without an answer.
+            with contextlib.suppress(Exception):
+                await message.reply_text(
+                    f'🛑 {bold("Команда не выполнена")} — '
+                    f'{cam.description} ({cam.id})\n\n{describe_error(err)}',
+                    quote=True,
+                )
 
     return wrapper

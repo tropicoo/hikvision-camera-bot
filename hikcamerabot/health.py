@@ -36,6 +36,12 @@ CPU_RECOVERED_CELSIUS: Final[float] = 70.0
 
 _ROOT_PATH: Final[Path] = Path('/')
 
+# Stream names (DVR, SRS, YOUTUBE...) are shown as is.
+_SERVICE_NAMES_RU: Final[dict[str, str]] = {
+    'Alarm': 'Оповещения',
+    'Timelapse': 'Таймлапс',
+}
+
 
 def get_storage_paths(bot: 'CameraBot') -> list[Path]:
     """Return storage paths used by enabled features + root filesystem."""
@@ -71,30 +77,32 @@ def is_disk_recovered(usage: DiskUsage) -> bool:
 def _format_disk(usage: DiskUsage) -> str:
     warn = ' ⚠️' if is_disk_low(usage) else ''
     return (
-        f'{usage.path}: {usage.free_gib:.1f} GiB free of {usage.total_gib:.1f} GiB '
+        f'{usage.path}: свободно {usage.free_gib:.1f} из {usage.total_gib:.1f} ГБ '
         f'({usage.free_percent:.0f}%){warn}'
     )
 
 
 def _service_name(service: 'AbstractService') -> str:
     if service.NAME is not None:
-        return str(service.NAME.value)
-    return service.__class__.__name__.removesuffix('Service')
+        name = str(service.NAME.value)
+    else:
+        name = service.__class__.__name__.removesuffix('Service')
+    return _SERVICE_NAMES_RU.get(name, name)
 
 
 def build_status_text(bot: 'CameraBot', started_at: float) -> str:
     lines = [
-        '<b>🤖 Bot status</b>',
-        f'Uptime: {format_duration(time.time() - started_at)}',
+        '<b>🤖 Состояние бота</b>',
+        f'Работает: {format_duration(time.time() - started_at)}',
     ]
 
     host: list[str] = []
     if (temp := get_cpu_temperature()) is not None:
-        host.append(f'CPU {temp:.1f}°C{" 🔥" if temp >= CPU_HOT_CELSIUS else ""}')
+        host.append(f'процессор {temp:.1f}°C{" 🔥" if temp >= CPU_HOT_CELSIUS else ""}')
     if load := get_load_average():
-        host.append(f'load {load[0]:.2f} {load[1]:.2f} {load[2]:.2f}')
+        host.append(f'нагрузка {load[0]:.2f} {load[1]:.2f} {load[2]:.2f}')
     if memory := get_memory_usage():
-        host.append(f'RAM {memory.used_gib:.1f}/{memory.total_gib:.1f} GiB')
+        host.append(f'память {memory.used_gib:.1f}/{memory.total_gib:.1f} ГБ')
     if host:
         lines.append(' · '.join(host))
 
@@ -104,20 +112,20 @@ def build_status_text(bot: 'CameraBot', started_at: float) -> str:
         if (usage := get_disk_usage(path)) is not None
     ]
     if disks:
-        lines.append('\n<b>💾 Storage</b>')
+        lines.append('\n<b>💾 Диск</b>')
         lines.extend(_format_disk(usage) for usage in disks)
 
-    lines.append('\n<b>📷 Cameras</b>')
+    lines.append('\n<b>📷 Камеры</b>')
     for cam in bot.cam_registry.get_instances():
         services = [
             f'{_service_name(svc)} {"✅" if svc.started else "⛔"}'
             for svc in cam.service_manager.get_all()
             if svc.started or svc.enabled_in_conf
         ]
-        services_text = ', '.join(services) if services else 'no services enabled'
+        services_text = ', '.join(services) if services else 'службы не включены'
         lines.append(
             f'<b>{cam.id}</b> {cam.description}: {services_text}; '
-            f'snapshots taken: {cam.snapshots_taken}'
+            f'снимков сделано: {cam.snapshots_taken}'
         )
     return '\n'.join(lines)
 
@@ -163,12 +171,13 @@ class HealthWatchdog:
             self._low_disks.add(usage.path)
             self._log.warning('Low disk space: %s', _format_disk(usage))
             await self._bot.send_alert_message(
-                f'⚠️ <b>Low disk space</b>\n{_format_disk(usage)}'
+                f'⚠️ <b>Мало места на диске</b>\n{_format_disk(usage)}\n'
+                'Удалите старые записи, иначе новые видео не сохранятся.'
             )
         elif usage.path in self._low_disks and is_disk_recovered(usage):
             self._low_disks.discard(usage.path)
             await self._bot.send_alert_message(
-                f'✅ <b>Disk space is OK again</b>\n{_format_disk(usage)}'
+                f'✅ <b>Места на диске снова достаточно</b>\n{_format_disk(usage)}'
             )
 
     async def _check_cpu_temperature(self) -> None:
@@ -179,11 +188,12 @@ class HealthWatchdog:
             self._cpu_hot = True
             self._log.warning('CPU temperature is high: %.1f°C', temp)
             await self._bot.send_alert_message(
-                f'🔥 <b>CPU temperature is high: {temp:.1f}°C</b>\n'
-                'Check cooling of the device. Raspberry Pi throttles at 80-85°C.'
+                f'🔥 <b>Процессор перегревается: {temp:.1f}°C</b>\n'
+                'Проверьте охлаждение устройства. Raspberry Pi снижает скорость '
+                'работы при 80–85°C.'
             )
         elif self._cpu_hot and temp <= CPU_RECOVERED_CELSIUS:
             self._cpu_hot = False
             await self._bot.send_alert_message(
-                f'✅ <b>CPU temperature is OK again: {temp:.1f}°C</b>'
+                f'✅ <b>Температура процессора в норме: {temp:.1f}°C</b>'
             )

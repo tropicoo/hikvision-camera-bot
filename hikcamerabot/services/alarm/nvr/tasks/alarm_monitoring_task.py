@@ -1,16 +1,21 @@
 import logging
 import time
 
-from httpx import ConnectError
+from httpx import TransportError
 
 from hikcamerabot.camera import HikvisionCam
 from hikcamerabot.enums import DetectionType
-from hikcamerabot.exceptions import AlarmEventChunkDetectorError, ChunkLoopError
+from hikcamerabot.exceptions import (
+    AlarmEventChunkDetectorError,
+    ChunkLoopError,
+    HikvisionAPIError,
+)
 from hikcamerabot.services.alarm.camera.chunk import (
     AlarmEventChunkDetector,
     CameraNvrChannelNameDetector,
 )
 from hikcamerabot.services.alarm.camera.notifier import AlarmNotifier
+from hikcamerabot.services.alarm.link import CameraLinkNotifier
 from hikcamerabot.utils.task import retry_forever
 
 
@@ -44,6 +49,9 @@ class NvrAlarmMonitoringTask:
 
         self._run_forever = run_forever
         self._cls_name = self.__class__.__name__
+        self._link = CameraLinkNotifier(
+            bot=cameras[0].bot, title=f'видеорегистратор {host}'
+        )
 
     async def run(self) -> None:
         """Monitor NVR alarm chunks, reconnecting with backoff on errors."""
@@ -56,27 +64,37 @@ class NvrAlarmMonitoringTask:
         self._log.info('Starting NVR Alarm Monitoring Task')
         try:
             await self._process_chunks()
-        except ChunkLoopError:
+        except Exception as err:
+            self._log_failure(err)
+            await self._link.on_failure(err)
+            raise
+
+    def _log_failure(self, err: Exception) -> None:
+        if isinstance(err, ChunkLoopError):
             self._log.error(
                 'Unexpectedly exited from NVR "%s" Alert Stream chunk processing loop',
                 self._host,
             )
-            raise
-        except ConnectError:
-            self._log.error('Failed to connect to NVR "%s" Alert Stream', self._host)
-            raise
-        except Exception:
+        elif isinstance(err, TransportError | HikvisionAPIError):
+            # NVR is offline or rejects us: one line, no traceback.
+            self._log.error(
+                'NVR "%s" Alert Stream connection failed: %s: %s',
+                self._host,
+                err.__class__.__name__,
+                err,
+            )
+        else:
             self._log.exception(
                 'Unknown exception in "%s" for "%s"',
                 self.__class__.__name__,
                 self._host,
             )
-            raise
 
     async def _process_chunks(self) -> None:
         """Process chunks received from NVR Alert Stream."""
         async for chunk in self._api.alert_stream():
             self._log.debug('Alert chunk from NVR "%s": %s', self._host, chunk)
+            await self._link.on_success()
             if not chunk:
                 continue
             try:

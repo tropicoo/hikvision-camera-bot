@@ -80,9 +80,9 @@ class AbstractStreamService(AbstractService, ABC):
     async def start(self, skip_check: bool = False) -> None:
         """Start the stream."""
         if not skip_check and self.started:
-            warn_msg = f'{self._get_cap_service_name()} stream already started'
-            self._log.warning(warn_msg)
-            raise ServiceRuntimeError(warn_msg)
+            name = self._get_cap_service_name()
+            self._log.warning('%s stream already started', name)
+            raise ServiceRuntimeError(f'Трансляция {name} уже запущена')
 
         await self._start_ffmpeg_process()
         self._start_reader_task()
@@ -145,27 +145,31 @@ class AbstractStreamService(AbstractService, ABC):
                 stderr=asyncio.subprocess.STDOUT,
             )
         except Exception as err:
-            err_msg = f'{self._cls_name} failed to start'
-            self._log.exception(err_msg)
-            raise ServiceRuntimeError(err_msg) from err
+            self._log.exception('%s failed to start', self._cls_name)
+            raise ServiceRuntimeError(
+                f'Не удалось запустить трансляцию {self._get_cap_service_name()}. '
+                'Подробности в логах бота.'
+            ) from err
         self._start_ts = int(time.time())
         self._started.set()
 
     async def stop(self, disable: bool = True) -> None:
         """Stop the stream."""
         if not self.started:
-            warn_msg = f'{self._get_cap_service_name()} stream already stopped'
-            self._log.warning(warn_msg)
-            raise ServiceRuntimeError(warn_msg)
+            name = self._get_cap_service_name()
+            self._log.warning('%s stream already stopped', name)
+            raise ServiceRuntimeError(f'Трансляция {name} уже остановлена')
         try:
             self._log.info('Killing proc "%s"', mask_secrets(self._cmd))
             await kill_proc(process=self._proc, signal_=signal.SIGINT, reraise=True)
         except ProcessLookupError as err:
             self._log.error('Failed to kill process: %s', err)
         except Exception as err:
-            err_msg = f'Failed to kill/disable {self.NAME} stream'
-            self._log.exception(err_msg)
-            raise ServiceRuntimeError(err_msg) from err
+            self._log.exception('Failed to kill/disable %s stream', self.NAME)
+            raise ServiceRuntimeError(
+                f'Не удалось остановить трансляцию {self._get_cap_service_name()}. '
+                'Подробности в логах бота.'
+            ) from err
 
         if disable:
             self._started.clear()

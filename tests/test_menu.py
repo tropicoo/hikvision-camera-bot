@@ -416,7 +416,7 @@ def test_status_text_with_fake_bot(tmp_path):
     bot = SimpleNamespace(cam_registry=SimpleNamespace(get_instances=lambda: [cam]))
 
     text = build_status_text(bot, started_at=0)
-    assert 'Bot status' in text
+    assert 'Состояние бота' in text
     assert 'cam_1' in text
-    assert 'snapshots taken: 3' in text
-    assert 'Alarm ✅' in text
+    assert 'снимков сделано: 3' in text
+    assert 'Оповещения ✅' in text

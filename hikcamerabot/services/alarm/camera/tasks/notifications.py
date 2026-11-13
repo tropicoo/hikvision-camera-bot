@@ -2,10 +2,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from emoji import emojize
 from pyrogram.enums import ParseMode
 
-from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.constants import DETECTION_NAMES_RU
 from hikcamerabot.enums import DetectionType, EventType, VideoGifType
 from hikcamerabot.event_engine.events.outbound import (
     AlertSnapshotOutboundEvent,
@@ -44,14 +43,13 @@ class AlarmTextMessageNotificationTask(AbstractAlertNotificationTask):
             await self._send_alert_text()
 
     async def _send_alert_text(self) -> None:
-        detection_name = DETECTION_SWITCH_MAP[self._detection_type]['name']
+        detection_name = DETECTION_NAMES_RU[self._detection_type]
         await self._result_queue.put(
             SendTextOutboundEvent(
                 event=EventType.SEND_TEXT,
-                text=emojize(
-                    f':rotating_light: <b>Alert on "{self._cam.id} - '
-                    f'{self._cam.description}": {detection_name}</b>',
-                    language='alias',
+                text=(
+                    f'🚨 <b>Тревога: {detection_name}</b>\n'
+                    f'📹 {self._cam.description} ({self._cam.id})'
                 ),
                 parse_mode=ParseMode.HTML,
             )
