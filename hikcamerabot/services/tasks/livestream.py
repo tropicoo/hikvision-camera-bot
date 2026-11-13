@@ -2,16 +2,18 @@ import asyncio
 import logging
 from typing import Literal
 
-from tenacity import retry, retry_if_exception_type, wait_fixed
-
 from hikcamerabot.enums import ServiceType
 from hikcamerabot.exceptions import HikvisionCamError
 from hikcamerabot.services.abstract import AbstractServiceTask
+from hikcamerabot.utils.process import mask_secrets
 from hikcamerabot.utils.shared import shallow_sleep_async
+from hikcamerabot.utils.task import retry_forever
 
 
 class FfmpegStdoutReaderTask:
     """Log async ffmpeg stdout."""
+
+    _READ_SIZE: int = 4096
 
     def __init__(self, proc: asyncio.subprocess.Process, cmd: str) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
@@ -20,10 +22,15 @@ class FfmpegStdoutReaderTask:
 
     async def run(self) -> None:
         self._log.info('Starting %s', self.__class__.__name__)
-        while self._proc.returncode is None:
-            self._log.debug('Reading stdout from "%s"', self._cmd)
-            self._log.info((await self._proc.stdout.read(50)).decode())
-            await asyncio.sleep(0.2)
+        self._log.debug('Reading stdout from "%s"', mask_secrets(self._cmd))
+        # Read until EOF: drains the pipe so ffmpeg never blocks on a full
+        # buffer. ffmpeg progress lines end with '\r', so `readline()` can't be
+        # used (it would overflow on long runs). Empty lines are not logged.
+        while chunk := await self._proc.stdout.read(self._READ_SIZE):
+            text = chunk.decode(errors='replace').replace('\r', '\n')
+            for line in text.split('\n'):
+                if line := line.strip():
+                    self._log.info(mask_secrets(line))
         self._log.info('Exiting %s', self.__class__.__name__)
 
 
@@ -37,8 +44,14 @@ class ServiceStreamerTask(AbstractServiceTask):
             f'for "{self._cam.description}"'
         )
 
-    @retry(retry=retry_if_exception_type(Exception), wait=wait_fixed(0.1))
     async def run(self) -> None:
+        await retry_forever(
+            self._run,
+            logger=self._log,
+            name=f'{self._cam.id} {self.service.NAME.value} stream task',
+        )
+
+    async def _run(self) -> None:
         self._log.debug(
             '[%s] Starting %s stream task for "%s"',
             self._cam.id,

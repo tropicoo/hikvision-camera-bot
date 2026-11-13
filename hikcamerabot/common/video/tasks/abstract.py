@@ -4,7 +4,7 @@ import signal
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from hikcamerabot.utils.process import kill_proc
+from hikcamerabot.utils.process import kill_proc, start_process
 
 
 class AbstractFfBinaryTask(ABC):
@@ -17,8 +17,8 @@ class AbstractFfBinaryTask(ABC):
 
     async def _run_proc(self, cmd: str) -> asyncio.subprocess.Process | None:
         self._log.debug('Running command: "%s"', cmd)
-        proc = await asyncio.create_subprocess_shell(
-            cmd=cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        proc = await start_process(
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         try:
             await asyncio.wait_for(proc.wait(), timeout=self._CMD_TIMEOUT)

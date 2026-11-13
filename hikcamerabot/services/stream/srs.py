@@ -12,6 +12,7 @@ from hikcamerabot.services.stream.abstract import AbstractStreamService
 from hikcamerabot.services.tasks.livestream import ServiceStreamerTask
 from hikcamerabot.utils.shared import get_srs_server_ip_address
 from hikcamerabot.utils.task import create_task
+from hikcamerabot.utils.url import url_credential
 
 
 class SrsStreamService(AbstractStreamService):
@@ -37,9 +38,9 @@ class SrsStreamService(AbstractStreamService):
             rtsp_port=self.cam.conf.rtsp_port,
             loglevel=self._enc_conf.loglevel,
             map=null_audio['map'],
-            pw=self._hik_password,
+            pw=url_credential(self._hik_password),
             rtsp_transport_type=self._enc_conf.rtsp_transport_type,
-            user=self._hik_user,
+            user=url_credential(self._hik_user),
             vcodec=self._enc_conf.vcodec,
         )
 

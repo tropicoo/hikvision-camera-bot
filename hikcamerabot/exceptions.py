@@ -25,8 +25,18 @@ class APIRequestError(HikvisionAPIError):
     pass
 
 
+class APIConnectionError(APIRequestError):
+    """Camera is unreachable: no route, connection refused or timeout."""
+
+
 class APIBadResponseCodeError(APIRequestError):
-    pass
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
+class APIAuthError(APIBadResponseCodeError):
+    """Camera rejected user/password or the user has no rights (401/403)."""
 
 
 class ServiceError(Exception):

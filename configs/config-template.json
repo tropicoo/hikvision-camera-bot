@@ -90,6 +90,7 @@
                 }
             },
             "alert": {
+                "enabled": true,
                 "delay": 15,
                 "motion_detection": {
                     "enabled": false,
@@ -233,6 +234,7 @@
                 }
             },
             "alert": {
+                "enabled": true,
                 "delay": 15,
                 "motion_detection": {
                     "enabled": false,

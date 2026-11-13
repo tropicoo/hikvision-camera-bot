@@ -7,6 +7,7 @@ import xmltodict
 
 from hikcamerabot.clients.hikvision import HikvisionAPIClient
 from hikcamerabot.clients.hikvision.enums import EndpointAddr
+from hikcamerabot.clients.hikvision.xml_status import is_ok_status
 from hikcamerabot.constants import XML_HEADERS
 from hikcamerabot.exceptions import HikvisionAPIError
 
@@ -39,7 +40,7 @@ class AbstractEndpoint(ABC):
         xml_text = response.text
         try:
             xml_dict = xmltodict.parse(xml_text)['ResponseStatus']
-            is_err = xml_dict['statusCode'] != 1 and xml_dict['statusString'] != 'OK'
+            is_err = not is_ok_status(xml_dict)
         except KeyError as err:
             err_msg = f'Failed to parse response XML: {err}'
             self._log.error(err)

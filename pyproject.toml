@@ -1,6 +1,6 @@
 [project]
 name = "hikvision-camera-bot"
-version = "1.9"
+version = "2.0.1"
 description = "Telegram Bot which sends snapshots from your Hikvision cameras"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -19,6 +19,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
     "ty>=0.0.1a16",
 ]
 lint = [
@@ -65,10 +67,32 @@ ignore = [
     "ISC001",
     "PERF401",
     "PLR0913",
+    "RUF001", # Russian texts for Telegram users
+    "RUF002",
+    "RUF003",
     "TD002",
     "TD003",
     "TRY003",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN",
+    "ARG001",
+    "D",
+    "INP001",
+    "PLC0415",
+    "PLR0402",
+    "PLR2004",
+    "S101",
+    "S106",
+    "S108",
+    "SLF001",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [tool.ruff.format]
 indent-style = "space"

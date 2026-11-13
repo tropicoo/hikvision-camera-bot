@@ -3,7 +3,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Final, cast
+from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
@@ -11,6 +11,7 @@ from hikcamerabot.config.schemas import CONFIG_SCHEMA_MAPPING
 from hikcamerabot.config.schemas.encoding import EncodingTemplatesSchema
 from hikcamerabot.config.schemas.livestream import LivestreamTemplatesSchema
 from hikcamerabot.config.schemas.main_config import MainConfigSchema
+from hikcamerabot.config.store import CONFIGS_DIR_PATH
 from hikcamerabot.enums import ConfigFile
 from hikcamerabot.exceptions import ConfigError
 
@@ -21,8 +22,6 @@ type ConfigErrorsType = dict[ConfigFile, str]
 
 
 class ConfigLoader:
-    _CONFIGS_DIR: Final[Path] = Path('configs')
-
     def __init__(self) -> None:
         self._log = logging.getLogger(self.__class__.__name__)
 
@@ -36,9 +35,8 @@ class ConfigLoader:
         """Load telegram and camera configuration from config file."""
         config_data: list[BaseModel] = []
         errors: ConfigErrorsType = {}
-        dir_path = Path(__file__).parent.parent.parent / self._CONFIGS_DIR
         for conf_file, schema in CONFIG_SCHEMA_MAPPING.items():
-            conf_file_path = dir_path / conf_file
+            conf_file_path = CONFIGS_DIR_PATH / conf_file
             self._check_path_existence(conf_file_path)
 
             self._log.info('Reading config file "%s"', conf_file_path)

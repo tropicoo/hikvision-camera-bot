@@ -4,6 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+from hikcamerabot.clients.hikvision.enums import IrcutFilterType
 from hikcamerabot.constants import DETECTION_SWITCH_MAP
 from hikcamerabot.enums import EventType
 from hikcamerabot.event_engine.events.abstract import BaseInboundEvent
@@ -24,10 +25,18 @@ from hikcamerabot.event_engine.events.outbound import (
 )
 from hikcamerabot.event_engine.queue import get_result_queue
 from hikcamerabot.exceptions import ServiceRuntimeError
+from hikcamerabot.utils.errors import describe_error
 from hikcamerabot.utils.shared import bold
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
+
+
+_IRCUT_NAMES_RU: dict[IrcutFilterType, str] = {
+    IrcutFilterType.NIGHT: '🌙 ночь (ИК-подсветка включена)',
+    IrcutFilterType.DAY: '☀️ день (ИК-подсветка выключена)',
+    IrcutFilterType.AUTO: '🌗 авто',
+}
 
 
 class AbstractTaskEvent(ABC):
@@ -57,8 +66,8 @@ class TaskTakeSnapshot(AbstractTaskEvent):
                 SendTextOutboundEvent(
                     event=EventType.SEND_TEXT,
                     text=(
-                        f'🛑 {bold(f"Failed to take picture on [{cam.id}] {cam.description}")}\n\n'
-                        f'{bold(f"👀 Details: {err}")}'
+                        f'🛑 {bold("Не удалось получить снимок")} — '
+                        f'{cam.description} ({cam.id})\n\n{describe_error(err)}'
                     ),
                     message=event.message,
                 )
@@ -175,6 +184,6 @@ class TaskIrcutFilterConf(AbstractTaskEvent):
             SendTextOutboundEvent(
                 event=EventType.SEND_TEXT,
                 message=event.message,
-                text=bold(f'IrcutFilter set to "{event.filter_type.value}"'),
+                text=bold(f'ИК-режим: {_IRCUT_NAMES_RU[event.filter_type]}'),
             )
         )

@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from hikcamerabot.config.schemas.main_config import CameraConfigSchema
@@ -42,9 +42,9 @@ class DvrFileMonitoringTask:
 
     async def _get_unlocked_files(self) -> list[str]:
         files = [
-            f
-            for f in os.listdir(self._storage_path)
-            if f.startswith(f'{self._cam_id}_') and f.endswith('.mp4')
+            f.name
+            for f in Path(self._storage_path).iterdir()
+            if f.name.startswith(f'{self._cam_id}_') and f.name.endswith('.mp4')
         ]
         if not files:
             self._log.debug(

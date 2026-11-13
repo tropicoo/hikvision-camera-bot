@@ -19,8 +19,7 @@ class AlarmEventChunkDetector:
 
     @classmethod
     def detect_chunk(cls, chunk: str) -> DetectionType | None:
-        """Detect chunk in regard of `DETECTION_REGEX` string and return
-        detection key.
+        """Detect chunk with `DETECTION_REGEX` and return detection key.
 
         :param chunk: string, one line from alert stream.
         """

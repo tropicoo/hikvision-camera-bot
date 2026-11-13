@@ -5,7 +5,7 @@ from hikcamerabot.utils.process import get_stdout_stderr
 
 
 class GetFfprobeContextTask(AbstractFfBinaryTask):
-    _CMD = 'ffprobe -loglevel error -show_format -show_streams -of json {filepath}'
+    _CMD = 'ffprobe -loglevel error -show_format -show_streams -of json "{filepath}"'
 
     async def run(self) -> dict | None:
         return await self._get_context()

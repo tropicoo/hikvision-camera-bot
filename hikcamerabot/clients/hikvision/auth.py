@@ -18,7 +18,10 @@ class DigestAuthCached(httpx.DigestAuth):
 
         response = yield request
 
-        if response.status_code != 401 or 'www-authenticate' not in response.headers:
+        if (
+            response.status_code != httpx.codes.UNAUTHORIZED
+            or 'www-authenticate' not in response.headers
+        ):
             # If the response is not a 401 then we don't
             # need to build an authenticated request.
             return

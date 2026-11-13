@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 import xmltodict
 
 from hikcamerabot.clients.hikvision.enums import EndpointAddr
-from hikcamerabot.constants import DETECTION_SWITCH_MAP, XML_HEADERS
+from hikcamerabot.clients.hikvision.xml_status import is_ok_status
+from hikcamerabot.constants import (
+    DETECTION_NAMES_RU,
+    DETECTION_SWITCH_MAP,
+    XML_HEADERS,
+)
 from hikcamerabot.enums import DetectionType
 from hikcamerabot.exceptions import APIRequestError, HikvisionAPIError
 
@@ -44,9 +49,9 @@ class CameraConfigSwitch:
             raise HikvisionAPIError(err_msg) from err
 
         if is_enabled and state:
-            return f'{full_name} already enabled'
+            return f'{DETECTION_NAMES_RU[trigger]}: уже включено'
         if not is_enabled and not state:
-            return f'{full_name} already disabled'
+            return f'{DETECTION_NAMES_RU[trigger]}: уже выключено'
 
         xml_payload = self._prepare_xml_payload(xml, state)
         try:
@@ -75,7 +80,7 @@ class CameraConfigSwitch:
     def _parse_response_xml(self, response: str) -> None:
         try:
             xml_dict = xmltodict.parse(response)['ResponseStatus']
-            if xml_dict['statusCode'] != 1 and xml_dict['statusString'] != 'OK':
+            if not is_ok_status(xml_dict):
                 err_msg = 'Camera returned failed errored XML'
                 self._log.error(err_msg)
                 raise HikvisionAPIError(err_msg)

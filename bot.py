@@ -3,10 +3,13 @@
 
 import asyncio
 
-import uvloop
-
 from hikcamerabot.launcher import BotLauncher
 from hikcamerabot.utils.shared import setup_logging
+
+try:
+    import uvloop
+except ImportError:  # uvloop is installed only on Linux.
+    uvloop = None
 
 
 async def main() -> None:
@@ -15,5 +18,7 @@ async def main() -> None:
 
 
 if __name__ == '__main__':
-    uvloop.install()
-    asyncio.run(main())
+    if uvloop is not None:
+        uvloop.run(main())
+    else:
+        asyncio.run(main())

@@ -27,4 +27,4 @@ class TelegramStreamService(AbstractExternalLivestreamService):
 
     def _generate_output(self) -> str:
         # urljoin does not support rtmp protocol
-        return f'{self._stream_conf.url}/{self._stream_conf.key}'
+        return f'{self._stream_conf.url.rstrip("/")}/{self._stream_conf.key}'

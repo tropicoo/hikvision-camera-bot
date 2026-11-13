@@ -156,6 +156,9 @@ class AlertStreamEndpoint(AbstractEndpoint):
         async with self._api_client.session.stream(
             self._METHOD, url, timeout=timeout
         ) as response:
+            # Otherwise an error page (e.g. 401 on a wrong password) is read as
+            # an alert chunk and the stream reconnects in a tight loop.
+            self._api_client.raise_for_status_code(response.status_code)
             chunk: str
             async for chunk in response.aiter_text():
                 yield chunk

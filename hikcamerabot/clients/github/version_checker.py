@@ -1,9 +1,20 @@
 import logging
+import re
 from dataclasses import dataclass
+from typing import Final
 
 from httpx import AsyncClient
 
 from hikcamerabot.version import __version__
+
+_VERSION_REGEX: Final[re.Pattern[str]] = re.compile(
+    r"__version__\s*=\s*['\"](\d+(?:\.\d+)*)['\"]"
+)
+_TIMEOUT: Final[float] = 10.0
+
+
+def _parse_version(version: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in version.split('.'))
 
 
 @dataclass
@@ -14,14 +25,19 @@ class BotVersion:
     latest: str
 
     def has_new_version(self) -> bool:
-        _current = [int(x) for x in self.current.split('.')]
-        _latest = [int(x) for x in self.latest.split('.')]
-        return _latest > _current
+        return _parse_version(self.latest) > _parse_version(self.current)
 
 
 class HikCameraBotVersionChecker:
-    LATEST_TAG_URL: str = (
-        'https://github.com/tropicoo/hikvision-camera-bot/releases/latest'
+    """Compare running version with the one in this fork's `master` branch.
+
+    The bot is updated with `update.sh` (git pull), so the version file of the
+    default branch is what the user gets after an update.
+    """
+
+    LATEST_VERSION_URL: str = (
+        'https://raw.githubusercontent.com/SA1D77/hikvision-camera-bot/'
+        'master/hikcamerabot/version.py'
     )
 
     def __init__(self) -> None:
@@ -31,14 +47,18 @@ class HikCameraBotVersionChecker:
         return __version__
 
     async def get_latest_version(self) -> str:
-        """Get latest version number from latest GitHub tag URL."""
+        """Get latest version number. Raise an exception if it's unavailable."""
         self._log.info('Get latest hikvision-camera-bot version number')
         client: AsyncClient
-        async with AsyncClient() as client:
-            response = await client.head(self.LATEST_TAG_URL)
-            version: str = response.headers.get('location').split('/')[-1]
-            self._log.info('Latest hikvision-camera-bot version number: %s', version)
-            return version
+        async with AsyncClient(timeout=_TIMEOUT) as client:
+            response = await client.get(self.LATEST_VERSION_URL)
+        response.raise_for_status()
+        match = _VERSION_REGEX.search(response.text)
+        if match is None:
+            raise ValueError(f'No version found at {self.LATEST_VERSION_URL}')
+        version = match.group(1)
+        self._log.info('Latest hikvision-camera-bot version number: %s', version)
+        return version
 
     async def get_version(self) -> BotVersion:
         return BotVersion(

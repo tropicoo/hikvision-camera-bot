@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --group lint
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format
+        run: uv run ruff format --check .
+
+      - name: Prepare test configs from templates
+        run: |
+          sudo mkdir -p /data/timelapses /data/dvr
+          sudo chown "$USER" /data/timelapses /data/dvr
+          cp configs/config-template.json configs/config.json
+          cp configs/livestream_templates-template.json configs/livestream_templates.json
+          cp configs/encoding_templates-template.json configs/encoding_templates.json
+
+      - name: Tests
+        run: uv run pytest -v
+
+      - name: Bot modules import
+        run: uv run python -c "import hikcamerabot.launcher, hikcamerabot.menu"
+
+  docker:
+    # Same image as on Raspberry Pi 4 (arm64) and on regular PCs (amd64).
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build bot image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: hikvision-camera-bot:ci
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+      - name: Check image contents
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} hikvision-camera-bot:ci \
+            sh -c "ffmpeg -hide_banner -version | head -1 && python -c 'import pyrogram, tgcrypto, uvloop, PIL, hikcamerabot.utils.process; print(\"python deps OK\")'"

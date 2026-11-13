@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from datetime import datetime
+import time
 from io import BytesIO
 from typing import TYPE_CHECKING
 
@@ -11,7 +11,7 @@ from pyrogram.types import Message
 from hikcamerabot.clients.hikvision import HikvisionAPI, HikvisionAPIClient
 from hikcamerabot.clients.hikvision.enums import IrcutFilterType
 from hikcamerabot.common.video.videogif_recorder import VideoGifRecorder
-from hikcamerabot.config.schemas.main_config import CameraConfigSchema
+from hikcamerabot.config.schemas.main_config import AlertSchema, CameraConfigSchema
 from hikcamerabot.enums import VideoGifType
 from hikcamerabot.exceptions import HikvisionAPIError, HikvisionCamError
 from hikcamerabot.services.abstract import AbstractService
@@ -142,6 +142,11 @@ class HikvisionCam:
     def __repr__(self) -> str:
         return f'<HikvisionCam id="{self.id}" desc="{self.description}">'
 
+    def update_alert_conf(self, alert: AlertSchema) -> None:
+        """Apply new alert settings to the camera and its alarm service."""
+        self.conf = self.conf.model_copy(update={'alert': alert})
+        self.services.alarm.update_conf(alert)
+
     async def start_videogif_record(
         self,
         video_type: VideoGifType = VideoGifType.ON_DEMAND,
@@ -165,7 +170,7 @@ class HikvisionCam:
             self._log.error(err_msg)
             raise HikvisionCamError(err_msg) from err
 
-        taken_at = int(datetime.now().timestamp())
+        taken_at = int(time.time())
         self._increase_snapshot_count()
 
         try:

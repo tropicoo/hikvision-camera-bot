@@ -1,4 +1,3 @@
-import os
 import shutil
 from pathlib import Path
 from typing import Final
@@ -34,4 +33,3 @@ def file_size(filepath: Path) -> int:
 
 awaitable_shutil_move = wrap(shutil.move)
 awaitable_shutil_copyfileobj = wrap(shutil.copyfileobj)
-awaitable_os_killpg = wrap(os.killpg)

@@ -43,6 +43,7 @@ class AlarmService(AbstractService):
         self._alert_count: int = 0
 
         self._started: asyncio.Event = asyncio.Event()
+        self._monitoring_task: asyncio.Task | None = None
 
     @property
     def alert_count(self) -> int:
@@ -57,9 +58,18 @@ class AlarmService(AbstractService):
         return self._started.is_set()
 
     @property
+    def conf(self) -> AlertSchema:
+        return self._conf
+
+    def update_conf(self, conf: AlertSchema) -> None:
+        """Apply alert settings changed from the bot menu without restart."""
+        self._conf = conf
+        self.alert_delay = conf.delay
+
+    @property
     def enabled_in_conf(self) -> bool:
-        """Check if any alarm trigger is enabled in conf."""
-        return any(
+        """Check if alarm is enabled and any alarm trigger is enabled in conf."""
+        return self._conf.enabled and any(
             self._conf.get_detection_schema_by_type(type_=trigger).enabled
             for trigger in self.ALARM_TRIGGERS
         )
@@ -73,14 +83,17 @@ class AlarmService(AbstractService):
             return
 
         if self.started:
-            raise ServiceRuntimeError('Alarm (alert) mode already started')
+            raise ServiceRuntimeError('Оповещения уже включены')
         await self._enable_triggers_on_camera()
         self._started.set()
         self._start_service_task()
 
     def _start_service_task(self) -> None:
+        # Quick `alert_off` -> `alert_on` could leave the old task alive (it
+        # checks the state only on the next chunk) and duplicate every alert.
+        self._cancel_service_task()
         task_name = f'{ServiceAlarmMonitoringTask.__name__}_{self.cam.id}'
-        create_task(
+        self._monitoring_task = create_task(
             ServiceAlarmMonitoringTask(service=self).run(),
             task_name=task_name,
             logger=self._log,
@@ -89,15 +102,37 @@ class AlarmService(AbstractService):
         )
 
     async def _enable_triggers_on_camera(self) -> None:
+        """Enable triggers which are enabled in config.
+
+        Some (old) cameras don't support e.g. Line Crossing Detection and return
+        an error. Then just warn and keep monitoring the alert stream: other
+        detections (or ones enabled manually in camera web UI) still work.
+        """
         for trigger in self.ALARM_TRIGGERS:
-            if self._conf.get_detection_schema_by_type(type_=trigger).enabled:
+            if not self._conf.get_detection_schema_by_type(type_=trigger).enabled:
+                continue
+            try:
                 await self.trigger_switch(trigger=DetectionType(trigger), state=True)
+            except ServiceRuntimeError as err:
+                self._log.warning(
+                    '[%s] %s. Is it supported by the camera and is the user allowed '
+                    'to change it? Configure it in camera web UI or set '
+                    '"enabled": false for it in config to hide this warning',
+                    self.cam.id,
+                    err,
+                )
 
     async def stop(self) -> None:
         """Disable alarm."""
         if not self.started:
-            raise ServiceRuntimeError('Alarm alert mode already stopped')
+            raise ServiceRuntimeError('Оповещения уже выключены')
         self._started.clear()
+        self._cancel_service_task()
+
+    def _cancel_service_task(self) -> None:
+        if self._monitoring_task and not self._monitoring_task.done():
+            self._monitoring_task.cancel()
+        self._monitoring_task = None
 
     async def alert_stream(self) -> AsyncGenerator[str]:
         """Get Alarm stream from Hikvision Camera."""

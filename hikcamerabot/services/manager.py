@@ -29,19 +29,24 @@ class ServiceManager:
         self._services[service_instance.TYPE].pop(service_instance.NAME, None)
 
     async def start_all(self, only_conf_enabled: bool = False) -> None:
+        """Start services. A failing service doesn't prevent others from starting."""
         for service_type_dict in self._services.values():
             for service in service_type_dict.values():
-                if only_conf_enabled:
-                    if service.enabled_in_conf:
-                        await service.start()
-                    else:
-                        self._log.info(
-                            '[%s] Do not start service "%s" - disabled by default',
-                            service.cam.id,
-                            service,
-                        )
-                else:
+                if only_conf_enabled and not service.enabled_in_conf:
+                    self._log.info(
+                        '[%s] Do not start service "%s" - disabled by default',
+                        service.cam.id,
+                        service,
+                    )
+                    continue
+                try:
                     await service.start()
+                except Exception:
+                    self._log.exception(
+                        '[%s] Failed to start service "%s", starting other services',
+                        service.cam.id,
+                        service,
+                    )
 
     async def stop_all(self) -> None:
         for service_type_dict in self._services.values():

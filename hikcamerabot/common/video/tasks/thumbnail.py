@@ -6,7 +6,7 @@ from hikcamerabot.utils.process import get_stdout_stderr
 
 
 class MakeThumbnailTask(AbstractFfBinaryTask):
-    _CMD = f'{FFMPEG_BIN} -y -loglevel error -i {{filepath}} -vframes 1 -q:v 31 {{thumbpath}}'
+    _CMD = f'{FFMPEG_BIN} -y -loglevel error -i "{{filepath}}" -vframes 1 -q:v 31 "{{thumbpath}}"'
 
     def __init__(self, thumbnail_path: Path, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

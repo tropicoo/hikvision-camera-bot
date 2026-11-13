@@ -27,7 +27,7 @@ class MakeTimelapseVideoTask(AbstractFfBinaryTask):
     _CMD = (
         f'{FFMPEG_BIN} -loglevel {{loglevel}} '
         f'-framerate {{img_num}}/{{video_length}} '
-        f'-i {{pattern_path}} '
+        f'-i "{{pattern_path}}" '
         f'-c:v {{video_codec}} '
         f'-crf {{image_quality}} '
         f'-pix_fmt {{pix_fmt}} '

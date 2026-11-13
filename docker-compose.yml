@@ -1,3 +1,10 @@
+# Rotate container logs so they never fill the SD card / disk.
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   hikvision-camera-bot:
     container_name: "hikvision_camera_bot"
@@ -10,11 +17,22 @@ services:
       - "/data/dvr:/data/dvr"                # The first path is a real local storage path e.g., "D:\Videos" in Windows. Change to your preferred one.
       - "/data/timelapses:/data/timelapses"  # The first path is a real local storage path e.g., "D:\Timelapses" in Windows. Change to your preferred one.
       - "./configs:/app/configs"
+    # Short video clips are recorded to /tmp before sending: keep them in RAM
+    # to reduce SD card wear. Increase size if you store more in /tmp.
+    tmpfs:
+      - /tmp:size=512m
     depends_on:
       - hikvision-srs-server
-    command: >
-      bash -c "python ./bot.py"
-    restart: unless-stopped
+    # Tiny init process: forwards `docker stop` signal to the bot and reaps
+    # finished ffmpeg processes.
+    init: true
+    command: ["python", "./bot.py"]
+    # Time for the bot to stop ffmpeg gracefully, so DVR files are not corrupted.
+    stop_grace_period: 30s
+    # Always start after Raspberry Pi reboot, even if the container was stopped
+    # manually before (`unless-stopped` keeps manually stopped containers down).
+    restart: always
+    logging: *default-logging
     networks:
       - hik_network
 
@@ -33,7 +51,8 @@ services:
       - "./srs_prod:/usr/local/srs/user_conf"
     command: >
       bash -c "./objs/srs -c user_conf/hik-docker.conf"
-    restart: unless-stopped
+    restart: always
+    logging: *default-logging
     ports:
       # SRS RTMP port. If you comment this out, you won't be able to connect with video player like VLC.
       - "1935:1935"

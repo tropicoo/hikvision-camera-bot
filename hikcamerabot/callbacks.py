@@ -2,6 +2,7 @@
 
 import logging
 
+from pyrogram.enums import ChatType
 from pyrogram.types import Message
 
 from hikcamerabot.camera import HikvisionCam
@@ -36,15 +37,18 @@ log = logging.getLogger(__name__)
 async def cmds(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
     """Print camera commands."""
     presentation = bot.cam_registry.get_commands_presentation(cam.id)
-    text = f'<b>Available commands</b>\n\n{presentation}\n\n/list_cams, /groups, /help'
+    text = (
+        f'<b>Команды камеры «{cam.description}»</b>\n\n{presentation}\n\n'
+        '/menu, /list_cams, /groups, /status, /help'
+    )
     await send_text(text=text, message=message, quote=True)
 
 
 @authorization_check
 @camera_selection
 async def cmd_ir_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
-    """Get and send resized snapshot from the camera."""
-    log.info('Resized cam snapshot from %s requested', cam.description)
+    """Switch the camera to night mode (IR light on)."""
+    log.info('Night IR mode for %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_IRCUT_FILTER,
@@ -57,8 +61,8 @@ async def cmd_ir_on(bot: CameraBot, message: Message, cam: HikvisionCam) -> None
 @authorization_check
 @camera_selection
 async def cmd_ir_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
-    """Get and send resized snapshot from the camera."""
-    log.info('Resized cam snapshot from %s requested', cam.description)
+    """Switch the camera to day mode (IR light off)."""
+    log.info('Day IR mode for %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_IRCUT_FILTER,
@@ -71,8 +75,8 @@ async def cmd_ir_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> Non
 @authorization_check
 @camera_selection
 async def cmd_ir_auto(bot: CameraBot, message: Message, cam: HikvisionCam) -> None:
-    """Get and send resized snapshot from the camera."""
-    log.info('Resized cam snapshot from %s requested', cam.description)
+    """Let the camera switch day/night mode automatically."""
+    log.info('Auto IR mode for %s requested', cam.description)
     event = IrcutConfEvent(
         cam=cam,
         event=EventType.CONFIGURE_IRCUT_FILTER,
@@ -138,35 +142,71 @@ async def cmd_getvideor(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
     await bot.inbound_dispatcher.dispatch(event)
 
 
+def plural_ru(count: int, one: str, few: str, many: str) -> str:
+    """Return Russian plural form: 1 камера, 2 камеры, 5 камер."""
+    if count % 10 == 1 and count % 100 != 11:  # noqa: PLR2004
+        return one
+    if count % 10 in (2, 3, 4) and count % 100 not in (12, 13, 14):
+        return few
+    return many
+
+
+def _camera_card(cam: HikvisionCam) -> str:
+    return f'📹 <b>{cam.description}</b> ({cam.id})\nКоманды: /cmds_{cam.id}'
+
+
 @authorization_check
-async def cmd_stop(bot: CameraBot, message: Message) -> None:
-    """Terminate the bot."""
-    # log.info(f'Stopping {(await bot.first_name)} bot')
-    # TODO: Is this even needed?
+async def cmd_stop(bot: CameraBot, message: Message) -> None:  # noqa: ARG001
+    """Explain how to stop the bot: it can't be stopped from Telegram."""
+    await send_text(text=STOP_TEXT, message=message, quote=True)
 
 
 @authorization_check
 async def cmd_app_version(bot: CameraBot, message: Message) -> None:  # noqa: ARG001
-    version = await HikCameraBotVersionChecker().get_version()
-    text = f'Latest {version.latest}\nCurrent {version.current}'
-    await send_text(text=text, message=message, quote=True)
+    """Show current bot version and whether an update is available."""
+    checker = HikCameraBotVersionChecker()
+    current = checker.get_current_version()
+    lines = [f'🤖 Версия бота: <b>{current}</b>']
+    try:
+        version = await checker.get_version()
+    except Exception as err:
+        log.warning('Failed to check the latest bot version: %s', err)
+        lines.append(
+            '⚠️ Не удалось проверить обновления: нет интернета или GitHub '
+            'недоступен. Попробуйте позже.'
+        )
+    else:
+        if version.has_new_version():
+            lines.append(
+                f'🆕 Доступна версия <b>{version.latest}</b>.\n'
+                'Чтобы обновить, выполните на устройстве с ботом: '
+                '<code>./update.sh</code>'
+            )
+        else:
+            lines.append('✅ Установлена последняя версия.')
+    await send_text(text='\n'.join(lines), message=message, quote=True)
+
+
+async def cmd_unknown(bot: CameraBot, message: Message) -> None:
+    """Answer to a mistyped or unknown command instead of silence."""
+    text = message.text or ''
+    if message.chat.type != ChatType.PRIVATE:
+        # In groups answer only to commands addressed to this bot.
+        username = getattr(bot.me, 'username', None)
+        if not username or f'@{username}'.lower() not in text.lower():
+            return
+    log.info('Unknown command "%s" from %s', text[:64], message.chat.id)
+    await send_text(text=UNKNOWN_COMMAND_TEXT, message=message, quote=True)
 
 
 @authorization_check
 async def cmd_list_group_cams(bot: CameraBot, message: Message) -> None:
     meta = bot.cam_registry.get_group(message.command[0])
-    cam_count = len(meta['cams'])
-    plural = '' if cam_count == 1 else 's'
-    msg = [bold(f'You have {cam_count} camera{plural} in group "{meta["name"]}"')]
-
-    cam: HikvisionCam
-    for cam in meta['cams']:
-        msg.append(
-            f'<b>Camera:</b> {cam.id}\n'
-            f'<b>Description:</b> {cam.description}\n'
-            f'<b>Commands</b>: /cmds_{cam.id}'
-        )
-    msg.append('/groups, /help')
+    count = len(meta['cams'])
+    word = plural_ru(count, 'камера', 'камеры', 'камер')
+    msg = [bold(f'В группе «{meta["name"]}» {count} {word}')]
+    msg.extend(_camera_card(cam) for cam in meta['cams'])
+    msg.append('/groups, /menu, /help')
     await send_text(text='\n\n'.join(msg), message=message, quote=True)
 
 
@@ -174,13 +214,13 @@ async def cmd_list_group_cams(bot: CameraBot, message: Message) -> None:
 async def cmd_list_groups(bot: CameraBot, message: Message) -> None:
     group_registry = bot.cam_registry.get_groups_registry()
     count = len(group_registry)
-    plural = '' if count == 1 else 's'
-    msg = [bold(f'You have {count} camera group{plural}\n')]
+    word = plural_ru(count, 'группа', 'группы', 'групп')
+    msg = [bold(f'Группы камер: {count} {word}\n')]
 
-    for command, meta in bot.cam_registry.get_groups_registry().items():
-        msg.append(f'/{command} - {meta["name"]}')
+    for command, meta in group_registry.items():
+        msg.append(f'/{command} — {meta["name"]}')
 
-    msg.append('\n/help')
+    msg.append('\n/list_cams, /menu, /help')
     await send_text(text='\n'.join(msg), message=message, quote=True)
 
 
@@ -189,16 +229,10 @@ async def cmd_list_cams(bot: CameraBot, message: Message) -> None:
     """List user's cameras."""
     log.debug('Camera list has been requested from %s', message.chat.id)
     count = bot.cam_registry.count()
-    plural = '' if count == 1 else 's'
-    msg = [bold(f'You have {count} camera{plural}')]
-
-    for cam_id, meta in bot.cam_registry.get_all().items():
-        msg.append(
-            f'<b>Camera:</b> {cam_id}\n'
-            f'<b>Description:</b> {meta["cam"].description}\n'
-            f'<b>Commands</b>: /cmds_{cam_id}'
-        )
-    msg.append('/groups, /help')
+    word = plural_ru(count, 'камера', 'камеры', 'камер')
+    msg = [bold(f'Подключено: {count} {word}')]
+    msg.extend(_camera_card(cam) for cam in bot.cam_registry.get_instances())
+    msg.append('/groups, /menu, /help')
     await send_text(text='\n\n'.join(msg), message=message, quote=True)
 
 
@@ -428,19 +462,46 @@ async def cmd_alert_off(bot: CameraBot, message: Message, cam: HikvisionCam) -> 
     await bot.inbound_dispatcher.dispatch(event)
 
 
-@authorization_check
-async def cmd_help(
-    bot: CameraBot,  # noqa: ARG001
-    message: Message,
-    append: bool = False,  # noqa: ARG001
-    requested: bool = True,  # noqa: ARG001
-    cam_id: str | None = None,  # noqa: ARG001
-) -> None:
-    """Send help message to telegram chat."""
-    log.info('Help message has been requested from %d', message.chat.id)
-    text = (
-        'Use /list_cams to show cameras and their commands\n'
-        'Use /groups to show camera groups\n'
-        'Use /version to check the bot version'
-    )
-    await send_text(text=text, message=message, quote=True)
+HELP_TEXT = (
+    '<b>🤖 Бот для камер Hikvision</b>\n'
+    'Присылает фото и видео с камер, сообщает о тревогах (движение, '
+    'пересечение линии, вторжение) и следит за состоянием устройства.\n\n'
+    '<b>С чего начать</b>\n'
+    'Нажмите кнопку «📋 Меню» под полем ввода или отправьте /menu — '
+    'откроется панель с кнопками:\n'
+    '• 📷 Фото / 🖼 Полное фото — снимок с камеры\n'
+    '• 🎥 Видео — короткая запись с камеры\n'
+    '• 🔔 Оповещения — включить или выключить сообщения о тревогах\n'
+    '• 🌙 ☀️ 🌗 — режим ночь / день / авто\n'
+    '• ⚙️ Настройки — какие детекции включены и что присылать при тревоге\n\n'
+    '<b>Основные команды</b>\n'
+    '/menu — панель управления с кнопками\n'
+    '/status — состояние бота, диска и камер\n'
+    '/list_cams — список камер и их команды\n'
+    '/groups — группы камер\n'
+    '/version — версия бота и наличие обновления\n'
+    '/help — эта справка\n\n'
+    '<b>Если что-то не работает</b>\n'
+    '• «Камера не отвечает» — проверьте питание камеры и сеть, затем '
+    'повторите команду.\n'
+    '• «Камера отклонила логин или пароль» — исправьте user и password '
+    'камеры в configs/config.json и перезапустите бота.\n'
+    '• Не приходят тревоги — откройте /menu и проверьте, что оповещения и '
+    'нужные детекции отмечены ✅.\n'
+    '• Бот не отвечает — на устройстве с ботом выполните '
+    '<code>docker compose restart hikvision-camera-bot</code>, логи: '
+    '<code>docker compose logs --tail 100 hikvision-camera-bot</code>'
+)
+
+STOP_TEXT = (
+    '🛑 Остановить бота из Telegram нельзя: он работает как служба и '
+    'запускается сам после перезагрузки.\n\n'
+    'Остановить на устройстве с ботом: <code>docker compose stop</code>\n'
+    'Запустить снова: <code>docker compose up -d</code>\n\n'
+    'Чтобы просто не получать тревоги, выключите оповещения в /menu.'
+)
+
+UNKNOWN_COMMAND_TEXT = (
+    '🤔 Не знаю такую команду. Откройте /menu, чтобы управлять камерами '
+    'кнопками, или /help — там список команд.'
+)

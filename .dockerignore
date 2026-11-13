@@ -17,3 +17,27 @@ tmp*
 .env
 rsync*
 _tmp
+
+# Not needed inside the image: faster build on Raspberry Pi, smaller image.
+.git
+.gitattributes
+.ralph
+.claude
+.pytest_cache
+.ruff_cache
+**/__pycache__
+**/*.pyc
+docs
+tests
+update.sh
+
+# Secrets and backups must never get into image layers.
+# Real configs are mounted as a volume (see docker-compose.yml).
+configs
+**/*.bak*
+*.sql
+*.tgz
+*.tar
+*.tar.gz
+*.zip
+*.log

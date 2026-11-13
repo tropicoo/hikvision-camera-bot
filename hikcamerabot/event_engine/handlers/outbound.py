@@ -6,12 +6,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from emoji import emojize
 from pyrogram.enums import ChatAction
 from pyrogram.types import Message
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from hikcamerabot.constants import DETECTION_SWITCH_MAP
+from hikcamerabot.constants import DETECTION_NAMES_RU
 from hikcamerabot.event_engine.events.abstract import BaseOutboundEvent
 from hikcamerabot.event_engine.events.outbound import (
     AlarmConfOutboundEvent,
@@ -26,6 +25,10 @@ from hikcamerabot.utils.shared import bold, format_ts, send_text
 
 if TYPE_CHECKING:
     from hikcamerabot.camerabot import CameraBot
+
+
+# Safe for file names: no colons or slashes.
+_FILENAME_TIME_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
 class AbstractResultEventHandler(ABC):
@@ -58,9 +61,8 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
     async def __handle(self, event: VideoOutboundEvent) -> None:
         cam = event.cam
         caption = (
-            f'{emojize(":rotating_light:", language="alias")} '
-            f'Alert video from {cam.description} {cam.hashtag}\n/cmds_{cam.id}, '
-            f'/list_cams'
+            f'🚨 Видео по тревоге: {cam.description} {cam.hashtag}\n'
+            f'/cmds_{cam.id}, /list_cams'
         )
         try:
             # Simple for loop because video cache will be used.
@@ -101,6 +103,7 @@ class ResultAlertVideoHandler(AbstractResultEventHandler):
 
     def _get_file(self, video_path: Path) -> tuple[str | Path, bool]:
         """Get str file id from cache or `InputFile` from video path.
+
         Indicate whether file is cached or not.
         """
         self._log.debug('Video cache: %s', self._video_file_cache)
@@ -127,11 +130,11 @@ class ResultRecordVideoGifHandler(AbstractResultEventHandler):
             cam = event.cam
             message = event.message
             caption = (
-                f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
-                f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
-                f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
-                f'📏 {bold("Size:")} {event.file_size_human()}\n'
-                f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
+                f'📷 {bold("Камера:")} {cam.description} ({cam.id})\n'
+                f'🗓️ {bold("Дата:")} {format_ts(event.create_ts)}\n'
+                f'#️⃣ {bold("Хештег:")} {cam.hashtag}\n'
+                f'📏 {bold("Размер:")} {event.file_size_human()}\n'
+                f'🤖 {bold("Команды:")} /cmds_{cam.id}, /list_cams'
             )
             await self._bot.send_chat_action(
                 message.chat.id, action=ChatAction.UPLOAD_VIDEO
@@ -157,22 +160,23 @@ class ResultAlertSnapshotHandler(AbstractResultEventHandler):
         cam = event.cam
 
         datetime_str = format_ts(event.ts)
-        detection_type = event.detection_type
         alert_count = event.alert_count
         resized = event.resized
         photo = event.img
-        trigger_name: str = DETECTION_SWITCH_MAP[detection_type]['name'].value
 
         caption = (
-            f'[{cam.description}] {trigger_name} on {datetime_str} '
-            f'(alert #{alert_count}) {cam.hashtag}\n/cmds_{cam.id}, /list_cams'
+            f'🚨 {bold(DETECTION_NAMES_RU[event.detection_type])} — '
+            f'{cam.description}\n'
+            f'🗓️ {datetime_str} (тревога №{alert_count}) {cam.hashtag}\n'
+            f'/cmds_{cam.id}, /list_cams'
         )
+        file_name = f'Тревога {cam.id} {format_ts(event.ts, _FILENAME_TIME_FORMAT)}.jpg'
 
         async def send_document(photo_: BytesIO | str) -> Message:
             return await self._bot.send_document(
                 chat_id=uid,
                 document=photo_,
-                file_name=f'Full_alert_snapshot_{datetime_str}.jpg',
+                file_name=file_name,
                 caption=caption,
             )
 
@@ -199,8 +203,8 @@ class ResultStreamConfHandler(AbstractResultEventHandler):
         message = event.message
         stream_type = event.stream_type
         state = event.state
-        text: str = event.text or '{} stream successfully {}'.format(
-            stream_type.value.capitalize(), 'enabled' if state else 'disabled'
+        text: str = event.text or 'Трансляция {} {}'.format(
+            stream_type.value.capitalize(), 'запущена' if state else 'остановлена'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)
@@ -222,11 +226,8 @@ class ResultSendTextHandler(AbstractResultEventHandler):
 class ResultAlarmConfHandler(AbstractResultEventHandler):
     async def _handle(self, event: AlarmConfOutboundEvent) -> None:
         message = event.message
-        service_name = event.service_name
-        state = event.state
-
-        text: str = event.text or '{} successfully {}'.format(
-            service_name.value, 'enabled' if state else 'disabled'
+        text: str = event.text or (
+            '🔔 Оповещения включены' if event.state else '🔕 Оповещения выключены'
         )
         await send_text(text=bold(text), message=message, quote=True)
         self._log.info(text)
@@ -235,11 +236,8 @@ class ResultAlarmConfHandler(AbstractResultEventHandler):
 class ResultDetectionConfHandler(AbstractResultEventHandler):
     async def _handle(self, event: DetectionConfOutboundEvent) -> None:
         message = event.message
-        name: str = DETECTION_SWITCH_MAP[event.type]['name'].value
-        state = event.state
-
-        text: str = event.text or '{} successfully {}'.format(
-            name, 'enabled' if state else 'disabled'
+        text: str = event.text or '{}: {}'.format(
+            DETECTION_NAMES_RU[event.type], 'включено' if event.state else 'выключено'
         )
         await send_text(text=bold(text), message=message, quote=True)
 
@@ -255,12 +253,12 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         cam = event.cam
         message = event.message
         caption = (
-            f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
-            f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
-            f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
-            f'🔢 {bold("Count:")} {event.taken_count}\n'
-            f'📏 {bold("Size:")} {event.file_size_human()}\n'
-            f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
+            f'📷 {bold("Камера:")} {cam.description} ({cam.id})\n'
+            f'🗓️ {bold("Дата:")} {format_ts(event.create_ts)}\n'
+            f'#️⃣ {bold("Хештег:")} {cam.hashtag}\n'
+            f'🔢 {bold("Снимок №:")} {event.taken_count}\n'
+            f'📏 {bold("Размер:")} {event.file_size_human()}\n'
+            f'🤖 {bold("Команды:")} /cmds_{cam.id}, /list_cams'
         )
 
         self._log.info('[%s] Sending resized cam snapshot', cam.id)
@@ -275,15 +273,16 @@ class ResultTakeSnapshotHandler(AbstractResultEventHandler):
         cam = event.cam
         message = event.message
 
-        datetime_str = format_ts(event.create_ts)
-        filename = f'Full snapshot {datetime_str}.jpg'
+        filename = (
+            f'Снимок {cam.id} {format_ts(event.create_ts, _FILENAME_TIME_FORMAT)}.jpg'
+        )
         caption = (
-            f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
-            f'🗓️ {bold("Date:")} {datetime_str}\n'
-            f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
-            f'🔢 {bold("Count:")} {event.taken_count}\n'
-            f'📏 {bold("Size:")} {event.file_size_human()}\n'
-            f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
+            f'📷 {bold("Камера:")} {cam.description} ({cam.id})\n'
+            f'🗓️ {bold("Дата:")} {format_ts(event.create_ts)}\n'
+            f'#️⃣ {bold("Хештег:")} {cam.hashtag}\n'
+            f'🔢 {bold("Снимок №:")} {event.taken_count}\n'
+            f'📏 {bold("Размер:")} {event.file_size_human()}\n'
+            f'🤖 {bold("Команды:")} /cmds_{cam.id}, /list_cams'
         )
 
         self._log.info('[%s] Sending full cam snapshot', cam.id)
@@ -316,11 +315,11 @@ class ResultTimelapseHandler(AbstractResultEventHandler):
             cam = event.cam
             message = event.message
             caption = (
-                f'📷 {bold("Camera:")} [{cam.id}] {cam.description}\n'
-                f'🗓️ {bold("Date:")} {format_ts(event.create_ts)}\n'
-                f'#️⃣ {bold("Hashtag:")} {cam.hashtag}\n'
-                f'📏 {bold("Size:")} {event.file_size_human()}\n'
-                f'🤖 {bold("Commands:")} /cmds_{cam.id}, /list_cams'
+                f'📷 {bold("Камера:")} {cam.description} ({cam.id})\n'
+                f'🗓️ {bold("Дата:")} {format_ts(event.create_ts)}\n'
+                f'#️⃣ {bold("Хештег:")} {cam.hashtag}\n'
+                f'📏 {bold("Размер:")} {event.file_size_human()}\n'
+                f'🤖 {bold("Команды:")} /cmds_{cam.id}, /list_cams'
             )
             await self._bot.send_chat_action(
                 message.chat.id, action=ChatAction.UPLOAD_VIDEO

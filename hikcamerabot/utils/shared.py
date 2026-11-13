@@ -14,7 +14,11 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from hikcamerabot.config.config import main_conf
-from hikcamerabot.constants import SRS_DOCKER_CONTAINER_NAME, TG_MAX_MSG_SIZE
+from hikcamerabot.constants import (
+    CMD_SECTION_TITLES_RU,
+    SRS_DOCKER_CONTAINER_NAME,
+    TG_MAX_MSG_SIZE,
+)
 from hikcamerabot.enums import CmdSectionType
 
 if TYPE_CHECKING:
@@ -51,8 +55,9 @@ def gen_random_str(length: int = 4) -> str:
     )
 
 
-def format_ts(ts: float, time_format: str = '%a %b %d %H:%M:%S %Y') -> str:
-    return datetime.fromtimestamp(ts).strftime(time_format)
+def format_ts(ts: float, time_format: str = '%d.%m.%Y %H:%M:%S') -> str:
+    # Server local time (TZ from .env) is intended here.
+    return datetime.fromtimestamp(ts).strftime(time_format)  # noqa: DTZ006
 
 
 def bold(text: str) -> str:
@@ -76,9 +81,10 @@ def build_command_presentation(
     groups: list[str] = []
     visibility_opts = cam.conf.command_sections_visibility
     for section_desc, cmds in commands.items():
-        if getattr(visibility_opts, CmdSectionType(section_desc).name.lower()):
+        section = CmdSectionType(section_desc)
+        if getattr(visibility_opts, section.name.lower()):
             rendered_cmds = '\n'.join([f'/{cmd}' for cmd in cmds])
-            groups.append(f'{section_desc}\n{rendered_cmds}')
+            groups.append(f'<b>{CMD_SECTION_TITLES_RU[section]}</b>\n{rendered_cmds}')
     return '\n\n'.join(groups)
 
 

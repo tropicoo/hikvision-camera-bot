@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 from hikcamerabot.enums import (
+    CmdSectionType,
     DetectionEventName,
     DetectionType,
     DetectionVerboseName,
@@ -61,7 +62,7 @@ FFMPEG_CMD_VIDEO_GIF: Final[str] = (
     '-i {video_source} '
     '-c:v copy -c:a aac '
     '-t {rec_time} '
-    '{filepath}'
+    '"{filepath}"'
 )
 
 FFMPEG_CMD_HLS_VIDEO_GIF: Final[str] = (
@@ -70,7 +71,7 @@ FFMPEG_CMD_HLS_VIDEO_GIF: Final[str] = (
     '-i {video_source} '
     '-c copy '
     '-t {rec_time} '
-    '{filepath}'
+    '"{filepath}"'
 )
 
 # Livestream constants.
@@ -170,5 +171,23 @@ DETECTION_SWITCH_MAP: Final[
     },
 }
 
+# Names shown to Telegram users.
+DETECTION_NAMES_RU: Final[dict[DetectionType, str]] = {
+    DetectionType.MOTION: 'Детекция движения',
+    DetectionType.LINE: 'Пересечение линии',
+    DetectionType.INTRUSION: 'Вторжение в зону',
+}
+
+CMD_SECTION_TITLES_RU: Final[dict[CmdSectionType, str]] = {
+    CmdSectionType.GENERAL: 'Фото и видео',
+    CmdSectionType.INFRARED: 'ИК-режим (день/ночь)',
+    CmdSectionType.MOTION_DETECTION: 'Детекция движения',
+    CmdSectionType.LINE_DETECTION: 'Пересечение линии',
+    CmdSectionType.INTRUSION_DETECTION: 'Вторжение в зону',
+    CmdSectionType.ALERT_SERVICE: 'Оповещения о тревогах',
+    CmdSectionType.STREAM_YOUTUBE: 'Трансляция на YouTube',
+    CmdSectionType.STREAM_TELEGRAM: 'Трансляция в Telegram',
+    CmdSectionType.STREAM_ICECAST: 'Трансляция Icecast',
+}
 
 XML_HEADERS: Final[dict[str, str]] = {'Content-Type': 'application/xml'}
